@@ -3,6 +3,7 @@ import { password } from "@crustjs/prompts";
 import { V2ApiService } from "nia-ai-ts";
 import { getConfigDirPath, maskApiKey, readConfig, updateConfig } from "../services/config.ts";
 import { configureOpenApi } from "../services/sdk.ts";
+import { handleError } from "../utils/errors.ts";
 
 const loginCommand = defineCommand({
 	meta: {
@@ -64,13 +65,7 @@ const loginCommand = defineCommand({
 				}
 			}
 		} catch (error: unknown) {
-			const status = (error as { status?: number }).status;
-			if (status === 401 || status === 403) {
-				console.error("Invalid API token. Get your token at https://app.trynia.ai/settings");
-			} else {
-				console.error("Failed to validate token:", (error as Error).message ?? String(error));
-			}
-			process.exit(1);
+			handleError(error, { domain: "Authentication" });
 		}
 	},
 });

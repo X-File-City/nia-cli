@@ -6,6 +6,7 @@ import type {
 } from "nia-ai-ts";
 import { V2ApiPackageSearchService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
+import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
 import { createSpinner } from "../utils/spinner.ts";
@@ -23,31 +24,6 @@ function validateRegistry(registry: string): void {
 		console.error(`Invalid registry: "${registry}". Allowed: ${VALID_REGISTRIES.join(", ")}`);
 		process.exit(1);
 	}
-}
-
-/**
- * Shared error handler for package search commands.
- * Maps common SDK errors to user-friendly messages.
- */
-function handlePackagesError(error: unknown): never {
-	const status = (error as { status?: number }).status;
-	const message = (error as Error).message ?? String(error);
-
-	if (status === 401 || status === 403) {
-		console.error("Authentication failed — run `nia auth login` to authenticate.");
-	} else if (status === 404) {
-		console.error("Package not found. Check the registry, package name, and version.");
-	} else if (status === 422) {
-		console.error(`Validation error: ${message}`);
-	} else if (status === 429) {
-		console.error("Rate limited — try again in a moment.");
-	} else if (status && status >= 500) {
-		console.error(`Server error (${status}) — try again later.`);
-	} else {
-		console.error(`Package search failed: ${message}`);
-	}
-
-	process.exit(1);
 }
 
 // --- Subcommands ---
@@ -154,7 +130,7 @@ const grepCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Search failed");
-			handlePackagesError(error);
+			handleError(error, { domain: "Package search" });
 		}
 	},
 });
@@ -243,7 +219,7 @@ const hybridCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Search failed");
-			handlePackagesError(error);
+			handleError(error, { domain: "Package search" });
 		}
 	},
 });
@@ -345,7 +321,7 @@ const readCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to read file");
-			handlePackagesError(error);
+			handleError(error, { domain: "Package search" });
 		}
 	},
 });

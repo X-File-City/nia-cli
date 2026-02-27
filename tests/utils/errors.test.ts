@@ -1,0 +1,501 @@
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+
+// --- Mock process.exit ---
+
+const mockExit = mock((code?: number) => {
+	throw new Error(`process.exit(${code})`);
+});
+
+const originalExit = process.exit;
+const originalArgv = process.argv;
+
+// --- Mock modules ---
+
+// We need to import CrustError from @crustjs/core for type-checking
+// but we also need access to the actual classes from nia-ai-ts
+
+// Import the actual error classes
+import { CrustError } from "@crustjs/core";
+import { ApiError, NiaSDKError, NiaTimeoutError } from "nia-ai-ts";
+import { findClosestMatch, handleError, withErrorHandling } from "../../src/utils/errors.ts";
+
+describe("error handling", () => {
+	let consoleErrorOutput: string[];
+	let originalConsoleError: typeof console.error;
+
+	beforeEach(() => {
+		consoleErrorOutput = [];
+		// biome-ignore lint/suspicious/noExplicitAny: test mock override
+		process.exit = mockExit as any;
+		process.argv = ["bun", "nia", "search", "universal", "test"];
+
+		// Capture console.error output
+		originalConsoleError = console.error;
+		console.error = ((...args: unknown[]) => {
+			consoleErrorOutput.push(args.map(String).join(" "));
+		}) as typeof console.error;
+	});
+
+	afterEach(() => {
+		process.exit = originalExit;
+		process.argv = originalArgv;
+		console.error = originalConsoleError;
+		mock.restore();
+	});
+
+	// --- ApiError handling ---
+
+	describe("ApiError handling", () => {
+		function createApiError(status: number, message: string, body?: unknown): ApiError {
+			// biome-ignore lint/suspicious/noExplicitAny: test mock for ApiError constructor params
+			const request = { method: "GET", url: "/test" } as any;
+			// biome-ignore lint/suspicious/noExplicitAny: test mock for ApiError constructor params
+			const response = {
+				url: "/test",
+				ok: false,
+				status,
+				statusText: message,
+				body: body ?? {},
+			} as any;
+			return new ApiError(request, response, message);
+		}
+
+		test("handles 401 authentication error", () => {
+			const error = createApiError(401, "Unauthorized");
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Authentication failed"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("nia auth login"))).toBe(true);
+		});
+
+		test("handles 403 forbidden error", () => {
+			const error = createApiError(403, "Forbidden");
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Authentication failed"))).toBe(true);
+		});
+
+		test("handles 404 not found error with domain", () => {
+			const error = createApiError(404, "Not Found");
+			try {
+				handleError(error, { domain: "Repository" });
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Repository resource not found"))).toBe(
+				true,
+			);
+		});
+
+		test("handles 404 not found error without domain", () => {
+			const error = createApiError(404, "Not Found");
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Resource not found"))).toBe(true);
+		});
+
+		test("handles 422 validation error with detail body", () => {
+			const error = createApiError(422, "Unprocessable Entity", {
+				detail: "Invalid URL format",
+			});
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Validation error"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Invalid URL format"))).toBe(true);
+		});
+
+		test("handles 422 validation error with detail array", () => {
+			const error = createApiError(422, "Unprocessable Entity", {
+				detail: [
+					{ msg: "field required", loc: ["body", "url"] },
+					{ msg: "invalid type", loc: ["body", "name"] },
+				],
+			});
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Validation error"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("body"))).toBe(true);
+		});
+
+		test("handles 429 rate limit error", () => {
+			const error = createApiError(429, "Too Many Requests");
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Rate limited"))).toBe(true);
+		});
+
+		test("handles 500 server error", () => {
+			const error = createApiError(500, "Internal Server Error");
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Server error (500)"))).toBe(true);
+		});
+
+		test("handles 502 server error", () => {
+			const error = createApiError(502, "Bad Gateway");
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Server error (502)"))).toBe(true);
+		});
+
+		test("handles unknown status code with domain", () => {
+			const error = createApiError(418, "I'm a teapot");
+			try {
+				handleError(error, { domain: "Search" });
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Search failed"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("418"))).toBe(true);
+		});
+
+		test("shows response body in verbose mode", () => {
+			process.argv = ["bun", "nia", "--verbose", "search", "universal", "test"];
+			const error = createApiError(500, "Internal Server Error", {
+				detail: "Something went wrong",
+			});
+			try {
+				handleError(error, { verbose: true });
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Response body"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Something went wrong"))).toBe(true);
+		});
+
+		test("shows stack trace in verbose mode", () => {
+			const error = createApiError(500, "Internal Server Error");
+			try {
+				handleError(error, { verbose: true });
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(true);
+		});
+	});
+
+	// --- NiaTimeoutError handling ---
+
+	describe("NiaTimeoutError handling", () => {
+		test("handles timeout error with friendly message", () => {
+			const error = new NiaTimeoutError("Request timed out after 30000ms");
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Request timed out"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Try again later"))).toBe(true);
+		});
+
+		test("shows details in verbose mode", () => {
+			const error = new NiaTimeoutError("Request timed out after 30000ms");
+			try {
+				handleError(error, { verbose: true });
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Details"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("30000ms"))).toBe(true);
+		});
+	});
+
+	// --- NiaSDKError handling ---
+
+	describe("NiaSDKError handling", () => {
+		test("handles generic SDK error", () => {
+			const error = new NiaSDKError("SDK connection failed");
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("SDK error"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("SDK connection failed"))).toBe(true);
+		});
+
+		test("shows stack trace in verbose mode", () => {
+			const error = new NiaSDKError("SDK connection failed");
+			try {
+				handleError(error, { verbose: true });
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(true);
+		});
+	});
+
+	// --- CrustError handling ---
+
+	describe("CrustError handling", () => {
+		test("handles COMMAND_NOT_FOUND with suggestion", () => {
+			const error = new CrustError("COMMAND_NOT_FOUND", 'Unknown command: "serch"', {
+				input: "serch",
+				available: ["search", "sources", "repos"],
+				commandPath: ["nia"],
+				// biome-ignore lint/suspicious/noExplicitAny: test mock
+				parentCommand: {} as any,
+			});
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes('Unknown command: "serch"'))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes('Did you mean "search"'))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Available commands"))).toBe(true);
+		});
+
+		test("handles COMMAND_NOT_FOUND without close match", () => {
+			const error = new CrustError("COMMAND_NOT_FOUND", 'Unknown command: "xyz"', {
+				input: "xyz",
+				available: ["search", "sources", "repos"],
+				commandPath: ["nia"],
+				// biome-ignore lint/suspicious/noExplicitAny: test mock
+				parentCommand: {} as any,
+			});
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes('Unknown command: "xyz"'))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Available commands"))).toBe(true);
+			// Should not have a "Did you mean" suggestion for completely different input
+		});
+
+		test("handles VALIDATION with missing argument", () => {
+			const error = new CrustError("VALIDATION", "Missing required argument", {
+				issues: [{ message: "query is required", path: "argument" }],
+			});
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Missing required"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("query is required"))).toBe(true);
+		});
+
+		test("handles VALIDATION without details", () => {
+			const error = new CrustError("VALIDATION", "Missing required arguments");
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Missing required arguments"))).toBe(true);
+		});
+
+		test("handles PARSE error", () => {
+			const error = new CrustError("PARSE", 'Unknown flag "--foo"');
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Invalid arguments"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("--foo"))).toBe(true);
+		});
+
+		test("handles DEFINITION error", () => {
+			const error = new CrustError("DEFINITION", "Command name cannot be empty");
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Command name cannot be empty"))).toBe(true);
+		});
+
+		test("handles EXECUTION error", () => {
+			const error = new CrustError("EXECUTION", "Runtime execution error");
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Runtime execution error"))).toBe(true);
+		});
+	});
+
+	// --- Generic Error handling ---
+
+	describe("generic Error handling", () => {
+		test("handles plain Error with message", () => {
+			const error = new Error("Something went wrong");
+			try {
+				handleError(error);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Something went wrong"))).toBe(true);
+		});
+
+		test("handles plain Error with domain", () => {
+			const error = new Error("Connection refused");
+			try {
+				handleError(error, { domain: "Oracle" });
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Oracle failed"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Connection refused"))).toBe(true);
+		});
+
+		test("handles Error with status property", () => {
+			const error = Object.assign(new Error("Not Found"), { status: 404 });
+			try {
+				handleError(error, { domain: "Source" });
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Source resource not found"))).toBe(true);
+		});
+
+		test("handles non-Error thrown value (string)", () => {
+			try {
+				handleError("unexpected string error");
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("unexpected string error"))).toBe(true);
+		});
+
+		test("handles non-Error thrown value (number)", () => {
+			try {
+				handleError(42);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("42"))).toBe(true);
+		});
+
+		test("handles null/undefined", () => {
+			try {
+				handleError(null);
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("null"))).toBe(true);
+		});
+
+		test("shows stack trace in verbose mode for generic Error", () => {
+			const error = new Error("test error");
+			try {
+				handleError(error, { verbose: true });
+			} catch {}
+			expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(true);
+		});
+	});
+
+	// --- process.exit behavior ---
+
+	describe("process.exit behavior", () => {
+		test("calls process.exit(1) for all error types", () => {
+			const errors = [
+				new Error("test"),
+				new NiaSDKError("test"),
+				new NiaTimeoutError("test"),
+				"string error",
+				42,
+			];
+
+			for (const error of errors) {
+				try {
+					handleError(error);
+				} catch (e) {
+					expect((e as Error).message).toBe("process.exit(1)");
+				}
+			}
+		});
+	});
+});
+
+// --- findClosestMatch ---
+
+describe("findClosestMatch", () => {
+	const commands = ["search", "sources", "repos", "oracle", "tracer", "contexts", "packages"];
+
+	test("finds exact match", () => {
+		expect(findClosestMatch("search", commands)).toBe("search");
+	});
+
+	test("finds close match with typo", () => {
+		expect(findClosestMatch("serch", commands)).toBe("search");
+	});
+
+	test("finds match for different typo", () => {
+		expect(findClosestMatch("soruces", commands)).toBe("sources");
+	});
+
+	test("finds match for prefix", () => {
+		expect(findClosestMatch("trac", commands)).toBe("tracer");
+	});
+
+	test("returns undefined for completely different input", () => {
+		expect(findClosestMatch("xyzabc", commands)).toBeUndefined();
+	});
+
+	test("returns undefined for empty candidates", () => {
+		expect(findClosestMatch("search", [])).toBeUndefined();
+	});
+
+	test("is case-insensitive", () => {
+		expect(findClosestMatch("SEARCH", commands)).toBe("search");
+	});
+
+	test("handles single character difference", () => {
+		expect(findClosestMatch("packges", commands)).toBe("packages");
+	});
+});
+
+// --- withErrorHandling ---
+
+describe("withErrorHandling", () => {
+	let consoleErrorOutput: string[];
+	let originalConsoleError: typeof console.error;
+
+	beforeEach(() => {
+		consoleErrorOutput = [];
+		// biome-ignore lint/suspicious/noExplicitAny: test mock override
+		process.exit = mockExit as any;
+		process.argv = ["bun", "nia", "search", "universal", "test"];
+
+		originalConsoleError = console.error;
+		console.error = ((...args: unknown[]) => {
+			consoleErrorOutput.push(args.map(String).join(" "));
+		}) as typeof console.error;
+	});
+
+	afterEach(() => {
+		process.exit = originalExit;
+		process.argv = originalArgv;
+		console.error = originalConsoleError;
+		mock.restore();
+	});
+
+	test("does not catch when fn succeeds", async () => {
+		await withErrorHandling({ domain: "Test" }, async () => {
+			// no-op
+		});
+		expect(consoleErrorOutput.length).toBe(0);
+	});
+
+	test("catches and handles errors from fn", async () => {
+		try {
+			await withErrorHandling({ domain: "Search" }, async () => {
+				throw new Error("API call failed");
+			});
+		} catch {}
+		expect(consoleErrorOutput.some((s) => s.includes("Search failed"))).toBe(true);
+		expect(consoleErrorOutput.some((s) => s.includes("API call failed"))).toBe(true);
+	});
+
+	test("uses verbose from --verbose flag", async () => {
+		process.argv = ["bun", "nia", "--verbose", "search", "universal", "test"];
+		try {
+			await withErrorHandling({ domain: "Search" }, async () => {
+				throw new Error("API call failed");
+			});
+		} catch {}
+		expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(true);
+	});
+
+	test("does not show stack trace without --verbose", async () => {
+		process.argv = ["bun", "nia", "search", "universal", "test"];
+		try {
+			await withErrorHandling({ domain: "Search" }, async () => {
+				throw new Error("API call failed");
+			});
+		} catch {}
+		expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(false);
+	});
+
+	test("handles ApiError through withErrorHandling", async () => {
+		// biome-ignore lint/suspicious/noExplicitAny: test mock for ApiError constructor params
+		const request = { method: "GET", url: "/test" } as any;
+		// biome-ignore lint/suspicious/noExplicitAny: test mock for ApiError constructor params
+		const response = {
+			url: "/test",
+			ok: false,
+			status: 429,
+			statusText: "Too Many Requests",
+			body: {},
+		} as any;
+		const apiError = new ApiError(request, response, "Too Many Requests");
+
+		try {
+			await withErrorHandling({ domain: "Oracle" }, async () => {
+				throw apiError;
+			});
+		} catch {}
+		expect(consoleErrorOutput.some((s) => s.includes("Rate limited"))).toBe(true);
+	});
+});

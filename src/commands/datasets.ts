@@ -2,34 +2,10 @@ import { defineCommand } from "@crustjs/core";
 import type { HuggingFaceDatasetRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
+import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
 import { createSpinner } from "../utils/spinner.ts";
-
-/**
- * Shared error handler for datasets commands.
- * Maps common SDK errors to user-friendly messages.
- */
-function handleDatasetsError(error: unknown): never {
-	const status = (error as { status?: number }).status;
-	const message = (error as Error).message ?? String(error);
-
-	if (status === 401 || status === 403) {
-		console.error("Authentication failed — run `nia auth login` to authenticate.");
-	} else if (status === 404) {
-		console.error("Dataset not found. Check the identifier and try again.");
-	} else if (status === 422) {
-		console.error(`Validation error: ${message}`);
-	} else if (status === 429) {
-		console.error("Rate limited — try again in a moment.");
-	} else if (status && status >= 500) {
-		console.error(`Server error (${status}) — try again later.`);
-	} else {
-		console.error(`Operation failed: ${message}`);
-	}
-
-	process.exit(1);
-}
 
 // --- Subcommands ---
 
@@ -106,7 +82,7 @@ const indexCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Indexing failed");
-			handleDatasetsError(error);
+			handleError(error, { domain: "Dataset" });
 		}
 	},
 });
@@ -175,7 +151,7 @@ const listCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to load datasets");
-			handleDatasetsError(error);
+			handleError(error, { domain: "Dataset" });
 		}
 	},
 });

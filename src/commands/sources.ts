@@ -2,6 +2,7 @@ import { defineCommand } from "@crustjs/core";
 import type { GrepRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService, V2ApiSourcesService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
+import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
 import { checkFirstRun, promptOptional, promptSelect, requireArg } from "../utils/prompts.ts";
@@ -19,31 +20,6 @@ const SOURCE_TYPES = [
 ] as const;
 
 type SourceType = (typeof SOURCE_TYPES)[number];
-
-/**
- * Shared error handler for sources commands.
- * Maps common SDK errors to user-friendly messages.
- */
-function handleSourcesError(error: unknown): never {
-	const status = (error as { status?: number }).status;
-	const message = (error as Error).message ?? String(error);
-
-	if (status === 401 || status === 403) {
-		console.error("Authentication failed — run `nia auth login` to authenticate.");
-	} else if (status === 404) {
-		console.error("Source not found. Check the source ID and try again.");
-	} else if (status === 422) {
-		console.error(`Validation error: ${message}`);
-	} else if (status === 429) {
-		console.error("Rate limited — try again in a moment.");
-	} else if (status && status >= 500) {
-		console.error(`Server error (${status}) — try again later.`);
-	} else {
-		console.error(`Operation failed: ${message}`);
-	}
-
-	process.exit(1);
-}
 
 /**
  * Validate a source type flag value.
@@ -178,7 +154,7 @@ const indexCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Indexing failed");
-			handleSourcesError(error);
+			handleError(error, { domain: "Source" });
 		}
 	},
 });
@@ -239,7 +215,7 @@ const listCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("List failed");
-			handleSourcesError(error);
+			handleError(error, { domain: "Source" });
 		}
 	},
 });
@@ -282,7 +258,7 @@ const getCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Fetch failed");
-			handleSourcesError(error);
+			handleError(error, { domain: "Source" });
 		}
 	},
 });
@@ -325,7 +301,7 @@ const resolveCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Resolve failed");
-			handleSourcesError(error);
+			handleError(error, { domain: "Source" });
 		}
 	},
 });
@@ -393,7 +369,7 @@ const updateCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Update failed");
-			handleSourcesError(error);
+			handleError(error, { domain: "Source" });
 		}
 	},
 });
@@ -439,7 +415,7 @@ const deleteCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Delete failed");
-			handleSourcesError(error);
+			handleError(error, { domain: "Source" });
 		}
 	},
 });
@@ -496,7 +472,7 @@ const syncCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Sync failed");
-			handleSourcesError(error);
+			handleError(error, { domain: "Source" });
 		}
 	},
 });
@@ -540,7 +516,7 @@ const renameCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Rename failed");
-			handleSourcesError(error);
+			handleError(error, { domain: "Source" });
 		}
 	},
 });
@@ -612,7 +588,7 @@ const readCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Read failed");
-			handleSourcesError(error);
+			handleError(error, { domain: "Source" });
 		}
 	},
 });
@@ -718,7 +694,7 @@ const grepCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Grep failed");
-			handleSourcesError(error);
+			handleError(error, { domain: "Source" });
 		}
 	},
 });
@@ -768,7 +744,7 @@ const treeCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Tree failed");
-			handleSourcesError(error);
+			handleError(error, { domain: "Source" });
 		}
 	},
 });
@@ -812,7 +788,7 @@ const lsCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Listing failed");
-			handleSourcesError(error);
+			handleError(error, { domain: "Source" });
 		}
 	},
 });

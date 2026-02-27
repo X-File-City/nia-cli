@@ -1,28 +1,10 @@
 import { defineCommand } from "@crustjs/core";
 import { V2ApiService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
+import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
 import { createSpinner } from "../utils/spinner.ts";
-
-/**
- * Handle errors from the usage API.
- */
-function handleUsageError(error: unknown): never {
-	const status = (error as { status?: number }).status;
-	const message = (error as Error).message ?? String(error);
-
-	if (status === 401 || status === 403) {
-		console.error("Authentication failed — run `nia auth login` to authenticate.");
-	} else if (status === 429) {
-		console.error("Rate limited — try again in a moment.");
-	} else if (status && status >= 500) {
-		console.error(`Server error (${status}) — try again later.`);
-	} else {
-		console.error(`Failed to fetch usage: ${message}`);
-	}
-	process.exit(1);
-}
 
 export const usageCommand = defineCommand({
 	meta: {
@@ -84,7 +66,7 @@ export const usageCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to fetch usage");
-			handleUsageError(error);
+			handleError(error, { domain: "Usage" });
 		}
 	},
 });

@@ -2,34 +2,10 @@ import { defineCommand } from "@crustjs/core";
 import type { routes__v2__data_sources__ResearchPaperRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
+import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
 import { createSpinner } from "../utils/spinner.ts";
-
-/**
- * Shared error handler for papers commands.
- * Maps common SDK errors to user-friendly messages.
- */
-function handlePapersError(error: unknown): never {
-	const status = (error as { status?: number }).status;
-	const message = (error as Error).message ?? String(error);
-
-	if (status === 401 || status === 403) {
-		console.error("Authentication failed — run `nia auth login` to authenticate.");
-	} else if (status === 404) {
-		console.error("Paper not found. Check the arXiv ID and try again.");
-	} else if (status === 422) {
-		console.error(`Validation error: ${message}`);
-	} else if (status === 429) {
-		console.error("Rate limited — try again in a moment.");
-	} else if (status && status >= 500) {
-		console.error(`Server error (${status}) — try again later.`);
-	} else {
-		console.error(`Operation failed: ${message}`);
-	}
-
-	process.exit(1);
-}
 
 // --- Subcommands ---
 
@@ -102,7 +78,7 @@ const indexCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Indexing failed");
-			handlePapersError(error);
+			handleError(error, { domain: "Paper" });
 		}
 	},
 });
@@ -170,7 +146,7 @@ const listCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to load papers");
-			handlePapersError(error);
+			handleError(error, { domain: "Paper" });
 		}
 	},
 });

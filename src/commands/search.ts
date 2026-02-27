@@ -1,31 +1,9 @@
 import { defineCommand } from "@crustjs/core";
 import { createSdk } from "../services/sdk.ts";
+import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
 import { createSpinner } from "../utils/spinner.ts";
-
-/**
- * Shared error handler for search commands.
- * Maps common SDK errors to user-friendly messages.
- */
-function handleSearchError(error: unknown): never {
-	const status = (error as { status?: number }).status;
-	const message = (error as Error).message ?? String(error);
-
-	if (status === 401 || status === 403) {
-		console.error("Authentication failed — run `nia auth login` to authenticate.");
-	} else if (status === 404) {
-		console.error("Search endpoint not found. Check your base URL configuration.");
-	} else if (status === 429) {
-		console.error("Rate limited — try again in a moment.");
-	} else if (status && status >= 500) {
-		console.error(`Server error (${status}) — try again later.`);
-	} else {
-		console.error(`Search failed: ${message}`);
-	}
-
-	process.exit(1);
-}
 
 const universalCommand = defineCommand({
 	meta: {
@@ -84,7 +62,7 @@ const universalCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Search failed");
-			handleSearchError(error);
+			handleError(error, { domain: "Search" });
 		}
 	},
 });
@@ -181,7 +159,7 @@ const queryCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Query failed");
-			handleSearchError(error);
+			handleError(error, { domain: "Search" });
 		}
 	},
 });
@@ -264,7 +242,7 @@ const webCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Web search failed");
-			handleSearchError(error);
+			handleError(error, { domain: "Search" });
 		}
 	},
 });
@@ -322,7 +300,7 @@ const deepCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Research failed");
-			handleSearchError(error);
+			handleError(error, { domain: "Search" });
 		}
 	},
 });

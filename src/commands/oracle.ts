@@ -3,38 +3,12 @@ import type { OracleSessionChatRequest } from "nia-ai-ts";
 import { DefaultService, OpenAPI } from "nia-ai-ts";
 import { resolveBaseUrl } from "../services/config.ts";
 import { createSdk } from "../services/sdk.ts";
+import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
 import { checkFirstRun, promptOptional, requireArg } from "../utils/prompts.ts";
 import { createSpinner } from "../utils/spinner.ts";
 import { renderStream, renderStreamEvent } from "../utils/streaming.ts";
-
-/**
- * Shared error handler for oracle commands.
- * Maps common SDK errors to user-friendly messages.
- */
-function handleOracleError(error: unknown): never {
-	const status = (error as { status?: number }).status;
-	const message = (error as Error).message ?? String(error);
-
-	if (status === 401 || status === 403) {
-		console.error("Authentication failed — run `nia auth login` to authenticate.");
-	} else if (status === 404) {
-		console.error("Oracle job not found. Check the job ID and try again.");
-	} else if (status === 422) {
-		console.error(`Validation error: ${message}`);
-	} else if (status === 429) {
-		console.error(
-			"Rate limited — you may have too many concurrent jobs. Max 3 concurrent jobs allowed.",
-		);
-	} else if (status && status >= 500) {
-		console.error(`Server error (${status}) — try again later.`);
-	} else {
-		console.error(`Oracle operation failed: ${message}`);
-	}
-
-	process.exit(1);
-}
 
 // --- Subcommands ---
 
@@ -133,7 +107,7 @@ const jobCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to create Oracle job");
-			handleOracleError(error);
+			handleError(error, { domain: "Oracle" });
 		}
 	},
 });
@@ -195,7 +169,7 @@ const statusCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to fetch job status");
-			handleOracleError(error);
+			handleError(error, { domain: "Oracle" });
 		}
 	},
 });
@@ -235,7 +209,7 @@ const cancelCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to cancel Oracle job");
-			handleOracleError(error);
+			handleError(error, { domain: "Oracle" });
 		}
 	},
 });
@@ -306,7 +280,7 @@ const jobsCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to fetch Oracle jobs");
-			handleOracleError(error);
+			handleError(error, { domain: "Oracle" });
 		}
 	},
 });
@@ -348,7 +322,7 @@ const streamCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to stream Oracle job");
-			handleOracleError(error);
+			handleError(error, { domain: "Oracle" });
 		}
 	},
 });
@@ -406,7 +380,7 @@ const sessionsCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to fetch Oracle sessions");
-			handleOracleError(error);
+			handleError(error, { domain: "Oracle" });
 		}
 	},
 });
@@ -471,7 +445,7 @@ const sessionCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to fetch session details");
-			handleOracleError(error);
+			handleError(error, { domain: "Oracle" });
 		}
 	},
 });
@@ -533,7 +507,7 @@ const messagesCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to fetch session messages");
-			handleOracleError(error);
+			handleError(error, { domain: "Oracle" });
 		}
 	},
 });
@@ -588,15 +562,9 @@ const chatCommand = defineCommand({
 			);
 
 			if (!response.ok || !response.body) {
-				const status = response.status;
-				if (status === 401 || status === 403) {
-					console.error("Authentication failed — run `nia auth login` to authenticate.");
-				} else if (status === 404) {
-					console.error("Session not found. Check the session ID and try again.");
-				} else {
-					console.error(`Chat request failed with status ${status}`);
-				}
-				process.exit(1);
+				const err = new Error(`Chat request failed with status ${response.status}`);
+				(err as Error & { status: number }).status = response.status;
+				throw err;
 			}
 
 			spinner.stop("Streaming chat response");
@@ -632,7 +600,7 @@ const chatCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to stream chat response");
-			handleOracleError(error);
+			handleError(error, { domain: "Oracle" });
 		}
 	},
 });
@@ -674,7 +642,7 @@ const deleteSessionCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to delete Oracle session");
-			handleOracleError(error);
+			handleError(error, { domain: "Oracle" });
 		}
 	},
 });
@@ -732,7 +700,7 @@ const oracleUsageCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to fetch Oracle usage");
-			handleOracleError(error);
+			handleError(error, { domain: "Oracle" });
 		}
 	},
 });

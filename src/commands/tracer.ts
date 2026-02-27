@@ -3,35 +3,11 @@ import type { TracerRequest } from "nia-ai-ts";
 import { GithubSearchService, OpenAPI } from "nia-ai-ts";
 import { resolveBaseUrl } from "../services/config.ts";
 import { createSdk } from "../services/sdk.ts";
+import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
 import { createSpinner } from "../utils/spinner.ts";
 import { renderStreamEvent } from "../utils/streaming.ts";
-
-/**
- * Shared error handler for tracer commands.
- * Maps common SDK errors to user-friendly messages.
- */
-function handleTracerError(error: unknown): never {
-	const status = (error as { status?: number }).status;
-	const message = (error as Error).message ?? String(error);
-
-	if (status === 401 || status === 403) {
-		console.error("Authentication failed — run `nia auth login` to authenticate.");
-	} else if (status === 404) {
-		console.error("Tracer job not found. Check the job ID and try again.");
-	} else if (status === 422) {
-		console.error(`Validation error: ${message}`);
-	} else if (status === 429) {
-		console.error("Rate limited — try again in a moment.");
-	} else if (status && status >= 500) {
-		console.error(`Server error (${status}) — try again later.`);
-	} else {
-		console.error(`Tracer operation failed: ${message}`);
-	}
-
-	process.exit(1);
-}
 
 // --- Subcommands ---
 
@@ -100,7 +76,7 @@ const runCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to create Tracer job");
-			handleTracerError(error);
+			handleError(error, { domain: "Tracer" });
 		}
 	},
 });
@@ -162,7 +138,7 @@ const statusCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to fetch Tracer job status");
-			handleTracerError(error);
+			handleError(error, { domain: "Tracer" });
 		}
 	},
 });
@@ -208,15 +184,9 @@ const streamCommand = defineCommand({
 			);
 
 			if (!response.ok || !response.body) {
-				const status = response.status;
-				if (status === 401 || status === 403) {
-					console.error("Authentication failed — run `nia auth login` to authenticate.");
-				} else if (status === 404) {
-					console.error("Tracer job not found. Check the job ID and try again.");
-				} else {
-					console.error(`Stream request failed with status ${status}`);
-				}
-				process.exit(1);
+				const err = new Error(`Stream request failed with status ${response.status}`);
+				(err as Error & { status: number }).status = response.status;
+				throw err;
 			}
 
 			spinner.stop("Streaming Tracer job events");
@@ -252,7 +222,7 @@ const streamCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to stream Tracer job");
-			handleTracerError(error);
+			handleError(error, { domain: "Tracer" });
 		}
 	},
 });
@@ -323,7 +293,7 @@ const listCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to fetch Tracer jobs");
-			handleTracerError(error);
+			handleError(error, { domain: "Tracer" });
 		}
 	},
 });
@@ -365,7 +335,7 @@ const deleteCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to delete Tracer job");
-			handleTracerError(error);
+			handleError(error, { domain: "Tracer" });
 		}
 	},
 });

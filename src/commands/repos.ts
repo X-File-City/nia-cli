@@ -2,34 +2,10 @@ import { defineCommand } from "@crustjs/core";
 import type { CodeGrepRequest, RepositoryRequest } from "nia-ai-ts";
 import { V2ApiRepositoriesService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
+import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
 import { createSpinner } from "../utils/spinner.ts";
-
-/**
- * Shared error handler for repos commands.
- * Maps common SDK errors to user-friendly messages.
- */
-function handleReposError(error: unknown): never {
-	const status = (error as { status?: number }).status;
-	const message = (error as Error).message ?? String(error);
-
-	if (status === 401 || status === 403) {
-		console.error("Authentication failed — run `nia auth login` to authenticate.");
-	} else if (status === 404) {
-		console.error("Repository not found. Check the repository ID and try again.");
-	} else if (status === 422) {
-		console.error(`Validation error: ${message}`);
-	} else if (status === 429) {
-		console.error("Rate limited — try again in a moment.");
-	} else if (status && status >= 500) {
-		console.error(`Server error (${status}) — try again later.`);
-	} else {
-		console.error(`Operation failed: ${message}`);
-	}
-
-	process.exit(1);
-}
 
 // --- Subcommands ---
 
@@ -96,7 +72,7 @@ const indexCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Indexing failed");
-			handleReposError(error);
+			handleError(error, { domain: "Repository" });
 		}
 	},
 });
@@ -145,7 +121,7 @@ const listCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("List failed");
-			handleReposError(error);
+			handleError(error, { domain: "Repository" });
 		}
 	},
 });
@@ -206,7 +182,7 @@ const statusCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Status check failed");
-			handleReposError(error);
+			handleError(error, { domain: "Repository" });
 		}
 	},
 });
@@ -242,7 +218,7 @@ const deleteCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Delete failed");
-			handleReposError(error);
+			handleError(error, { domain: "Repository" });
 		}
 	},
 });
@@ -287,7 +263,7 @@ const renameCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Rename failed");
-			handleReposError(error);
+			handleError(error, { domain: "Repository" });
 		}
 	},
 });
@@ -357,7 +333,7 @@ const readCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Read failed");
-			handleReposError(error);
+			handleError(error, { domain: "Repository" });
 		}
 	},
 });
@@ -478,7 +454,7 @@ const grepCommand = defineCommand({
 			fmt.output(result);
 		} catch (error) {
 			spinner.stop("Grep failed");
-			handleReposError(error);
+			handleError(error, { domain: "Repository" });
 		}
 	},
 });
@@ -569,7 +545,7 @@ const treeCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Tree failed");
-			handleReposError(error);
+			handleError(error, { domain: "Repository" });
 		}
 	},
 });

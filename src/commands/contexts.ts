@@ -2,6 +2,7 @@ import { defineCommand } from "@crustjs/core";
 import type { ContextShareRequest, ContextShareUpdateRequest } from "nia-ai-ts";
 import { V2ApiContextsService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
+import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
 import { createSpinner } from "../utils/spinner.ts";
@@ -10,31 +11,6 @@ import { createSpinner } from "../utils/spinner.ts";
  * Valid memory types for context sharing.
  */
 const VALID_MEMORY_TYPES = ["scratchpad", "episodic", "fact", "procedural"] as const;
-
-/**
- * Shared error handler for context commands.
- * Maps common SDK errors to user-friendly messages.
- */
-function handleContextsError(error: unknown): never {
-	const status = (error as { status?: number }).status;
-	const message = (error as Error).message ?? String(error);
-
-	if (status === 401 || status === 403) {
-		console.error("Authentication failed — run `nia auth login` to authenticate.");
-	} else if (status === 404) {
-		console.error("Context not found. Check the context ID and try again.");
-	} else if (status === 422) {
-		console.error(`Validation error: ${message}`);
-	} else if (status === 429) {
-		console.error("Rate limited — try again in a moment.");
-	} else if (status && status >= 500) {
-		console.error(`Server error (${status}) — try again later.`);
-	} else {
-		console.error(`Context operation failed: ${message}`);
-	}
-
-	process.exit(1);
-}
 
 /**
  * Validate memory type against allowed values.
@@ -175,7 +151,7 @@ const saveCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to save context");
-			handleContextsError(error);
+			handleError(error, { domain: "Context" });
 		}
 	},
 });
@@ -268,7 +244,7 @@ const listCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to fetch contexts");
-			handleContextsError(error);
+			handleError(error, { domain: "Context" });
 		}
 	},
 });
@@ -346,7 +322,7 @@ const searchCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Search failed");
-			handleContextsError(error);
+			handleError(error, { domain: "Context" });
 		}
 	},
 });
@@ -444,7 +420,7 @@ const semanticCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Semantic search failed");
-			handleContextsError(error);
+			handleError(error, { domain: "Context" });
 		}
 	},
 });
@@ -507,7 +483,7 @@ const getCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to fetch context");
-			handleContextsError(error);
+			handleError(error, { domain: "Context" });
 		}
 	},
 });
@@ -620,7 +596,7 @@ const updateCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to update context");
-			handleContextsError(error);
+			handleError(error, { domain: "Context" });
 		}
 	},
 });
@@ -660,7 +636,7 @@ const deleteCommand = defineCommand({
 			}
 		} catch (error) {
 			spinner.stop("Failed to delete context");
-			handleContextsError(error);
+			handleError(error, { domain: "Context" });
 		}
 	},
 });
