@@ -5,6 +5,7 @@ import { resolveBaseUrl } from "../services/config.ts";
 import { createSdk } from "../services/sdk.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
+import { checkFirstRun, promptOptional, requireArg } from "../utils/prompts.ts";
 import { createSpinner } from "../utils/spinner.ts";
 import { renderStream, renderStreamEvent } from "../utils/streaming.ts";
 
@@ -46,8 +47,7 @@ const jobCommand = defineCommand({
 		{
 			name: "query",
 			type: "string",
-			description: "Research question to investigate",
-			required: true,
+			description: "Research question (prompted interactively if omitted in a TTY)",
 		},
 	] as const,
 	flags: {
@@ -70,8 +70,32 @@ const jobCommand = defineCommand({
 	},
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
+		await checkFirstRun(global.apiKey);
+
 		const fmt = createFormatter({ output: global.output, color: global.color });
 		const spinner = createSpinner({ color: global.color });
+
+		// Interactive mode: prompt for missing required arg and optional fields
+		const query = await requireArg(args.query, {
+			name: "query",
+			message: "Research question to investigate:",
+		});
+
+		let repos = flags.repos;
+		if (!repos) {
+			repos =
+				(await promptOptional({
+					message: "Repositories to search (comma-separated, optional):",
+				})) ?? undefined;
+		}
+
+		let outputFormat = flags["output-format"];
+		if (!outputFormat) {
+			outputFormat =
+				(await promptOptional({
+					message: "Output format hint (optional):",
+				})) ?? undefined;
+		}
 
 		spinner.start("Creating Oracle research job...");
 
@@ -79,17 +103,17 @@ const jobCommand = defineCommand({
 			const sdk = await createSdk({ apiKey: global.apiKey });
 
 			const payload: Record<string, unknown> = {
-				query: args.query,
+				query,
 			};
 
-			if (flags.repos) {
-				payload.repositories = flags.repos.split(",").map((s) => s.trim());
+			if (repos) {
+				payload.repositories = repos.split(",").map((s) => s.trim());
 			}
 			if (flags.docs) {
 				payload.data_sources = flags.docs.split(",").map((s) => s.trim());
 			}
-			if (flags["output-format"]) {
-				payload.output_format = flags["output-format"];
+			if (outputFormat) {
+				payload.output_format = outputFormat;
 			}
 			if (flags.model) {
 				payload.model = flags.model;

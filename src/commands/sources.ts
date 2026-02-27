@@ -4,6 +4,7 @@ import { V2ApiDataSourcesService, V2ApiSourcesService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
+import { checkFirstRun, promptOptional, promptSelect, requireArg } from "../utils/prompts.ts";
 import { createSpinner } from "../utils/spinner.ts";
 
 /**
@@ -68,8 +69,7 @@ const indexCommand = defineCommand({
 		{
 			name: "url",
 			type: "string",
-			description: "URL to index",
-			required: true,
+			description: "URL to index (prompted interactively if omitted in a TTY)",
 		},
 	] as const,
 	flags: {
@@ -104,8 +104,39 @@ const indexCommand = defineCommand({
 	},
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
+		await checkFirstRun(global.apiKey);
+
 		const fmt = createFormatter({ output: global.output, color: global.color });
 		const spinner = createSpinner({ color: global.color });
+
+		// Interactive mode: prompt for missing required arg and optional fields
+		const url = await requireArg(args.url, {
+			name: "url",
+			message: "URL to index:",
+			validate: (v) => {
+				try {
+					new URL(v);
+					return true;
+				} catch {
+					return "Please enter a valid URL (e.g., https://docs.example.com)";
+				}
+			},
+		});
+
+		let displayName = flags.name;
+		if (!displayName) {
+			displayName = (await promptOptional({ message: "Display name (optional):" })) ?? undefined;
+		}
+
+		const sourceType = await promptSelect({
+			message: "Source type:",
+			choices: [
+				{ label: "Documentation", value: "documentation" as const },
+				{ label: "Repository", value: "repository" as const },
+				{ label: "Research Paper", value: "research_paper" as const },
+				{ label: "HuggingFace Dataset", value: "huggingface_dataset" as const },
+			],
+		});
 
 		spinner.start("Indexing source...");
 
@@ -113,11 +144,14 @@ const indexCommand = defineCommand({
 			const sdk = await createSdk({ apiKey: global.apiKey });
 
 			const params: Record<string, unknown> = {
-				url: args.url,
+				url,
 			};
 
-			if (flags.name) {
-				params.display_name = flags.name;
+			if (displayName) {
+				params.display_name = displayName;
+			}
+			if (sourceType) {
+				params.type = sourceType;
 			}
 			if (flags.branch) {
 				params.branch = flags.branch;
