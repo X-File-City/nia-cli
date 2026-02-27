@@ -43,7 +43,9 @@ export async function writeConfig(config: NiaConfig): Promise<void> {
 /**
  * Update a single config value atomically.
  */
-export async function updateConfig(updater: (current: NiaConfig) => NiaConfig): Promise<void> {
+export async function updateConfig(
+	updater: (current: NiaConfig) => NiaConfig,
+): Promise<void> {
 	return store.update(updater);
 }
 
@@ -104,7 +106,9 @@ export function maskApiKey(key: string | undefined): string {
  *
  * Returns undefined if no key is found anywhere.
  */
-export async function resolveApiKey(override?: string): Promise<string | undefined> {
+export async function resolveApiKey(
+	override?: string,
+): Promise<string | undefined> {
 	if (override) {
 		return override;
 	}

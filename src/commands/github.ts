@@ -1,5 +1,9 @@
 import { defineCommand } from "@crustjs/core";
-import type { GitHubGlobRequest, GitHubReadRequest, GitHubSearchRequest } from "nia-ai-ts";
+import type {
+	GitHubGlobRequest,
+	GitHubReadRequest,
+	GitHubSearchRequest,
+} from "nia-ai-ts";
 import { GithubSearchService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
@@ -68,7 +72,8 @@ const globCommand = defineCommand({
 				payload.ref = flags.ref;
 			}
 
-			const result = await GithubSearchService.githubGlobV2GithubGlobPost(payload);
+			const result =
+				await GithubSearchService.githubGlobV2GithubGlobPost(payload);
 
 			spinner.stop("Files found");
 
@@ -105,7 +110,8 @@ const globCommand = defineCommand({
 const readCommand = defineCommand({
 	meta: {
 		name: "read",
-		description: "Read a file from a GitHub repository with optional line range",
+		description:
+			"Read a file from a GitHub repository with optional line range",
 	},
 	args: [
 		{
@@ -160,7 +166,8 @@ const readCommand = defineCommand({
 				payload.end_line = flags.end;
 			}
 
-			const result = await GithubSearchService.githubReadV2GithubReadPost(payload);
+			const result =
+				await GithubSearchService.githubReadV2GithubReadPost(payload);
 
 			spinner.stop("File content retrieved");
 
@@ -240,7 +247,8 @@ const searchCommand = defineCommand({
 				payload.page = flags.page;
 			}
 
-			const result = await GithubSearchService.githubCodeSearchV2GithubSearchPost(payload);
+			const result =
+				await GithubSearchService.githubCodeSearchV2GithubSearchPost(payload);
 
 			spinner.stop("Search complete");
 
@@ -257,7 +265,9 @@ const searchCommand = defineCommand({
 							const path = entry.path ?? entry.file ?? entry.name ?? "";
 							console.log(`${path}`);
 							if (entry.text_matches && Array.isArray(entry.text_matches)) {
-								for (const match of entry.text_matches as Array<Record<string, unknown>>) {
+								for (const match of entry.text_matches as Array<
+									Record<string, unknown>
+								>) {
 									if (match.fragment) {
 										console.log(`  ${match.fragment}`);
 									}
@@ -314,12 +324,13 @@ const treeCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await GithubSearchService.githubTreeV2GithubTreeOwnerRepoGet(
-				owner,
-				repo,
-				flags.ref ?? undefined,
-				flags.path ?? undefined,
-			);
+			const result =
+				await GithubSearchService.githubTreeV2GithubTreeOwnerRepoGet(
+					owner,
+					repo,
+					flags.ref ?? undefined,
+					flags.path ?? undefined,
+				);
 
 			spinner.stop("Tree retrieved");
 

@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock SDK ---
 
@@ -147,9 +151,12 @@ mock.module("nia-ai-ts", () => ({
 	V2ApiDataSourcesService: {
 		indexResearchPaperV2V2ResearchPapersPost: mockIndexResearchPaper,
 		listResearchPapersV2V2ResearchPapersGet: mockListResearchPapers,
-		indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost: mockIndexHuggingfaceDataset,
-		listHuggingfaceDatasetsV2V2HuggingfaceDatasetsGet: mockListHuggingfaceDatasets,
-		assignDataSourceCategoryV2DataSourcesSourceIdCategoryPatch: mockAssignDataSourceCategory,
+		indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost:
+			mockIndexHuggingfaceDataset,
+		listHuggingfaceDatasetsV2V2HuggingfaceDatasetsGet:
+			mockListHuggingfaceDatasets,
+		assignDataSourceCategoryV2DataSourcesSourceIdCategoryPatch:
+			mockAssignDataSourceCategory,
 	},
 	V2ApiCategoriesService: {
 		listCategoriesV2CategoriesGet: mockListCategories,
@@ -245,9 +252,10 @@ describe("papers, datasets, and categories commands", () => {
 		test("returns paper source info on success", async () => {
 			await createSdk();
 
-			const result = await V2ApiDataSourcesService.indexResearchPaperV2V2ResearchPapersPost({
-				url: "2312.00752",
-			});
+			const result =
+				await V2ApiDataSourcesService.indexResearchPaperV2V2ResearchPapersPost({
+					url: "2312.00752",
+				});
 
 			expect(result.id).toBe("paper-src-001");
 			expect(result.title).toBe("Attention Is All You Need");
@@ -285,7 +293,9 @@ describe("papers, datasets, and categories commands", () => {
 		test("passes status filter", async () => {
 			await createSdk();
 
-			await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet("completed");
+			await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet(
+				"completed",
+			);
 
 			expect(mockListResearchPapers).toHaveBeenCalledWith("completed");
 		});
@@ -293,7 +303,11 @@ describe("papers, datasets, and categories commands", () => {
 		test("passes limit and offset", async () => {
 			await createSdk();
 
-			await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet(undefined, 10, 5);
+			await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet(
+				undefined,
+				10,
+				5,
+			);
 
 			expect(mockListResearchPapers).toHaveBeenCalledWith(undefined, 10, 5);
 		});
@@ -301,7 +315,8 @@ describe("papers, datasets, and categories commands", () => {
 		test("returns papers list", async () => {
 			await createSdk();
 
-			const result = await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet();
+			const result =
+				await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet();
 
 			expect(result.papers ?? []).toHaveLength(2);
 			expect(result.total).toBe(2);
@@ -332,9 +347,11 @@ describe("papers, datasets, and categories commands", () => {
 		test("calls indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost with identifier", async () => {
 			await createSdk();
 
-			await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost({
-				url: "dair-ai/emotion",
-			});
+			await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
+				{
+					url: "dair-ai/emotion",
+				},
+			);
 
 			expect(mockIndexHuggingfaceDataset).toHaveBeenCalledTimes(1);
 			expect(mockIndexHuggingfaceDataset).toHaveBeenCalledWith({
@@ -345,9 +362,11 @@ describe("papers, datasets, and categories commands", () => {
 		test("calls indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost with full URL", async () => {
 			await createSdk();
 
-			await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost({
-				url: "https://huggingface.co/datasets/squad",
-			});
+			await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
+				{
+					url: "https://huggingface.co/datasets/squad",
+				},
+			);
 
 			expect(mockIndexHuggingfaceDataset).toHaveBeenCalledWith({
 				url: "https://huggingface.co/datasets/squad",
@@ -357,10 +376,12 @@ describe("papers, datasets, and categories commands", () => {
 		test("passes config name for multi-config datasets", async () => {
 			await createSdk();
 
-			await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost({
-				url: "dair-ai/emotion",
-				config: "split",
-			});
+			await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
+				{
+					url: "dair-ai/emotion",
+					config: "split",
+				},
+			);
 
 			expect(mockIndexHuggingfaceDataset).toHaveBeenCalledWith({
 				url: "dair-ai/emotion",
@@ -371,10 +392,12 @@ describe("papers, datasets, and categories commands", () => {
 		test("passes add_as_global_source=false when private", async () => {
 			await createSdk();
 
-			await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost({
-				url: "dair-ai/emotion",
-				add_as_global_source: false,
-			});
+			await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
+				{
+					url: "dair-ai/emotion",
+					add_as_global_source: false,
+				},
+			);
 
 			expect(mockIndexHuggingfaceDataset).toHaveBeenCalledWith({
 				url: "dair-ai/emotion",
@@ -386,9 +409,11 @@ describe("papers, datasets, and categories commands", () => {
 			await createSdk();
 
 			const result =
-				await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost({
-					url: "dair-ai/emotion",
-				});
+				await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
+					{
+						url: "dair-ai/emotion",
+					},
+				);
 
 			expect(result.id).toBe("dataset-src-001");
 			expect(result.dataset_id).toBe("dair-ai/emotion");
@@ -403,9 +428,11 @@ describe("papers, datasets, and categories commands", () => {
 			await createSdk();
 
 			try {
-				await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost({
-					url: "invalid-url",
-				});
+				await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
+					{
+						url: "invalid-url",
+					},
+				);
 				expect(false).toBe(true);
 			} catch (error) {
 				expect((error as { status: number }).status).toBe(422);
@@ -425,7 +452,9 @@ describe("papers, datasets, and categories commands", () => {
 		test("passes status filter", async () => {
 			await createSdk();
 
-			await V2ApiDataSourcesService.listHuggingfaceDatasetsV2V2HuggingfaceDatasetsGet("completed");
+			await V2ApiDataSourcesService.listHuggingfaceDatasetsV2V2HuggingfaceDatasetsGet(
+				"completed",
+			);
 
 			expect(mockListHuggingfaceDatasets).toHaveBeenCalledWith("completed");
 		});
@@ -439,7 +468,11 @@ describe("papers, datasets, and categories commands", () => {
 				5,
 			);
 
-			expect(mockListHuggingfaceDatasets).toHaveBeenCalledWith(undefined, 10, 5);
+			expect(mockListHuggingfaceDatasets).toHaveBeenCalledWith(
+				undefined,
+				10,
+				5,
+			);
 		});
 
 		test("returns datasets list", async () => {
@@ -493,7 +526,8 @@ describe("papers, datasets, and categories commands", () => {
 		test("returns categories list with total", async () => {
 			await createSdk();
 
-			const result = await V2ApiCategoriesService.listCategoriesV2CategoriesGet();
+			const result =
+				await V2ApiCategoriesService.listCategoriesV2CategoriesGet();
 
 			expect(result.categories ?? []).toHaveLength(2);
 			expect(result.total).toBe(2);
@@ -535,9 +569,10 @@ describe("papers, datasets, and categories commands", () => {
 		test("returns created category", async () => {
 			await createSdk();
 
-			const result = await V2ApiCategoriesService.createCategoryV2CategoriesPost({
-				name: "DevOps",
-			});
+			const result =
+				await V2ApiCategoriesService.createCategoryV2CategoriesPost({
+					name: "DevOps",
+				});
 
 			expect(result.id).toBe("cat-003");
 			expect(result.name).toBe("DevOps");
@@ -547,7 +582,10 @@ describe("papers, datasets, and categories commands", () => {
 
 		test("handles validation error", async () => {
 			mockCreateCategory.mockImplementationOnce(() =>
-				Promise.reject({ status: 422, message: "Category name already exists" }),
+				Promise.reject({
+					status: 422,
+					message: "Category name already exists",
+				}),
 			);
 
 			await createSdk();
@@ -567,9 +605,12 @@ describe("papers, datasets, and categories commands", () => {
 		test("calls updateCategoryV2CategoriesCategoryIdPatch with name", async () => {
 			await createSdk();
 
-			await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch("cat-001", {
-				name: "Frontend Updated",
-			});
+			await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch(
+				"cat-001",
+				{
+					name: "Frontend Updated",
+				},
+			);
 
 			expect(mockUpdateCategory).toHaveBeenCalledTimes(1);
 			expect(mockUpdateCategory).toHaveBeenCalledWith("cat-001", {
@@ -580,10 +621,13 @@ describe("papers, datasets, and categories commands", () => {
 		test("passes color and order", async () => {
 			await createSdk();
 
-			await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch("cat-001", {
-				color: "#E74C3C",
-				order: 5,
-			});
+			await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch(
+				"cat-001",
+				{
+					color: "#E74C3C",
+					order: 5,
+				},
+			);
 
 			expect(mockUpdateCategory).toHaveBeenCalledWith("cat-001", {
 				color: "#E74C3C",
@@ -594,12 +638,13 @@ describe("papers, datasets, and categories commands", () => {
 		test("returns updated category", async () => {
 			await createSdk();
 
-			const result = await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch(
-				"cat-001",
-				{
-					name: "Frontend Updated",
-				},
-			);
+			const result =
+				await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch(
+					"cat-001",
+					{
+						name: "Frontend Updated",
+					},
+				);
 
 			expect(result.id).toBe("cat-001");
 			expect(result.name).toBe("Frontend Updated");
@@ -615,9 +660,12 @@ describe("papers, datasets, and categories commands", () => {
 			await createSdk();
 
 			try {
-				await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch("nonexistent", {
-					name: "Test",
-				});
+				await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch(
+					"nonexistent",
+					{
+						name: "Test",
+					},
+				);
 				expect(false).toBe(true);
 			} catch (error) {
 				expect((error as { status: number }).status).toBe(404);
@@ -629,7 +677,9 @@ describe("papers, datasets, and categories commands", () => {
 		test("calls deleteCategoryV2CategoriesCategoryIdDelete with category ID", async () => {
 			await createSdk();
 
-			await V2ApiCategoriesService.deleteCategoryV2CategoriesCategoryIdDelete("cat-001");
+			await V2ApiCategoriesService.deleteCategoryV2CategoriesCategoryIdDelete(
+				"cat-001",
+			);
 
 			expect(mockDeleteCategory).toHaveBeenCalledTimes(1);
 			expect(mockDeleteCategory).toHaveBeenCalledWith("cat-001");
@@ -639,7 +689,9 @@ describe("papers, datasets, and categories commands", () => {
 			await createSdk();
 
 			const result =
-				await V2ApiCategoriesService.deleteCategoryV2CategoriesCategoryIdDelete("cat-001");
+				await V2ApiCategoriesService.deleteCategoryV2CategoriesCategoryIdDelete(
+					"cat-001",
+				);
 
 			expect(result).toEqual({ success: true });
 		});
@@ -652,7 +704,9 @@ describe("papers, datasets, and categories commands", () => {
 			await createSdk();
 
 			try {
-				await V2ApiCategoriesService.deleteCategoryV2CategoriesCategoryIdDelete("nonexistent");
+				await V2ApiCategoriesService.deleteCategoryV2CategoriesCategoryIdDelete(
+					"nonexistent",
+				);
 				expect(false).toBe(true);
 			} catch (error) {
 				expect((error as { status: number }).status).toBe(404);
@@ -753,9 +807,11 @@ describe("papers, datasets, and categories commands", () => {
 			await createSdk();
 
 			try {
-				await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost({
-					url: "dair-ai/emotion",
-				});
+				await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
+					{
+						url: "dair-ai/emotion",
+					},
+				);
 				expect(false).toBe(true);
 			} catch (error) {
 				expect((error as { status: number }).status).toBe(403);
@@ -817,7 +873,11 @@ describe("papers, datasets, and categories commands", () => {
 		test("papers list maps status/limit/offset as positional params", async () => {
 			await createSdk();
 
-			await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet("completed", 20, 10);
+			await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet(
+				"completed",
+				20,
+				10,
+			);
 
 			expect(mockListResearchPapers).toHaveBeenCalledWith("completed", 20, 10);
 		});
@@ -825,10 +885,12 @@ describe("papers, datasets, and categories commands", () => {
 		test("datasets index maps dataset arg to url and config to config field", async () => {
 			await createSdk();
 
-			await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost({
-				url: "dair-ai/emotion",
-				config: "default",
-			});
+			await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
+				{
+					url: "dair-ai/emotion",
+					config: "default",
+				},
+			);
 
 			expect(mockIndexHuggingfaceDataset).toHaveBeenCalledWith({
 				url: "dair-ai/emotion",
@@ -855,10 +917,13 @@ describe("papers, datasets, and categories commands", () => {
 		test("categories update maps id arg and partial update body to CategoryUpdate", async () => {
 			await createSdk();
 
-			await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch("cat-002", {
-				name: "Backend Services",
-				color: null,
-			});
+			await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch(
+				"cat-002",
+				{
+					name: "Backend Services",
+					color: null,
+				},
+			);
 
 			expect(mockUpdateCategory).toHaveBeenCalledWith("cat-002", {
 				name: "Backend Services",

@@ -26,7 +26,11 @@ export interface FormatterOptions {
 export function resolveOutputFormat(output?: string): OutputFormat {
 	if (output) {
 		const normalized = output.toLowerCase();
-		if (normalized === "json" || normalized === "table" || normalized === "text") {
+		if (
+			normalized === "json" ||
+			normalized === "table" ||
+			normalized === "text"
+		) {
 			return normalized;
 		}
 		// Invalid format — fall through to auto-detection
@@ -125,7 +129,11 @@ export class Formatter {
 			return `${prefix}${this.style.dim("(none)")}`;
 		}
 
-		if (typeof data === "string" || typeof data === "number" || typeof data === "boolean") {
+		if (
+			typeof data === "string" ||
+			typeof data === "number" ||
+			typeof data === "boolean"
+		) {
 			return `${prefix}${String(data)}`;
 		}
 
@@ -141,7 +149,9 @@ export class Formatter {
 
 			// Array of objects — format each
 			return data
-				.map((item, i) => `${prefix}[${i}]\n${this.formatText(item, indent + 1)}`)
+				.map(
+					(item, i) => `${prefix}[${i}]\n${this.formatText(item, indent + 1)}`,
+				)
 				.join("\n");
 		}
 

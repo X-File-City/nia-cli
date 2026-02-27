@@ -48,7 +48,7 @@ describe("streaming utilities", () => {
 			test("outputs event as JSON line when not a TTY", () => {
 				renderStreamEvent({ type: "content", data: "hello" });
 				expect(logOutput.length).toBe(1);
-				const parsed = JSON.parse(logOutput[0]!);
+				const parsed = JSON.parse(logOutput[0] as string);
 				expect(parsed.type).toBe("content");
 				expect(parsed.data).toBe("hello");
 			});
@@ -62,7 +62,7 @@ describe("streaming utilities", () => {
 				};
 				renderStreamEvent(event);
 				expect(logOutput.length).toBe(1);
-				const parsed = JSON.parse(logOutput[0]!);
+				const parsed = JSON.parse(logOutput[0] as string);
 				expect(parsed.type).toBe("status");
 				expect(parsed.progress).toBe(42);
 				expect(parsed.items).toEqual(["a", "b"]);
@@ -72,7 +72,7 @@ describe("streaming utilities", () => {
 				renderStreamEvent({ type: "error", content: "failure" });
 				expect(logOutput.length).toBe(1);
 				// Should be valid JSON with no ANSI codes
-				const raw = logOutput[0]!;
+				const raw = logOutput[0] as string;
 				expect(raw).not.toContain("\x1b[");
 				JSON.parse(raw); // Should not throw
 			});
@@ -272,7 +272,10 @@ describe("streaming utilities", () => {
 			});
 
 			test("renders with color disabled", () => {
-				renderStreamEvent({ type: "error", content: "failure" }, { color: false });
+				renderStreamEvent(
+					{ type: "error", content: "failure" },
+					{ color: false },
+				);
 				expect(logOutput.length).toBe(1);
 				// Should contain the content but without ANSI codes
 				expect(logOutput[0]).toContain("failure");
@@ -332,13 +335,13 @@ describe("streaming utilities", () => {
 			await renderStream(mockStream());
 			expect(logOutput.length).toBe(3);
 
-			const first = JSON.parse(logOutput[0]!);
+			const first = JSON.parse(logOutput[0] as string);
 			expect(first.type).toBe("thinking");
 
-			const second = JSON.parse(logOutput[1]!);
+			const second = JSON.parse(logOutput[1] as string);
 			expect(second.type).toBe("content");
 
-			const third = JSON.parse(logOutput[2]!);
+			const third = JSON.parse(logOutput[2] as string);
 			expect(third.type).toBe("done");
 		});
 
@@ -432,7 +435,7 @@ describe("streaming utilities", () => {
 
 			await renderStream(singleEventStream());
 			expect(logOutput.length).toBe(1);
-			const parsed = JSON.parse(logOutput[0]!);
+			const parsed = JSON.parse(logOutput[0] as string);
 			expect(parsed.data).toBe("answer");
 		});
 	});

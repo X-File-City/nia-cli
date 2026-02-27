@@ -10,15 +10,26 @@ import { createSpinner } from "../utils/spinner.ts";
 /**
  * Valid memory types for context sharing.
  */
-const VALID_MEMORY_TYPES = ["scratchpad", "episodic", "fact", "procedural"] as const;
+const VALID_MEMORY_TYPES = [
+	"scratchpad",
+	"episodic",
+	"fact",
+	"procedural",
+] as const;
 
 /**
  * Validate memory type against allowed values.
  * Returns the validated value or exits with an error.
  */
-function validateMemoryType(value: string): "scratchpad" | "episodic" | "fact" | "procedural" {
-	if (!VALID_MEMORY_TYPES.includes(value as (typeof VALID_MEMORY_TYPES)[number])) {
-		console.error(`Invalid memory type: "${value}". Allowed: ${VALID_MEMORY_TYPES.join(", ")}`);
+function validateMemoryType(
+	value: string,
+): "scratchpad" | "episodic" | "fact" | "procedural" {
+	if (
+		!VALID_MEMORY_TYPES.includes(value as (typeof VALID_MEMORY_TYPES)[number])
+	) {
+		console.error(
+			`Invalid memory type: "${value}". Allowed: ${VALID_MEMORY_TYPES.join(", ")}`,
+		);
 		process.exit(1);
 	}
 	return value as "scratchpad" | "episodic" | "fact" | "procedural";
@@ -65,7 +76,8 @@ const saveCommand = defineCommand({
 		},
 		content: {
 			type: "string",
-			description: "Full content of the context (required, use '-' to read from stdin)",
+			description:
+				"Full content of the context (required, use '-' to read from stdin)",
 			required: true,
 		},
 		agent: {
@@ -126,13 +138,16 @@ const saveCommand = defineCommand({
 				payload.tags = flags.tags.split(",").map((s) => s.trim());
 			}
 			if (flags["memory-type"]) {
-				payload.memory_type = flags["memory-type"] as ContextShareRequest["memory_type"];
+				payload.memory_type = flags[
+					"memory-type"
+				] as ContextShareRequest["memory_type"];
 			}
 			if (flags.ttl !== undefined) {
 				payload.ttl_seconds = flags.ttl;
 			}
 
-			const result = await V2ApiContextsService.saveContextV2V2ContextsPost(payload);
+			const result =
+				await V2ApiContextsService.saveContextV2V2ContextsPost(payload);
 
 			spinner.stop("Context saved");
 
@@ -181,7 +196,8 @@ const listCommand = defineCommand({
 		},
 		"memory-type": {
 			type: "string",
-			description: "Filter by memory type: scratchpad, episodic, fact, procedural",
+			description:
+				"Filter by memory type: scratchpad, episodic, fact, procedural",
 		},
 	},
 	async run({ flags }) {
@@ -212,7 +228,9 @@ const listCommand = defineCommand({
 			// In text/table mode, format as a table
 			if (global.output !== "json") {
 				const response = result as Record<string, unknown>;
-				const items = (response.items ?? response.contexts ?? []) as Array<Record<string, unknown>>;
+				const items = (response.items ?? response.contexts ?? []) as Array<
+					Record<string, unknown>
+				>;
 
 				if (items.length === 0) {
 					console.log("No contexts found.");
@@ -231,12 +249,16 @@ const listCommand = defineCommand({
 				}
 
 				// Show pagination info
-				const pagination = response.pagination as Record<string, unknown> | undefined;
+				const pagination = response.pagination as
+					| Record<string, unknown>
+					| undefined;
 				if (pagination) {
 					const total = pagination.total ?? response.total;
 					const hasMore = pagination.has_more;
 					if (total !== undefined) {
-						console.log(`\nTotal: ${total}${hasMore ? " (more available)" : ""}`);
+						console.log(
+							`\nTotal: ${total}${hasMore ? " (more available)" : ""}`,
+						);
 					}
 				}
 			} else {
@@ -286,18 +308,21 @@ const searchCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiContextsService.searchContextsV2V2ContextsSearchGet(
-				args.query,
-				flags.limit ?? undefined,
-				flags.tags ?? undefined,
-				flags.agent ?? undefined,
-			);
+			const result =
+				await V2ApiContextsService.searchContextsV2V2ContextsSearchGet(
+					args.query,
+					flags.limit ?? undefined,
+					flags.tags ?? undefined,
+					flags.agent ?? undefined,
+				);
 
 			spinner.stop("Search complete");
 
 			if (global.output !== "json") {
 				const response = result as Record<string, unknown>;
-				const contexts = (response.contexts ?? []) as Array<Record<string, unknown>>;
+				const contexts = (response.contexts ?? []) as Array<
+					Record<string, unknown>
+				>;
 
 				if (contexts.length === 0) {
 					console.log("No matching contexts found.");
@@ -364,18 +389,21 @@ const semanticCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiContextsService.semanticSearchContextsV2V2ContextsSemanticSearchGet(
-				args.query,
-				flags.limit ?? undefined,
-				flags.highlights ?? undefined,
-				flags.workspace ?? undefined,
-			);
+			const result =
+				await V2ApiContextsService.semanticSearchContextsV2V2ContextsSemanticSearchGet(
+					args.query,
+					flags.limit ?? undefined,
+					flags.highlights ?? undefined,
+					flags.workspace ?? undefined,
+				);
 
 			spinner.stop("Semantic search complete");
 
 			if (global.output !== "json") {
 				const response = result as Record<string, unknown>;
-				const results = (response.results ?? []) as Array<Record<string, unknown>>;
+				const results = (response.results ?? []) as Array<
+					Record<string, unknown>
+				>;
 
 				if (results.length === 0) {
 					console.log("No matching contexts found.");
@@ -393,7 +421,9 @@ const semanticCommand = defineCommand({
 				}
 
 				// Show search metadata
-				const metadata = response.search_metadata as Record<string, unknown> | undefined;
+				const metadata = response.search_metadata as
+					| Record<string, unknown>
+					| undefined;
 				if (metadata) {
 					const parts: string[] = [];
 					if (metadata.total_results !== undefined) {
@@ -408,7 +438,9 @@ const semanticCommand = defineCommand({
 				}
 
 				// Show suggestions
-				const suggestions = response.suggestions as Record<string, unknown> | undefined;
+				const suggestions = response.suggestions as
+					| Record<string, unknown>
+					| undefined;
 				if (suggestions) {
 					const tips = suggestions.tips as string[] | undefined;
 					if (tips && tips.length > 0) {
@@ -449,7 +481,8 @@ const getCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiContextsService.getContextV2V2ContextsContextIdGet(args.id);
+			const result =
+				await V2ApiContextsService.getContextV2V2ContextsContextIdGet(args.id);
 
 			spinner.stop("Context retrieved");
 
@@ -562,7 +595,9 @@ const updateCommand = defineCommand({
 			hasUpdate = true;
 		}
 		if (flags["memory-type"]) {
-			payload.memory_type = flags["memory-type"] as ContextShareUpdateRequest["memory_type"];
+			payload.memory_type = flags[
+				"memory-type"
+			] as ContextShareUpdateRequest["memory_type"];
 			hasUpdate = true;
 		}
 
@@ -578,10 +613,11 @@ const updateCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
-				args.id,
-				payload,
-			);
+			const result =
+				await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
+					args.id,
+					payload,
+				);
 
 			spinner.stop("Context updated");
 
@@ -625,7 +661,10 @@ const deleteCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete(args.id);
+			const result =
+				await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete(
+					args.id,
+				);
 
 			spinner.stop("Context deleted");
 

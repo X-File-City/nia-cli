@@ -53,7 +53,9 @@ const indexCommand = defineCommand({
 			}
 
 			const result =
-				await V2ApiDataSourcesService.indexResearchPaperV2V2ResearchPapersPost(payload);
+				await V2ApiDataSourcesService.indexResearchPaperV2V2ResearchPapersPost(
+					payload,
+				);
 
 			spinner.stop("Paper indexed");
 
@@ -113,18 +115,21 @@ const listCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet(
-				flags.status ?? undefined,
-				flags.limit ?? undefined,
-				flags.offset ?? undefined,
-			);
+			const result =
+				await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet(
+					flags.status ?? undefined,
+					flags.limit ?? undefined,
+					flags.offset ?? undefined,
+				);
 
 			spinner.stop("Papers loaded");
 
 			// In text mode, show as table
 			if (global.output !== "json") {
 				const data = result as Record<string, unknown>;
-				const papers = (data.papers ?? data.items ?? []) as Array<Record<string, unknown>>;
+				const papers = (data.papers ?? data.items ?? []) as Array<
+					Record<string, unknown>
+				>;
 
 				if (papers.length === 0) {
 					console.log("No research papers found.");
@@ -135,7 +140,9 @@ const listCommand = defineCommand({
 						status: p.status ?? "",
 						created: p.created_at ?? "",
 					}));
-					console.log(fmt.formatTable(rows, ["title", "id", "status", "created"]));
+					console.log(
+						fmt.formatTable(rows, ["title", "id", "status", "created"]),
+					);
 
 					if (data.total !== undefined) {
 						console.log(`\nTotal: ${data.total} papers`);

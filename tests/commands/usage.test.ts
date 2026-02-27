@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock SDK ---
 
@@ -144,7 +148,8 @@ describe("usage command", () => {
 		test("handles limited usage entries formatting", () => {
 			const entry = { used: 42, limit: 100, unlimited: false };
 
-			const pct = entry.limit > 0 ? Math.round((entry.used / entry.limit) * 100) : 0;
+			const pct =
+				entry.limit > 0 ? Math.round((entry.used / entry.limit) * 100) : 0;
 			const display = `${entry.used}/${entry.limit} (${pct}%)`;
 			expect(display).toBe("42/100 (42%)");
 		});
@@ -164,7 +169,10 @@ describe("usage command", () => {
 			await createSdk();
 			const result = await V2ApiService.getUsageSummaryV2V2UsageGet();
 
-			const usage = (result as Record<string, unknown>).usage as Record<string, unknown>;
+			const usage = (result as Record<string, unknown>).usage as Record<
+				string,
+				unknown
+			>;
 			expect(Object.keys(usage).length).toBe(0);
 		});
 
@@ -199,24 +207,32 @@ describe("usage command", () => {
 
 			await createSdk();
 
-			await expect(V2ApiService.getUsageSummaryV2V2UsageGet()).rejects.toThrow("Unauthorized");
+			await expect(V2ApiService.getUsageSummaryV2V2UsageGet()).rejects.toThrow(
+				"Unauthorized",
+			);
 		});
 
 		test("handles 429 rate limit error", async () => {
 			mockGetUsage.mockImplementationOnce(() => {
-				const error = new Error("Too Many Requests") as Error & { status: number };
+				const error = new Error("Too Many Requests") as Error & {
+					status: number;
+				};
 				error.status = 429;
 				return Promise.reject(error);
 			});
 
 			await createSdk();
 
-			await expect(V2ApiService.getUsageSummaryV2V2UsageGet()).rejects.toThrow("Too Many Requests");
+			await expect(V2ApiService.getUsageSummaryV2V2UsageGet()).rejects.toThrow(
+				"Too Many Requests",
+			);
 		});
 
 		test("handles 500 server error", async () => {
 			mockGetUsage.mockImplementationOnce(() => {
-				const error = new Error("Internal Server Error") as Error & { status: number };
+				const error = new Error("Internal Server Error") as Error & {
+					status: number;
+				};
 				error.status = 500;
 				return Promise.reject(error);
 			});

@@ -88,12 +88,20 @@ function extractContent(event: Record<string, unknown>): string | null {
 /**
  * Render a single event to the TTY with formatting.
  */
-function renderTTYEvent(style: StyleInstance, eventType: string, content: string): void {
+function renderTTYEvent(
+	style: StyleInstance,
+	eventType: string,
+	content: string,
+): void {
 	const typeLabel = formatEventType(style, eventType);
 
 	// For streaming text content (like oracle research output),
 	// write directly without newline to allow progressive text assembly
-	if (eventType === "content" || eventType === "text" || eventType === "delta") {
+	if (
+		eventType === "content" ||
+		eventType === "text" ||
+		eventType === "delta"
+	) {
 		process.stdout.write(content);
 		return;
 	}

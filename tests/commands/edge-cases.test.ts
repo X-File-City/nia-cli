@@ -15,16 +15,24 @@ import {
 const mockCreateSources = mock(() =>
 	Promise.resolve({ id: "src_123", status: "processing", name: "Test" }),
 );
-const mockListSources = mock(() => Promise.resolve({ items: [], pagination: { total: 0 } }));
-const mockResolveSources = mock(() => Promise.resolve({ id: "src_123", name: "Test" }));
+const mockListSources = mock(() =>
+	Promise.resolve({ items: [], pagination: { total: 0 } }),
+);
+const mockResolveSources = mock(() =>
+	Promise.resolve({ id: "src_123", name: "Test" }),
+);
 const mockSaveContext = mock(() =>
 	Promise.resolve({ id: "ctx_123", title: "Test", memory_type: "episodic" }),
 );
 const mockListContexts = mock(() =>
 	Promise.resolve({ items: [], pagination: { total: 0, has_more: false } }),
 );
-const mockUpdateContext = mock(() => Promise.resolve({ id: "ctx_123", title: "Updated" }));
-const mockSearchContexts = mock(() => Promise.resolve({ contexts: [], total_results: 0 }));
+const mockUpdateContext = mock(() =>
+	Promise.resolve({ id: "ctx_123", title: "Updated" }),
+);
+const mockSearchContexts = mock(() =>
+	Promise.resolve({ contexts: [], total_results: 0 }),
+);
 const mockSemanticSearch = mock(() =>
 	Promise.resolve({ results: [], search_metadata: {}, suggestions: {} }),
 );
@@ -33,7 +41,9 @@ const mockGetContext = mock(() =>
 );
 const mockDeleteContext = mock(() => Promise.resolve({ success: true }));
 
-const mockCreateJob = mock(() => Promise.resolve({ job_id: "job_123", session_id: "sess_456" }));
+const mockCreateJob = mock(() =>
+	Promise.resolve({ job_id: "job_123", session_id: "sess_456" }),
+);
 const mockGetJob = mock(() =>
 	Promise.resolve({ job_id: "job_123", status: "completed", query: "test" }),
 );
@@ -66,16 +76,26 @@ mock.module("nia-ai-ts", () => ({
 		deleteContextV2V2ContextsContextIdDelete: mockDeleteContext,
 	},
 	V2ApiSourcesService: {
-		getSourceV2SourcesSourceIdGet: mock(() => Promise.resolve({ id: "src_123" })),
-		updateSourceV2SourcesSourceIdPatch: mock(() => Promise.resolve({ id: "src_123" })),
-		deleteSourceV2SourcesSourceIdDelete: mock(() => Promise.resolve({ success: true })),
+		getSourceV2SourcesSourceIdGet: mock(() =>
+			Promise.resolve({ id: "src_123" }),
+		),
+		updateSourceV2SourcesSourceIdPatch: mock(() =>
+			Promise.resolve({ id: "src_123" }),
+		),
+		deleteSourceV2SourcesSourceIdDelete: mock(() =>
+			Promise.resolve({ success: true }),
+		),
 	},
 	V2ApiDataSourcesService: {
-		renameDataSourceV2V2DataSourcesRenamePatch: mock(() => Promise.resolve({ success: true })),
+		renameDataSourceV2V2DataSourcesRenamePatch: mock(() =>
+			Promise.resolve({ success: true }),
+		),
 		readDocumentationFileV2V2DataSourcesSourceIdReadGet: mock(() =>
 			Promise.resolve({ content: "file content" }),
 		),
-		grepDocumentationV2V2DataSourcesSourceIdGrepPost: mock(() => Promise.resolve({ matches: [] })),
+		grepDocumentationV2V2DataSourcesSourceIdGrepPost: mock(() =>
+			Promise.resolve({ matches: [] }),
+		),
 		getDocumentationTreeV2V2DataSourcesSourceIdTreeGet: mock(() =>
 			Promise.resolve({ tree_string: "." }),
 		),
@@ -84,14 +104,20 @@ mock.module("nia-ai-ts", () => ({
 		),
 	},
 	DefaultService: {
-		cancelOracleJobV2OracleJobsJobIdDelete: mock(() => Promise.resolve({ success: true })),
+		cancelOracleJobV2OracleJobsJobIdDelete: mock(() =>
+			Promise.resolve({ success: true }),
+		),
 		listOracleJobsV2OracleJobsGet: mock(() => Promise.resolve([])),
 		listOracleSessionsV2OracleSessionsGet: mock(() => Promise.resolve([])),
-		getOracleSessionDetailV2OracleSessionsSessionIdGet: mock(() => Promise.resolve({})),
+		getOracleSessionDetailV2OracleSessionsSessionIdGet: mock(() =>
+			Promise.resolve({}),
+		),
 		deleteOracleSessionV2OracleSessionsSessionIdDelete: mock(() =>
 			Promise.resolve({ success: true }),
 		),
-		getOracleSessionMessagesV2OracleSessionsSessionIdMessagesGet: mock(() => Promise.resolve([])),
+		getOracleSessionMessagesV2OracleSessionsSessionIdMessagesGet: mock(() =>
+			Promise.resolve([]),
+		),
 	},
 }));
 
@@ -139,7 +165,15 @@ describe("edge cases", () => {
 		});
 
 		test("rejects invalid source types", () => {
-			const invalidTypes = ["repo", "doc", "paper", "dataset", "folder", "", "REPOSITORY"];
+			const invalidTypes = [
+				"repo",
+				"doc",
+				"paper",
+				"dataset",
+				"folder",
+				"",
+				"REPOSITORY",
+			];
 			for (const type of invalidTypes) {
 				expect(VALID_SOURCE_TYPES.includes(type)).toBe(false);
 			}
@@ -164,7 +198,14 @@ describe("edge cases", () => {
 		});
 
 		test("rejects invalid memory types", () => {
-			const invalidTypes = ["scratch", "episode", "facts", "procedure", "", "SCRATCHPAD"];
+			const invalidTypes = [
+				"scratch",
+				"episode",
+				"facts",
+				"procedure",
+				"",
+				"SCRATCHPAD",
+			];
 			for (const type of invalidTypes) {
 				expect(VALID_MEMORY_TYPES.includes(type)).toBe(false);
 			}
@@ -182,7 +223,13 @@ describe("edge cases", () => {
 	// --- Registry validation ---
 
 	describe("registry validation", () => {
-		const VALID_REGISTRIES = ["npm", "py_pi", "crates_io", "golang_proxy", "ruby_gems"];
+		const VALID_REGISTRIES = [
+			"npm",
+			"py_pi",
+			"crates_io",
+			"golang_proxy",
+			"ruby_gems",
+		];
 
 		test("accepts all valid registries", () => {
 			for (const reg of VALID_REGISTRIES) {
@@ -191,7 +238,14 @@ describe("edge cases", () => {
 		});
 
 		test("rejects common mistakes", () => {
-			const invalidRegistries = ["pypi", "crates", "go", "npm.js", "rubygems", "NPM"];
+			const invalidRegistries = [
+				"pypi",
+				"crates",
+				"go",
+				"npm.js",
+				"rubygems",
+				"NPM",
+			];
 			for (const reg of invalidRegistries) {
 				expect(VALID_REGISTRIES.includes(reg)).toBe(false);
 			}
@@ -201,7 +255,13 @@ describe("edge cases", () => {
 	// --- Oracle status validation ---
 
 	describe("oracle status validation", () => {
-		const VALID_STATUSES = ["queued", "running", "completed", "failed", "cancelled"];
+		const VALID_STATUSES = [
+			"queued",
+			"running",
+			"completed",
+			"failed",
+			"cancelled",
+		];
 
 		test("accepts all valid statuses", () => {
 			for (const status of VALID_STATUSES) {
@@ -210,7 +270,13 @@ describe("edge cases", () => {
 		});
 
 		test("rejects invalid statuses", () => {
-			const invalidStatuses = ["pending", "done", "error", "canceled", "RUNNING"];
+			const invalidStatuses = [
+				"pending",
+				"done",
+				"error",
+				"canceled",
+				"RUNNING",
+			];
 			for (const status of invalidStatuses) {
 				expect(VALID_STATUSES.includes(status)).toBe(false);
 			}
@@ -220,7 +286,15 @@ describe("edge cases", () => {
 	// --- Web search category validation ---
 
 	describe("web search category validation", () => {
-		const VALID_CATEGORIES = ["github", "company", "research", "news", "tweet", "pdf", "blog"];
+		const VALID_CATEGORIES = [
+			"github",
+			"company",
+			"research",
+			"news",
+			"tweet",
+			"pdf",
+			"blog",
+		];
 
 		test("accepts all valid categories", () => {
 			for (const cat of VALID_CATEGORIES) {
@@ -229,7 +303,14 @@ describe("edge cases", () => {
 		});
 
 		test("rejects invalid categories", () => {
-			const invalidCategories = ["code", "api", "docs", "repo", "article", "GITHUB"];
+			const invalidCategories = [
+				"code",
+				"api",
+				"docs",
+				"repo",
+				"article",
+				"GITHUB",
+			];
 			for (const cat of invalidCategories) {
 				expect(VALID_CATEGORIES.includes(cat)).toBe(false);
 			}
@@ -283,8 +364,14 @@ describe("edge cases", () => {
 
 	describe("update requires at least one field", () => {
 		test("contexts update with no fields should be rejected", () => {
-			const flags = { title: undefined, summary: undefined, content: undefined, tags: undefined };
-			const hasUpdate = !!flags.title || !!flags.summary || !!flags.content || !!flags.tags;
+			const flags = {
+				title: undefined,
+				summary: undefined,
+				content: undefined,
+				tags: undefined,
+			};
+			const hasUpdate =
+				!!flags.title || !!flags.summary || !!flags.content || !!flags.tags;
 			expect(hasUpdate).toBe(false);
 		});
 
@@ -295,7 +382,8 @@ describe("edge cases", () => {
 				content: undefined,
 				tags: undefined,
 			};
-			const hasUpdate = !!flags.title || !!flags.summary || !!flags.content || !!flags.tags;
+			const hasUpdate =
+				!!flags.title || !!flags.summary || !!flags.content || !!flags.tags;
 			expect(hasUpdate).toBe(true);
 		});
 
@@ -313,7 +401,8 @@ describe("edge cases", () => {
 
 		test("categories update requires --name, --color, or --order", () => {
 			const flags = { name: undefined, color: undefined, order: undefined };
-			const hasUpdate = !!flags.name || !!flags.color || flags.order !== undefined;
+			const hasUpdate =
+				!!flags.name || !!flags.color || flags.order !== undefined;
 			expect(hasUpdate).toBe(false);
 		});
 	});
@@ -517,16 +606,21 @@ describe("edge cases", () => {
 				"This is a very long research query that should be truncated at 60 characters to fit in the table";
 			const maxLen = 60;
 			const truncated =
-				longQuery.length > maxLen ? `${longQuery.slice(0, maxLen - 3)}...` : longQuery;
+				longQuery.length > maxLen
+					? `${longQuery.slice(0, maxLen - 3)}...`
+					: longQuery;
 			expect(truncated.length).toBeLessThanOrEqual(maxLen);
 			expect(truncated).toContain("...");
 		});
 
 		test("title truncation at 40 chars for contexts list", () => {
-			const longTitle = "This is a very long context title that exceeds forty characters";
+			const longTitle =
+				"This is a very long context title that exceeds forty characters";
 			const maxLen = 40;
 			const truncated =
-				longTitle.length > maxLen ? `${longTitle.slice(0, maxLen - 3)}...` : longTitle;
+				longTitle.length > maxLen
+					? `${longTitle.slice(0, maxLen - 3)}...`
+					: longTitle;
 			expect(truncated.length).toBeLessThanOrEqual(maxLen);
 			expect(truncated).toContain("...");
 		});
@@ -535,7 +629,9 @@ describe("edge cases", () => {
 			const shortTitle = "Short";
 			const maxLen = 40;
 			const truncated =
-				shortTitle.length > maxLen ? `${shortTitle.slice(0, maxLen - 3)}...` : shortTitle;
+				shortTitle.length > maxLen
+					? `${shortTitle.slice(0, maxLen - 3)}...`
+					: shortTitle;
 			expect(truncated).toBe("Short");
 			expect(truncated).not.toContain("...");
 		});
@@ -586,7 +682,11 @@ describe("edge cases", () => {
 			const queryArg = "auth flow,token validation,session management";
 			const semanticQueries = queryArg.split(",").map((s) => s.trim());
 			expect(semanticQueries).toHaveLength(3);
-			expect(semanticQueries).toEqual(["auth flow", "token validation", "session management"]);
+			expect(semanticQueries).toEqual([
+				"auth flow",
+				"token validation",
+				"session management",
+			]);
 		});
 
 		test("category assign with 'null' string sends null", () => {

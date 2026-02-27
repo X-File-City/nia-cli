@@ -28,31 +28,49 @@ describe("resolveOutputFormat", () => {
 
 	test("defaults to 'json' when no format specified and not TTY", () => {
 		const origIsTTY = process.stdout.isTTY;
-		Object.defineProperty(process.stdout, "isTTY", { value: false, configurable: true });
+		Object.defineProperty(process.stdout, "isTTY", {
+			value: false,
+			configurable: true,
+		});
 		try {
 			expect(resolveOutputFormat()).toBe("json");
 		} finally {
-			Object.defineProperty(process.stdout, "isTTY", { value: origIsTTY, configurable: true });
+			Object.defineProperty(process.stdout, "isTTY", {
+				value: origIsTTY,
+				configurable: true,
+			});
 		}
 	});
 
 	test("defaults to 'text' when no format specified and is TTY", () => {
 		const origIsTTY = process.stdout.isTTY;
-		Object.defineProperty(process.stdout, "isTTY", { value: true, configurable: true });
+		Object.defineProperty(process.stdout, "isTTY", {
+			value: true,
+			configurable: true,
+		});
 		try {
 			expect(resolveOutputFormat()).toBe("text");
 		} finally {
-			Object.defineProperty(process.stdout, "isTTY", { value: origIsTTY, configurable: true });
+			Object.defineProperty(process.stdout, "isTTY", {
+				value: origIsTTY,
+				configurable: true,
+			});
 		}
 	});
 
 	test("falls through to auto-detection for invalid format", () => {
 		const origIsTTY = process.stdout.isTTY;
-		Object.defineProperty(process.stdout, "isTTY", { value: false, configurable: true });
+		Object.defineProperty(process.stdout, "isTTY", {
+			value: false,
+			configurable: true,
+		});
 		try {
 			expect(resolveOutputFormat("invalid")).toBe("json");
 		} finally {
-			Object.defineProperty(process.stdout, "isTTY", { value: origIsTTY, configurable: true });
+			Object.defineProperty(process.stdout, "isTTY", {
+				value: origIsTTY,
+				configurable: true,
+			});
 		}
 	});
 });
@@ -302,7 +320,7 @@ describe("Formatter output method", () => {
 		const fmt = new Formatter({ output: "json", color: false });
 		fmt.output({ name: "test" });
 		expect(logOutput.length).toBe(1);
-		const parsed = JSON.parse(logOutput[0]!);
+		const parsed = JSON.parse(logOutput[0] as string);
 		expect(parsed.name).toBe("test");
 	});
 
@@ -318,7 +336,7 @@ describe("Formatter output method", () => {
 		const fmt = new Formatter({ output: "table", color: false });
 		fmt.output([{ name: "Alice", age: "30" }]);
 		expect(logOutput.length).toBe(1);
-		const plain = stripAnsi(logOutput[0]!);
+		const plain = stripAnsi(logOutput[0] as string);
 		expect(plain).toContain("Alice");
 	});
 
@@ -326,7 +344,7 @@ describe("Formatter output method", () => {
 		const fmt = new Formatter({ output: "table", color: false });
 		fmt.output({ name: "single" });
 		expect(logOutput.length).toBe(1);
-		const plain = stripAnsi(logOutput[0]!);
+		const plain = stripAnsi(logOutput[0] as string);
 		expect(plain).toContain("single");
 	});
 });

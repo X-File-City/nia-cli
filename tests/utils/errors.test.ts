@@ -17,7 +17,11 @@ const originalArgv = process.argv;
 // Import the actual error classes
 import { CrustError } from "@crustjs/core";
 import { ApiError, NiaSDKError, NiaTimeoutError } from "nia-ai-ts";
-import { findClosestMatch, handleError, withErrorHandling } from "../../src/utils/errors.ts";
+import {
+	findClosestMatch,
+	handleError,
+	withErrorHandling,
+} from "../../src/utils/errors.ts";
 
 describe("error handling", () => {
 	let consoleErrorOutput: string[];
@@ -46,16 +50,20 @@ describe("error handling", () => {
 	// --- ApiError handling ---
 
 	describe("ApiError handling", () => {
-		function createApiError(status: number, message: string, body?: unknown): ApiError {
+		function createApiError(
+			status: number,
+			message: string,
+			body?: unknown,
+		): ApiError {
 			// biome-ignore lint/suspicious/noExplicitAny: test mock for ApiError constructor params
 			const request = { method: "GET", url: "/test" } as any;
-			// biome-ignore lint/suspicious/noExplicitAny: test mock for ApiError constructor params
 			const response = {
 				url: "/test",
 				ok: false,
 				status,
 				statusText: message,
 				body: body ?? {},
+				// biome-ignore lint/suspicious/noExplicitAny: test mock for ApiError constructor params
 			} as any;
 			return new ApiError(request, response, message);
 		}
@@ -65,8 +73,12 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Authentication failed"))).toBe(true);
-			expect(consoleErrorOutput.some((s) => s.includes("nia auth login"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Authentication failed")),
+			).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("nia auth login"))).toBe(
+				true,
+			);
 		});
 
 		test("handles 403 forbidden error", () => {
@@ -74,7 +86,9 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Authentication failed"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Authentication failed")),
+			).toBe(true);
 		});
 
 		test("handles 404 not found error with domain", () => {
@@ -82,9 +96,11 @@ describe("error handling", () => {
 			try {
 				handleError(error, { domain: "Repository" });
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Repository resource not found"))).toBe(
-				true,
-			);
+			expect(
+				consoleErrorOutput.some((s) =>
+					s.includes("Repository resource not found"),
+				),
+			).toBe(true);
 		});
 
 		test("handles 404 not found error without domain", () => {
@@ -92,7 +108,9 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Resource not found"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Resource not found")),
+			).toBe(true);
 		});
 
 		test("handles 422 validation error with detail body", () => {
@@ -102,8 +120,12 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Validation error"))).toBe(true);
-			expect(consoleErrorOutput.some((s) => s.includes("Invalid URL format"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Validation error")),
+			).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Invalid URL format")),
+			).toBe(true);
 		});
 
 		test("handles 422 validation error with detail array", () => {
@@ -116,7 +138,9 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Validation error"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Validation error")),
+			).toBe(true);
 			expect(consoleErrorOutput.some((s) => s.includes("body"))).toBe(true);
 		});
 
@@ -125,7 +149,9 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Rate limited"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Rate limited"))).toBe(
+				true,
+			);
 		});
 
 		test("handles 500 server error", () => {
@@ -133,7 +159,9 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Server error (500)"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Server error (500)")),
+			).toBe(true);
 		});
 
 		test("handles 502 server error", () => {
@@ -141,7 +169,9 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Server error (502)"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Server error (502)")),
+			).toBe(true);
 		});
 
 		test("handles unknown status code with domain", () => {
@@ -149,7 +179,9 @@ describe("error handling", () => {
 			try {
 				handleError(error, { domain: "Search" });
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Search failed"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Search failed"))).toBe(
+				true,
+			);
 			expect(consoleErrorOutput.some((s) => s.includes("418"))).toBe(true);
 		});
 
@@ -161,8 +193,12 @@ describe("error handling", () => {
 			try {
 				handleError(error, { verbose: true });
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Response body"))).toBe(true);
-			expect(consoleErrorOutput.some((s) => s.includes("Something went wrong"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Response body"))).toBe(
+				true,
+			);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Something went wrong")),
+			).toBe(true);
 		});
 
 		test("shows stack trace in verbose mode", () => {
@@ -170,7 +206,9 @@ describe("error handling", () => {
 			try {
 				handleError(error, { verbose: true });
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(
+				true,
+			);
 		});
 	});
 
@@ -182,8 +220,12 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Request timed out"))).toBe(true);
-			expect(consoleErrorOutput.some((s) => s.includes("Try again later"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Request timed out")),
+			).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Try again later")),
+			).toBe(true);
 		});
 
 		test("shows details in verbose mode", () => {
@@ -204,8 +246,12 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("SDK error"))).toBe(true);
-			expect(consoleErrorOutput.some((s) => s.includes("SDK connection failed"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("SDK error"))).toBe(
+				true,
+			);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("SDK connection failed")),
+			).toBe(true);
 		});
 
 		test("shows stack trace in verbose mode", () => {
@@ -213,7 +259,9 @@ describe("error handling", () => {
 			try {
 				handleError(error, { verbose: true });
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(
+				true,
+			);
 		});
 	});
 
@@ -221,34 +269,52 @@ describe("error handling", () => {
 
 	describe("CrustError handling", () => {
 		test("handles COMMAND_NOT_FOUND with suggestion", () => {
-			const error = new CrustError("COMMAND_NOT_FOUND", 'Unknown command: "serch"', {
-				input: "serch",
-				available: ["search", "sources", "repos"],
-				commandPath: ["nia"],
-				// biome-ignore lint/suspicious/noExplicitAny: test mock
-				parentCommand: {} as any,
-			});
+			const error = new CrustError(
+				"COMMAND_NOT_FOUND",
+				'Unknown command: "serch"',
+				{
+					input: "serch",
+					available: ["search", "sources", "repos"],
+					commandPath: ["nia"],
+					// biome-ignore lint/suspicious/noExplicitAny: test mock
+					parentCommand: {} as any,
+				},
+			);
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes('Unknown command: "serch"'))).toBe(true);
-			expect(consoleErrorOutput.some((s) => s.includes('Did you mean "search"'))).toBe(true);
-			expect(consoleErrorOutput.some((s) => s.includes("Available commands"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes('Unknown command: "serch"')),
+			).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes('Did you mean "search"')),
+			).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Available commands")),
+			).toBe(true);
 		});
 
 		test("handles COMMAND_NOT_FOUND without close match", () => {
-			const error = new CrustError("COMMAND_NOT_FOUND", 'Unknown command: "xyz"', {
-				input: "xyz",
-				available: ["search", "sources", "repos"],
-				commandPath: ["nia"],
-				// biome-ignore lint/suspicious/noExplicitAny: test mock
-				parentCommand: {} as any,
-			});
+			const error = new CrustError(
+				"COMMAND_NOT_FOUND",
+				'Unknown command: "xyz"',
+				{
+					input: "xyz",
+					available: ["search", "sources", "repos"],
+					commandPath: ["nia"],
+					// biome-ignore lint/suspicious/noExplicitAny: test mock
+					parentCommand: {} as any,
+				},
+			);
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes('Unknown command: "xyz"'))).toBe(true);
-			expect(consoleErrorOutput.some((s) => s.includes("Available commands"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes('Unknown command: "xyz"')),
+			).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Available commands")),
+			).toBe(true);
 			// Should not have a "Did you mean" suggestion for completely different input
 		});
 
@@ -259,8 +325,12 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Missing required"))).toBe(true);
-			expect(consoleErrorOutput.some((s) => s.includes("query is required"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Missing required")),
+			).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("query is required")),
+			).toBe(true);
 		});
 
 		test("handles VALIDATION without details", () => {
@@ -268,7 +338,11 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Missing required arguments"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) =>
+					s.includes("Missing required arguments"),
+				),
+			).toBe(true);
 		});
 
 		test("handles PARSE error", () => {
@@ -276,16 +350,25 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Invalid arguments"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Invalid arguments")),
+			).toBe(true);
 			expect(consoleErrorOutput.some((s) => s.includes("--foo"))).toBe(true);
 		});
 
 		test("handles DEFINITION error", () => {
-			const error = new CrustError("DEFINITION", "Command name cannot be empty");
+			const error = new CrustError(
+				"DEFINITION",
+				"Command name cannot be empty",
+			);
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Command name cannot be empty"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) =>
+					s.includes("Command name cannot be empty"),
+				),
+			).toBe(true);
 		});
 
 		test("handles EXECUTION error", () => {
@@ -293,7 +376,9 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Runtime execution error"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Runtime execution error")),
+			).toBe(true);
 		});
 	});
 
@@ -305,7 +390,9 @@ describe("error handling", () => {
 			try {
 				handleError(error);
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Something went wrong"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Something went wrong")),
+			).toBe(true);
 		});
 
 		test("handles plain Error with domain", () => {
@@ -313,8 +400,12 @@ describe("error handling", () => {
 			try {
 				handleError(error, { domain: "Oracle" });
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Oracle failed"))).toBe(true);
-			expect(consoleErrorOutput.some((s) => s.includes("Connection refused"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Oracle failed"))).toBe(
+				true,
+			);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Connection refused")),
+			).toBe(true);
 		});
 
 		test("handles Error with status property", () => {
@@ -322,14 +413,18 @@ describe("error handling", () => {
 			try {
 				handleError(error, { domain: "Source" });
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Source resource not found"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("Source resource not found")),
+			).toBe(true);
 		});
 
 		test("handles non-Error thrown value (string)", () => {
 			try {
 				handleError("unexpected string error");
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("unexpected string error"))).toBe(true);
+			expect(
+				consoleErrorOutput.some((s) => s.includes("unexpected string error")),
+			).toBe(true);
 		});
 
 		test("handles non-Error thrown value (number)", () => {
@@ -351,7 +446,9 @@ describe("error handling", () => {
 			try {
 				handleError(error, { verbose: true });
 			} catch {}
-			expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(true);
+			expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(
+				true,
+			);
 		});
 	});
 
@@ -381,7 +478,15 @@ describe("error handling", () => {
 // --- findClosestMatch ---
 
 describe("findClosestMatch", () => {
-	const commands = ["search", "sources", "repos", "oracle", "tracer", "contexts", "packages"];
+	const commands = [
+		"search",
+		"sources",
+		"repos",
+		"oracle",
+		"tracer",
+		"contexts",
+		"packages",
+	];
 
 	test("finds exact match", () => {
 		expect(findClosestMatch("search", commands)).toBe("search");
@@ -454,8 +559,12 @@ describe("withErrorHandling", () => {
 				throw new Error("API call failed");
 			});
 		} catch {}
-		expect(consoleErrorOutput.some((s) => s.includes("Search failed"))).toBe(true);
-		expect(consoleErrorOutput.some((s) => s.includes("API call failed"))).toBe(true);
+		expect(consoleErrorOutput.some((s) => s.includes("Search failed"))).toBe(
+			true,
+		);
+		expect(consoleErrorOutput.some((s) => s.includes("API call failed"))).toBe(
+			true,
+		);
 	});
 
 	test("uses verbose from --verbose flag", async () => {
@@ -465,7 +574,9 @@ describe("withErrorHandling", () => {
 				throw new Error("API call failed");
 			});
 		} catch {}
-		expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(true);
+		expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(
+			true,
+		);
 	});
 
 	test("does not show stack trace without --verbose", async () => {
@@ -475,19 +586,21 @@ describe("withErrorHandling", () => {
 				throw new Error("API call failed");
 			});
 		} catch {}
-		expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(false);
+		expect(consoleErrorOutput.some((s) => s.includes("Stack trace"))).toBe(
+			false,
+		);
 	});
 
 	test("handles ApiError through withErrorHandling", async () => {
 		// biome-ignore lint/suspicious/noExplicitAny: test mock for ApiError constructor params
 		const request = { method: "GET", url: "/test" } as any;
-		// biome-ignore lint/suspicious/noExplicitAny: test mock for ApiError constructor params
 		const response = {
 			url: "/test",
 			ok: false,
 			status: 429,
 			statusText: "Too Many Requests",
 			body: {},
+			// biome-ignore lint/suspicious/noExplicitAny: test mock for ApiError constructor params
 		} as any;
 		const apiError = new ApiError(request, response, "Too Many Requests");
 
@@ -496,6 +609,8 @@ describe("withErrorHandling", () => {
 				throw apiError;
 			});
 		} catch {}
-		expect(consoleErrorOutput.some((s) => s.includes("Rate limited"))).toBe(true);
+		expect(consoleErrorOutput.some((s) => s.includes("Rate limited"))).toBe(
+			true,
+		);
 	});
 });

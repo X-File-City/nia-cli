@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock V2ApiRepositoriesService ---
 
@@ -42,7 +46,11 @@ const mockGrep = mock(() =>
 					content: 'import { defineCommand } from "@crustjs/core";',
 					match: "defineCommand",
 				},
-				{ line: 5, content: "const cmd = defineCommand({", match: "defineCommand" },
+				{
+					line: 5,
+					content: "const cmd = defineCommand({",
+					match: "defineCommand",
+				},
 			],
 			"src/commands/auth.ts": [
 				{
@@ -103,9 +111,15 @@ mock.module("nia-ai-ts", () => ({
 	V2ApiRepositoriesService: {
 		indexRepositoryV2V2RepositoriesPost: mock(() => Promise.resolve({})),
 		listRepositoriesV2V2RepositoriesGet: mock(() => Promise.resolve([])),
-		getRepositoryStatusV2V2RepositoriesRepositoryIdGet: mock(() => Promise.resolve({})),
-		deleteRepositoryV2V2RepositoriesRepositoryIdDelete: mock(() => Promise.resolve({})),
-		renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch: mock(() => Promise.resolve({})),
+		getRepositoryStatusV2V2RepositoriesRepositoryIdGet: mock(() =>
+			Promise.resolve({}),
+		),
+		deleteRepositoryV2V2RepositoriesRepositoryIdDelete: mock(() =>
+			Promise.resolve({}),
+		),
+		renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch: mock(() =>
+			Promise.resolve({}),
+		),
 		getRepositoryContentV2V2RepositoriesRepositoryIdContentGet: mockGetContent,
 		grepRepositoryV2V2RepositoriesRepositoryIdGrepPost: mockGrep,
 		getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet: mockGetTree,
@@ -170,7 +184,11 @@ describe("repos content commands", () => {
 				"canary",
 			);
 
-			expect(mockGetContent).toHaveBeenCalledWith("repo-001", "src/cli.ts", "canary");
+			expect(mockGetContent).toHaveBeenCalledWith(
+				"repo-001",
+				"src/cli.ts",
+				"canary",
+			);
 		});
 
 		test("passes ref parameter (takes precedence over branch)", async () => {
@@ -184,7 +202,12 @@ describe("repos content commands", () => {
 				"v3.0.0",
 			);
 
-			expect(mockGetContent).toHaveBeenCalledWith("repo-001", "src/cli.ts", undefined, "v3.0.0");
+			expect(mockGetContent).toHaveBeenCalledWith(
+				"repo-001",
+				"src/cli.ts",
+				undefined,
+				"v3.0.0",
+			);
 		});
 
 		test("passes both branch and ref parameters", async () => {
@@ -198,24 +221,30 @@ describe("repos content commands", () => {
 				"abc123",
 			);
 
-			expect(mockGetContent).toHaveBeenCalledWith("repo-001", "src/cli.ts", "canary", "abc123");
+			expect(mockGetContent).toHaveBeenCalledWith(
+				"repo-001",
+				"src/cli.ts",
+				"canary",
+				"abc123",
+			);
 		});
 
 		test("returns file content with success and metadata", async () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			const result = await svc.getRepositoryContentV2V2RepositoriesRepositoryIdContentGet(
-				"repo-001",
-				"src/cli.ts",
-			);
+			const result =
+				await svc.getRepositoryContentV2V2RepositoriesRepositoryIdContentGet(
+					"repo-001",
+					"src/cli.ts",
+				);
 
 			expect(result.success).toBe(true);
 			expect(result.content).toContain("defineCommand");
 			expect(result.content).toContain("hello");
 			expect(result.metadata).toBeDefined();
-			expect(result.metadata!.path).toBe("src/cli.ts");
-			expect(result.metadata!.language).toBe("TypeScript");
+			expect(result.metadata?.path).toBe("src/cli.ts");
+			expect(result.metadata?.language).toBe("TypeScript");
 			expect(result.error).toBeNull();
 		});
 
@@ -251,10 +280,11 @@ describe("repos content commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			const result = await svc.getRepositoryContentV2V2RepositoriesRepositoryIdContentGet(
-				"repo-001",
-				"large-file.bin",
-			);
+			const result =
+				await svc.getRepositoryContentV2V2RepositoriesRepositoryIdContentGet(
+					"repo-001",
+					"large-file.bin",
+				);
 
 			expect(result.success).toBe(false);
 			expect(result.error).toBe("File too large to display");
@@ -273,7 +303,9 @@ describe("repos content commands", () => {
 			});
 
 			expect(mockGrep).toHaveBeenCalledTimes(1);
-			expect(mockGrep).toHaveBeenCalledWith("repo-001", { pattern: "defineCommand" });
+			expect(mockGrep).toHaveBeenCalledWith("repo-001", {
+				pattern: "defineCommand",
+			});
 		});
 
 		test("passes path filter in CodeGrepRequest", async () => {
@@ -391,9 +423,13 @@ describe("repos content commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			const result = await svc.grepRepositoryV2V2RepositoriesRepositoryIdGrepPost("repo-001", {
-				pattern: "defineCommand",
-			});
+			const result =
+				await svc.grepRepositoryV2V2RepositoriesRepositoryIdGrepPost(
+					"repo-001",
+					{
+						pattern: "defineCommand",
+					},
+				);
 
 			expect(result.success).toBe(true);
 			expect(result.pattern).toBe("defineCommand");
@@ -402,8 +438,8 @@ describe("repos content commands", () => {
 			expect(result.files_with_matches).toBe(2);
 			expect(result.truncated).toBe(false);
 			expect(result.matches).toBeDefined();
-			expect(result.matches!["src/cli.ts"]).toHaveLength(2);
-			expect(result.matches!["src/commands/auth.ts"]).toHaveLength(1);
+			expect(result.matches?.["src/cli.ts"]).toHaveLength(2);
+			expect(result.matches?.["src/commands/auth.ts"]).toHaveLength(1);
 		});
 
 		test("passes all CodeGrepRequest fields together", async () => {
@@ -424,7 +460,10 @@ describe("repos content commands", () => {
 				exhaustive: true,
 			};
 
-			await svc.grepRepositoryV2V2RepositoriesRepositoryIdGrepPost("repo-001", fullRequest);
+			await svc.grepRepositoryV2V2RepositoriesRepositoryIdGrepPost(
+				"repo-001",
+				fullRequest,
+			);
 
 			expect(mockGrep).toHaveBeenCalledWith("repo-001", fullRequest);
 		});
@@ -440,7 +479,10 @@ describe("repos content commands", () => {
 					files_with_matches: 0 as number | undefined,
 					truncated: false as boolean | undefined,
 					options: undefined as Record<string, unknown> | undefined,
-					matches: {} as Record<string, Array<Record<string, unknown>>> | null | undefined,
+					matches: {} as
+						| Record<string, Array<Record<string, unknown>>>
+						| null
+						| undefined,
 					files: null as Array<string> | null | undefined,
 					counts: null as Record<string, number> | null | undefined,
 				}),
@@ -449,9 +491,13 @@ describe("repos content commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			const result = await svc.grepRepositoryV2V2RepositoriesRepositoryIdGrepPost("repo-001", {
-				pattern: "nonexistent_pattern_xyz",
-			});
+			const result =
+				await svc.grepRepositoryV2V2RepositoriesRepositoryIdGrepPost(
+					"repo-001",
+					{
+						pattern: "nonexistent_pattern_xyz",
+					},
+				);
 
 			expect(result.total_matches).toBe(0);
 			expect(result.files_with_matches).toBe(0);
@@ -465,7 +511,9 @@ describe("repos content commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			await svc.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet("repo-001");
+			await svc.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet(
+				"repo-001",
+			);
 
 			expect(mockGetTree).toHaveBeenCalledTimes(1);
 			expect(mockGetTree).toHaveBeenCalledWith("repo-001");
@@ -475,7 +523,10 @@ describe("repos content commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			await svc.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet("repo-001", "canary");
+			await svc.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet(
+				"repo-001",
+				"canary",
+			);
 
 			expect(mockGetTree).toHaveBeenCalledWith("repo-001", "canary");
 		});
@@ -551,7 +602,10 @@ describe("repos content commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			const result = await svc.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet("repo-001");
+			const result =
+				await svc.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet(
+					"repo-001",
+				);
 
 			expect(result.repository_id).toBe("repo-001");
 			expect(result.owner).toBe("vercel");
@@ -561,10 +615,10 @@ describe("repos content commands", () => {
 			expect(result.tree_text).toContain("cli.ts");
 			expect(result.tree_text).toContain("README.md");
 			expect(result.stats).toBeDefined();
-			expect(result.stats!.total_files).toBe(5);
-			expect(result.stats!.total_directories).toBe(2);
-			expect(result.stats!.file_extensions).toEqual({ ts: 3, json: 1, md: 1 });
-			expect(result.stats!.max_depth).toBe(2);
+			expect(result.stats?.total_files).toBe(5);
+			expect(result.stats?.total_directories).toBe(2);
+			expect(result.stats?.file_extensions).toEqual({ ts: 3, json: 1, md: 1 });
+			expect(result.stats?.max_depth).toBe(2);
 			expect(result.truncated).toBe(false);
 		});
 
@@ -572,14 +626,17 @@ describe("repos content commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			const result = await svc.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet("repo-001");
+			const result =
+				await svc.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet(
+					"repo-001",
+				);
 
 			expect(result.files).toHaveLength(5);
 			expect(result.directories).toHaveLength(2);
-			expect(result.files![0]!.path).toBe("src/cli.ts");
-			expect(result.files![0]!.type).toBe("blob");
-			expect(result.directories![0]!.path).toBe("src");
-			expect(result.directories![0]!.type).toBe("tree");
+			expect(result.files?.[0]?.path).toBe("src/cli.ts");
+			expect(result.files?.[0]?.type).toBe("blob");
+			expect(result.directories?.[0]?.path).toBe("src");
+			expect(result.directories?.[0]?.type).toBe("tree");
 		});
 
 		test("handles 404 when repository not found", async () => {
@@ -734,7 +791,10 @@ describe("repos content commands", () => {
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
 
 			await expect(
-				svc.getRepositoryContentV2V2RepositoriesRepositoryIdContentGet("repo-001", "test.ts"),
+				svc.getRepositoryContentV2V2RepositoriesRepositoryIdContentGet(
+					"repo-001",
+					"test.ts",
+				),
 			).rejects.toThrow("Unauthorized");
 		});
 
@@ -758,7 +818,9 @@ describe("repos content commands", () => {
 
 		test("handles 500 server error on tree", async () => {
 			mockGetTree.mockImplementationOnce(() => {
-				const error = new Error("Internal Server Error") as Error & { status: number };
+				const error = new Error("Internal Server Error") as Error & {
+					status: number;
+				};
 				error.status = 500;
 				return Promise.reject(error);
 			});

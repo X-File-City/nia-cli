@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock SDK ---
 
@@ -26,7 +30,9 @@ const mockGetJob = mock(() =>
 	} as Record<string, unknown>),
 );
 
-const mockCancelJob = mock(() => Promise.resolve({ success: true, message: "Job cancelled" }));
+const mockCancelJob = mock(() =>
+	Promise.resolve({ success: true, message: "Job cancelled" }),
+);
 
 const mockListJobs = mock(() =>
 	Promise.resolve([
@@ -105,7 +111,9 @@ describe("oracle commands", () => {
 			await sdk.oracle.createJob({ query: "How does auth work?" });
 
 			expect(mockCreateJob).toHaveBeenCalledTimes(1);
-			expect(mockCreateJob).toHaveBeenCalledWith({ query: "How does auth work?" });
+			expect(mockCreateJob).toHaveBeenCalledWith({
+				query: "How does auth work?",
+			});
 		});
 
 		test("passes repositories from --repos flag", async () => {
@@ -217,7 +225,9 @@ describe("oracle commands", () => {
 			const result = await sdk.oracle.getJob("job_abc123");
 
 			expect(result.status).toBe("completed");
-			expect(result.result).toEqual({ summary: "Authentication uses JWT tokens..." });
+			expect(result.result).toEqual({
+				summary: "Authentication uses JWT tokens...",
+			});
 			expect(result.completed_at).toBe("2026-01-15T10:02:30Z");
 		});
 
@@ -271,7 +281,10 @@ describe("oracle commands", () => {
 		test("returns success response", async () => {
 			await createSdk();
 
-			const result = await DefaultService.cancelOracleJobV2OracleJobsJobIdDelete("job_abc123");
+			const result =
+				await DefaultService.cancelOracleJobV2OracleJobsJobIdDelete(
+					"job_abc123",
+				);
 
 			expect(result).toEqual({ success: true, message: "Job cancelled" });
 		});
@@ -286,7 +299,9 @@ describe("oracle commands", () => {
 			await createSdk();
 
 			await expect(
-				DefaultService.cancelOracleJobV2OracleJobsJobIdDelete("job_nonexistent"),
+				DefaultService.cancelOracleJobV2OracleJobsJobIdDelete(
+					"job_nonexistent",
+				),
 			).rejects.toThrow("Not Found");
 		});
 	});
@@ -295,24 +310,44 @@ describe("oracle commands", () => {
 		test("calls DefaultService.listOracleJobsV2OracleJobsGet without filters", async () => {
 			await createSdk();
 
-			await DefaultService.listOracleJobsV2OracleJobsGet(undefined, undefined, undefined);
+			await DefaultService.listOracleJobsV2OracleJobsGet(
+				undefined,
+				undefined,
+				undefined,
+			);
 
 			expect(mockListJobs).toHaveBeenCalledTimes(1);
-			expect(mockListJobs).toHaveBeenCalledWith(undefined, undefined, undefined);
+			expect(mockListJobs).toHaveBeenCalledWith(
+				undefined,
+				undefined,
+				undefined,
+			);
 		});
 
 		test("passes status filter", async () => {
 			await createSdk();
 
-			await DefaultService.listOracleJobsV2OracleJobsGet("completed", undefined, undefined);
+			await DefaultService.listOracleJobsV2OracleJobsGet(
+				"completed",
+				undefined,
+				undefined,
+			);
 
-			expect(mockListJobs).toHaveBeenCalledWith("completed", undefined, undefined);
+			expect(mockListJobs).toHaveBeenCalledWith(
+				"completed",
+				undefined,
+				undefined,
+			);
 		});
 
 		test("passes limit parameter", async () => {
 			await createSdk();
 
-			await DefaultService.listOracleJobsV2OracleJobsGet(undefined, 10, undefined);
+			await DefaultService.listOracleJobsV2OracleJobsGet(
+				undefined,
+				10,
+				undefined,
+			);
 
 			expect(mockListJobs).toHaveBeenCalledWith(undefined, 10, undefined);
 		});
@@ -320,7 +355,11 @@ describe("oracle commands", () => {
 		test("passes skip parameter for pagination", async () => {
 			await createSdk();
 
-			await DefaultService.listOracleJobsV2OracleJobsGet(undefined, undefined, 5);
+			await DefaultService.listOracleJobsV2OracleJobsGet(
+				undefined,
+				undefined,
+				5,
+			);
 
 			expect(mockListJobs).toHaveBeenCalledWith(undefined, undefined, 5);
 		});
@@ -376,7 +415,9 @@ describe("oracle commands", () => {
 
 			const sdk = await createSdk();
 
-			await expect(sdk.oracle.createJob({ query: "test" })).rejects.toThrow("Unauthorized");
+			await expect(sdk.oracle.createJob({ query: "test" })).rejects.toThrow(
+				"Unauthorized",
+			);
 		});
 
 		test("handles 404 not found error", async () => {
@@ -388,24 +429,32 @@ describe("oracle commands", () => {
 
 			const sdk = await createSdk();
 
-			await expect(sdk.oracle.getJob("nonexistent")).rejects.toThrow("Not Found");
+			await expect(sdk.oracle.getJob("nonexistent")).rejects.toThrow(
+				"Not Found",
+			);
 		});
 
 		test("handles 429 rate limit error", async () => {
 			mockCreateJob.mockImplementationOnce(() => {
-				const error = new Error("Too Many Requests") as Error & { status: number };
+				const error = new Error("Too Many Requests") as Error & {
+					status: number;
+				};
 				error.status = 429;
 				return Promise.reject(error);
 			});
 
 			const sdk = await createSdk();
 
-			await expect(sdk.oracle.createJob({ query: "test" })).rejects.toThrow("Too Many Requests");
+			await expect(sdk.oracle.createJob({ query: "test" })).rejects.toThrow(
+				"Too Many Requests",
+			);
 		});
 
 		test("handles 500 server error", async () => {
 			mockListJobs.mockImplementationOnce(() => {
-				const error = new Error("Internal Server Error") as Error & { status: number };
+				const error = new Error("Internal Server Error") as Error & {
+					status: number;
+				};
 				error.status = 500;
 				return Promise.reject(error);
 			});
@@ -413,7 +462,11 @@ describe("oracle commands", () => {
 			await createSdk();
 
 			await expect(
-				DefaultService.listOracleJobsV2OracleJobsGet(undefined, undefined, undefined),
+				DefaultService.listOracleJobsV2OracleJobsGet(
+					undefined,
+					undefined,
+					undefined,
+				),
 			).rejects.toThrow("Internal Server Error");
 		});
 
@@ -446,7 +499,13 @@ describe("oracle commands", () => {
 		});
 
 		test("validates status against allowed values", () => {
-			const validStatuses = ["queued", "running", "completed", "failed", "cancelled"];
+			const validStatuses = [
+				"queued",
+				"running",
+				"completed",
+				"failed",
+				"cancelled",
+			];
 
 			for (const status of validStatuses) {
 				expect(validStatuses.includes(status)).toBe(true);
@@ -474,7 +533,8 @@ describe("oracle commands", () => {
 		test("query truncation for jobs list display", () => {
 			const longQuery =
 				"This is a very long research question that exceeds sixty characters and should be truncated";
-			const truncated = longQuery.length > 60 ? `${longQuery.slice(0, 57)}...` : longQuery;
+			const truncated =
+				longQuery.length > 60 ? `${longQuery.slice(0, 57)}...` : longQuery;
 
 			expect(truncated.length).toBeLessThanOrEqual(60);
 			expect(truncated).toEndWith("...");

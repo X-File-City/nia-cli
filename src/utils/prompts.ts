@@ -19,7 +19,9 @@ export async function checkFirstRun(apiKeyOverride?: string): Promise<void> {
 	const key = await resolveApiKey(apiKeyOverride);
 	if (!key) {
 		console.error("No API key found. Run `nia auth login` to get started.");
-		console.error("Or set the NIA_API_KEY environment variable, or pass --api-key <value>.");
+		console.error(
+			"Or set the NIA_API_KEY environment variable, or pass --api-key <value>.",
+		);
 		process.exit(1);
 	}
 }

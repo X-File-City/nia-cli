@@ -36,12 +36,16 @@ const setCommand = defineCommand({
 		}
 
 		if (!isSettableKey(key)) {
-			console.error(`Unknown config key: "${key}". Allowed keys: output, baseUrl`);
+			console.error(
+				`Unknown config key: "${key}". Allowed keys: output, baseUrl`,
+			);
 			process.exit(1);
 		}
 
 		if (key === "output" && !["json", "table", "text"].includes(value)) {
-			console.error(`Invalid output format: "${value}". Allowed values: json, table, text`);
+			console.error(
+				`Invalid output format: "${value}". Allowed values: json, table, text`,
+			);
 			process.exit(1);
 		}
 
@@ -71,7 +75,9 @@ const getCommand = defineCommand({
 		const { key } = args;
 
 		if (!isConfigKey(key)) {
-			console.error(`Unknown config key: "${key}". Valid keys: ${ALL_CONFIG_KEYS.join(", ")}`);
+			console.error(
+				`Unknown config key: "${key}". Valid keys: ${ALL_CONFIG_KEYS.join(", ")}`,
+			);
 			process.exit(1);
 		}
 
@@ -96,7 +102,8 @@ const listCommand = defineCommand({
 
 		for (const key of ALL_CONFIG_KEYS) {
 			const value = config[key];
-			const display = key === "apiKey" ? maskApiKey(value) : (value ?? "(not set)");
+			const display =
+				key === "apiKey" ? maskApiKey(value) : (value ?? "(not set)");
 			console.log(`${key} = ${display}`);
 		}
 	},

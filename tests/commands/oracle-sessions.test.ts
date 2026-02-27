@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock SDK ---
 
@@ -102,8 +106,10 @@ mock.module("nia-ai-ts", () => ({
 		listOracleSessionsV2OracleSessionsGet: mockListSessions,
 		getOracleSessionDetailV2OracleSessionsSessionIdGet: mockGetSessionDetail,
 		deleteOracleSessionV2OracleSessionsSessionIdDelete: mockDeleteSession,
-		getOracleSessionMessagesV2OracleSessionsSessionIdMessagesGet: mockGetSessionMessages,
-		streamOracleSessionChatV2OracleSessionsSessionIdChatStreamPost: mockChatStream,
+		getOracleSessionMessagesV2OracleSessionsSessionIdMessagesGet:
+			mockGetSessionMessages,
+		streamOracleSessionChatV2OracleSessionsSessionIdChatStreamPost:
+			mockChatStream,
 		cancelOracleJobV2OracleJobsJobIdDelete: mock(() => Promise.resolve()),
 		listOracleJobsV2OracleJobsGet: mock(() => Promise.resolve([])),
 	},
@@ -173,7 +179,10 @@ describe("oracle session commands", () => {
 			}
 
 			expect(events).toHaveLength(4);
-			expect(events[0]).toEqual({ type: "thinking", content: "Analyzing the question..." });
+			expect(events[0]).toEqual({
+				type: "thinking",
+				content: "Analyzing the question...",
+			});
 			expect(events[1]).toEqual({
 				type: "searching",
 				content: "Searching repositories...",
@@ -207,7 +216,10 @@ describe("oracle session commands", () => {
 		test("calls DefaultService.listOracleSessionsV2OracleSessionsGet without params", async () => {
 			await createSdk();
 
-			await DefaultService.listOracleSessionsV2OracleSessionsGet(undefined, undefined);
+			await DefaultService.listOracleSessionsV2OracleSessionsGet(
+				undefined,
+				undefined,
+			);
 
 			expect(mockListSessions).toHaveBeenCalledTimes(1);
 			expect(mockListSessions).toHaveBeenCalledWith(undefined, undefined);
@@ -272,7 +284,9 @@ describe("oracle session commands", () => {
 		test("calls getOracleSessionDetailV2OracleSessionsSessionIdGet with session ID", async () => {
 			await createSdk();
 
-			await DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet("sess_abc123");
+			await DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet(
+				"sess_abc123",
+			);
 
 			expect(mockGetSessionDetail).toHaveBeenCalledTimes(1);
 			expect(mockGetSessionDetail).toHaveBeenCalledWith("sess_abc123");
@@ -282,13 +296,17 @@ describe("oracle session commands", () => {
 			await createSdk();
 
 			const result =
-				await DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet("sess_abc123");
+				await DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet(
+					"sess_abc123",
+				);
 
 			expect(result.session_id).toBe("sess_abc123");
 			expect(result.query).toBe("How does authentication work?");
 			expect(result.status).toBe("completed");
 			expect(result.model).toBe("claude-opus-4-6");
-			expect(result.result).toEqual({ summary: "Authentication uses JWT tokens..." });
+			expect(result.result).toEqual({
+				summary: "Authentication uses JWT tokens...",
+			});
 			expect(result.job_id).toBe("job_abc123");
 		});
 
@@ -302,7 +320,9 @@ describe("oracle session commands", () => {
 			await createSdk();
 
 			await expect(
-				DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet("sess_nonexistent"),
+				DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet(
+					"sess_nonexistent",
+				),
 			).rejects.toThrow("Not Found");
 		});
 	});
@@ -319,7 +339,10 @@ describe("oracle session commands", () => {
 			);
 
 			expect(mockGetSessionMessages).toHaveBeenCalledTimes(1);
-			expect(mockGetSessionMessages).toHaveBeenCalledWith("sess_abc123", undefined);
+			expect(mockGetSessionMessages).toHaveBeenCalledWith(
+				"sess_abc123",
+				undefined,
+			);
 		});
 
 		test("passes limit parameter", async () => {
@@ -383,7 +406,9 @@ describe("oracle session commands", () => {
 
 	describe("oracle chat", () => {
 		test("chat request body contains message field", () => {
-			const requestBody = { message: "Can you explain the refresh token flow?" };
+			const requestBody = {
+				message: "Can you explain the refresh token flow?",
+			};
 
 			expect(requestBody).toHaveProperty("message");
 			expect(typeof requestBody.message).toBe("string");
@@ -410,7 +435,9 @@ describe("oracle session commands", () => {
 			const sessionId = "sess_abc123";
 			const url = `${baseUrl}/oracle/sessions/${encodeURIComponent(sessionId)}/chat/stream`;
 
-			expect(url).toBe("https://apigcp.trynia.ai/v2/oracle/sessions/sess_abc123/chat/stream");
+			expect(url).toBe(
+				"https://apigcp.trynia.ai/v2/oracle/sessions/sess_abc123/chat/stream",
+			);
 		});
 
 		test("chat handles special characters in session ID for URL encoding", () => {
@@ -418,7 +445,9 @@ describe("oracle session commands", () => {
 			const sessionId = "sess_abc/123";
 			const url = `${baseUrl}/oracle/sessions/${encodeURIComponent(sessionId)}/chat/stream`;
 
-			expect(url).toBe("https://apigcp.trynia.ai/v2/oracle/sessions/sess_abc%2F123/chat/stream");
+			expect(url).toBe(
+				"https://apigcp.trynia.ai/v2/oracle/sessions/sess_abc%2F123/chat/stream",
+			);
 		});
 	});
 
@@ -428,7 +457,9 @@ describe("oracle session commands", () => {
 		test("calls deleteOracleSessionV2OracleSessionsSessionIdDelete with session ID", async () => {
 			await createSdk();
 
-			await DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete("sess_abc123");
+			await DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete(
+				"sess_abc123",
+			);
 
 			expect(mockDeleteSession).toHaveBeenCalledTimes(1);
 			expect(mockDeleteSession).toHaveBeenCalledWith("sess_abc123");
@@ -438,7 +469,9 @@ describe("oracle session commands", () => {
 			await createSdk();
 
 			const result =
-				await DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete("sess_abc123");
+				await DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete(
+					"sess_abc123",
+				);
 
 			expect(result).toEqual({ success: true, message: "Session deleted" });
 		});
@@ -453,7 +486,9 @@ describe("oracle session commands", () => {
 			await createSdk();
 
 			await expect(
-				DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete("sess_nonexistent"),
+				DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete(
+					"sess_nonexistent",
+				),
 			).rejects.toThrow("Not Found");
 		});
 	});
@@ -526,7 +561,10 @@ describe("oracle session commands", () => {
 			await createSdk();
 
 			await expect(
-				DefaultService.listOracleSessionsV2OracleSessionsGet(undefined, undefined),
+				DefaultService.listOracleSessionsV2OracleSessionsGet(
+					undefined,
+					undefined,
+				),
 			).rejects.toThrow("Unauthorized");
 		});
 
@@ -540,13 +578,17 @@ describe("oracle session commands", () => {
 			await createSdk();
 
 			await expect(
-				DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet("nonexistent"),
+				DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet(
+					"nonexistent",
+				),
 			).rejects.toThrow("Not Found");
 		});
 
 		test("handles 500 server error for messages", async () => {
 			mockGetSessionMessages.mockImplementationOnce(() => {
-				const error = new Error("Internal Server Error") as Error & { status: number };
+				const error = new Error("Internal Server Error") as Error & {
+					status: number;
+				};
 				error.status = 500;
 				return Promise.reject(error);
 			});
@@ -602,7 +644,8 @@ describe("oracle session commands", () => {
 		test("session query truncation for sessions list display", () => {
 			const longQuery =
 				"This is a very long research question that exceeds sixty characters and should be truncated for display";
-			const truncated = longQuery.length > 60 ? `${longQuery.slice(0, 57)}...` : longQuery;
+			const truncated =
+				longQuery.length > 60 ? `${longQuery.slice(0, 57)}...` : longQuery;
 
 			expect(truncated.length).toBeLessThanOrEqual(60);
 			expect(truncated).toEndWith("...");

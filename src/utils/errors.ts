@@ -24,7 +24,10 @@ export interface ErrorHandlerOptions {
  * Format a user-friendly error message for the given error and print it.
  * Calls `process.exit(1)` after printing.
  */
-export function handleError(error: unknown, options: ErrorHandlerOptions = {}): never {
+export function handleError(
+	error: unknown,
+	options: ErrorHandlerOptions = {},
+): never {
 	const { verbose = false, domain } = options;
 
 	// --- CrustError (framework-level) ---
@@ -39,7 +42,9 @@ export function handleError(error: unknown, options: ErrorHandlerOptions = {}): 
 
 	// --- NiaTimeoutError (SDK timeout) ---
 	if (error instanceof NiaTimeoutError) {
-		console.error("Request timed out — the server took too long to respond. Try again later.");
+		console.error(
+			"Request timed out — the server took too long to respond. Try again later.",
+		);
 		if (verbose) {
 			console.error(`\nDetails: ${error.message}`);
 			if (error.stack) {
@@ -62,7 +67,12 @@ export function handleError(error: unknown, options: ErrorHandlerOptions = {}): 
 	if (error instanceof Error) {
 		const statusError = error as Error & { status?: number };
 		if (typeof statusError.status === "number") {
-			handleStatusCode(statusError.status, statusError.message, verbose, domain);
+			handleStatusCode(
+				statusError.status,
+				statusError.message,
+				verbose,
+				domain,
+			);
 		}
 
 		const label = domain ? `${domain} failed` : "Error";
@@ -131,8 +141,19 @@ function handleCrustError(error: CrustError, verbose: boolean): never {
 /**
  * Handle ApiError from the generated OpenAPI client.
  */
-function handleApiError(error: ApiError, verbose: boolean, domain?: string): never {
-	handleStatusCode(error.status, error.message, verbose, domain, error.body, error.stack);
+function handleApiError(
+	error: ApiError,
+	verbose: boolean,
+	domain?: string,
+): never {
+	handleStatusCode(
+		error.status,
+		error.message,
+		verbose,
+		domain,
+		error.body,
+		error.stack,
+	);
 }
 
 /**
@@ -148,17 +169,23 @@ function handleStatusCode(
 ): never {
 	switch (true) {
 		case status === 401 || status === 403:
-			console.error("Authentication failed — run `nia auth login` to authenticate.");
+			console.error(
+				"Authentication failed — run `nia auth login` to authenticate.",
+			);
 			break;
 
 		case status === 404: {
 			const label = domain ? `${domain} resource` : "Resource";
-			console.error(`${label} not found. Check the ID or identifier and try again.`);
+			console.error(
+				`${label} not found. Check the ID or identifier and try again.`,
+			);
 			break;
 		}
 
 		case status === 422:
-			console.error(`Validation error: ${extractDetailMessage(body) ?? message}`);
+			console.error(
+				`Validation error: ${extractDetailMessage(body) ?? message}`,
+			);
 			break;
 
 		case status === 429:
@@ -247,7 +274,10 @@ function formatBody(body: unknown): string {
  * Find the closest string match using Levenshtein distance.
  * Returns undefined if no match is close enough (threshold: half the input length + 2).
  */
-export function findClosestMatch(input: string, candidates: string[]): string | undefined {
+export function findClosestMatch(
+	input: string,
+	candidates: string[],
+): string | undefined {
 	if (candidates.length === 0) return undefined;
 
 	let bestMatch: string | undefined;
@@ -255,7 +285,10 @@ export function findClosestMatch(input: string, candidates: string[]): string | 
 	const threshold = Math.max(Math.floor(input.length / 3) + 1, 2);
 
 	for (const candidate of candidates) {
-		const distance = levenshteinDistance(input.toLowerCase(), candidate.toLowerCase());
+		const distance = levenshteinDistance(
+			input.toLowerCase(),
+			candidate.toLowerCase(),
+		);
 		if (distance < bestDistance) {
 			bestDistance = distance;
 			bestMatch = candidate;

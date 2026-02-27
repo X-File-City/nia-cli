@@ -18,7 +18,9 @@ export interface CreateSdkOptions {
  *
  * Throws if no API key is found anywhere in the chain.
  */
-export async function createSdk(options: CreateSdkOptions = {}): Promise<NiaSDK> {
+export async function createSdk(
+	options: CreateSdkOptions = {},
+): Promise<NiaSDK> {
 	const apiKey = await resolveApiKey(options.apiKey);
 
 	if (!apiKey) {

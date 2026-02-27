@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock SDK ---
 
@@ -12,7 +16,8 @@ const mockGithubGlob = mock(() =>
 
 const mockGithubRead = mock(() =>
 	Promise.resolve({
-		content: 'import { foo } from "./bar";\n\nexport function hello() {\n  return "world";\n}',
+		content:
+			'import { foo } from "./bar";\n\nexport function hello() {\n  return "world";\n}',
 		path: "src/index.ts",
 		repository: "vercel/next.js",
 	}),
@@ -137,7 +142,11 @@ describe("github commands", () => {
 				pattern: "src/**/*.ts",
 			});
 
-			expect(result.files).toEqual(["src/index.ts", "src/utils/helper.ts", "src/types/config.ts"]);
+			expect(result.files).toEqual([
+				"src/index.ts",
+				"src/utils/helper.ts",
+				"src/types/config.ts",
+			]);
 		});
 
 		test("handles empty results", async () => {
@@ -164,7 +173,7 @@ describe("github commands", () => {
 
 			const calledWith = (
 				mockGithubGlob.mock.calls as unknown as Array<[Record<string, unknown>]>
-			)[0]![0];
+			)[0]?.[0];
 			expect(calledWith).toEqual({ repository: "owner/repo", pattern: "*.ts" });
 			expect("ref" in calledWith).toBe(false);
 		});
@@ -265,7 +274,7 @@ describe("github commands", () => {
 
 			const calledWith = (
 				mockGithubRead.mock.calls as unknown as Array<[Record<string, unknown>]>
-			)[0]![0];
+			)[0]?.[0];
 			expect(calledWith).toEqual({ repository: "owner/repo", path: "file.ts" });
 			expect("ref" in calledWith).toBe(false);
 			expect("start_line" in calledWith).toBe(false);
@@ -342,10 +351,11 @@ describe("github commands", () => {
 		test("returns search results with items", async () => {
 			await createSdk();
 
-			const result = await GithubSearchService.githubCodeSearchV2GithubSearchPost({
-				query: "foo",
-				repository: "owner/repo",
-			});
+			const result =
+				await GithubSearchService.githubCodeSearchV2GithubSearchPost({
+					query: "foo",
+					repository: "owner/repo",
+				});
 
 			expect(result.items).toBeDefined();
 			expect(Array.isArray(result.items)).toBe(true);
@@ -357,10 +367,11 @@ describe("github commands", () => {
 			mockGithubSearch.mockResolvedValueOnce({ items: [] });
 			await createSdk();
 
-			const result = await GithubSearchService.githubCodeSearchV2GithubSearchPost({
-				query: "nonexistent_pattern_xyz",
-				repository: "owner/repo",
-			});
+			const result =
+				await GithubSearchService.githubCodeSearchV2GithubSearchPost({
+					query: "nonexistent_pattern_xyz",
+					repository: "owner/repo",
+				});
 
 			expect(result.items).toEqual([]);
 		});
@@ -376,8 +387,10 @@ describe("github commands", () => {
 			await GithubSearchService.githubCodeSearchV2GithubSearchPost(payload);
 
 			const calledWith = (
-				mockGithubSearch.mock.calls as unknown as Array<[Record<string, unknown>]>
-			)[0]![0];
+				mockGithubSearch.mock.calls as unknown as Array<
+					[Record<string, unknown>]
+				>
+			)[0]?.[0];
 			expect(calledWith).toEqual({ query: "test", repository: "owner/repo" });
 			expect("per_page" in calledWith).toBe(false);
 			expect("page" in calledWith).toBe(false);
@@ -396,7 +409,12 @@ describe("github commands", () => {
 			);
 
 			expect(mockGithubTree).toHaveBeenCalledTimes(1);
-			expect(mockGithubTree).toHaveBeenCalledWith("vercel", "next.js", undefined, undefined);
+			expect(mockGithubTree).toHaveBeenCalledWith(
+				"vercel",
+				"next.js",
+				undefined,
+				undefined,
+			);
 		});
 
 		test("passes ref from --ref flag", async () => {
@@ -409,7 +427,12 @@ describe("github commands", () => {
 				undefined,
 			);
 
-			expect(mockGithubTree).toHaveBeenCalledWith("vercel", "next.js", "canary", undefined);
+			expect(mockGithubTree).toHaveBeenCalledWith(
+				"vercel",
+				"next.js",
+				"canary",
+				undefined,
+			);
 		});
 
 		test("passes path from --path flag", async () => {
@@ -422,7 +445,12 @@ describe("github commands", () => {
 				"packages/next",
 			);
 
-			expect(mockGithubTree).toHaveBeenCalledWith("vercel", "next.js", undefined, "packages/next");
+			expect(mockGithubTree).toHaveBeenCalledWith(
+				"vercel",
+				"next.js",
+				undefined,
+				"packages/next",
+			);
 		});
 
 		test("passes both ref and path together", async () => {
@@ -446,12 +474,13 @@ describe("github commands", () => {
 		test("returns tree with tree_text and stats", async () => {
 			await createSdk();
 
-			const result = await GithubSearchService.githubTreeV2GithubTreeOwnerRepoGet(
-				"vercel",
-				"next.js",
-				undefined,
-				undefined,
-			);
+			const result =
+				await GithubSearchService.githubTreeV2GithubTreeOwnerRepoGet(
+					"vercel",
+					"next.js",
+					undefined,
+					undefined,
+				);
 
 			expect(typeof result.tree_text).toBe("string");
 			expect(result.stats).toBeDefined();
@@ -528,7 +557,9 @@ describe("github commands", () => {
 		});
 
 		test("handles 404 not found error", async () => {
-			mockGithubRead.mockRejectedValueOnce(Object.assign(new Error("Not found"), { status: 404 }));
+			mockGithubRead.mockRejectedValueOnce(
+				Object.assign(new Error("Not found"), { status: 404 }),
+			);
 
 			await createSdk();
 
@@ -583,7 +614,9 @@ describe("github commands", () => {
 
 		test("handles 422 validation error", async () => {
 			mockGithubGlob.mockRejectedValueOnce(
-				Object.assign(new Error("Validation error: invalid pattern"), { status: 422 }),
+				Object.assign(new Error("Validation error: invalid pattern"), {
+					status: 422,
+				}),
 			);
 
 			await createSdk();
@@ -641,7 +674,9 @@ describe("github commands", () => {
 				per_page: 15,
 			});
 
-			expect(mockGithubSearch).toHaveBeenCalledWith(expect.objectContaining({ per_page: 15 }));
+			expect(mockGithubSearch).toHaveBeenCalledWith(
+				expect.objectContaining({ per_page: 15 }),
+			);
 		});
 
 		test("tree passes separate owner and repo to API method (not combined)", async () => {
@@ -655,7 +690,12 @@ describe("github commands", () => {
 			);
 
 			// Verify the tree method receives separate owner and repo, not combined
-			expect(mockGithubTree).toHaveBeenCalledWith("nozomio-labs", "nia-cli", undefined, undefined);
+			expect(mockGithubTree).toHaveBeenCalledWith(
+				"nozomio-labs",
+				"nia-cli",
+				undefined,
+				undefined,
+			);
 		});
 
 		test("tree ref and path flags map to correct positional parameters", async () => {
@@ -668,7 +708,12 @@ describe("github commands", () => {
 				"src/shared",
 			);
 
-			expect(mockGithubTree).toHaveBeenCalledWith("vercel", "next.js", "canary", "src/shared");
+			expect(mockGithubTree).toHaveBeenCalledWith(
+				"vercel",
+				"next.js",
+				"canary",
+				"src/shared",
+			);
 		});
 
 		test("search page flag maps to page field in request body", async () => {
@@ -680,7 +725,9 @@ describe("github commands", () => {
 				page: 5,
 			});
 
-			expect(mockGithubSearch).toHaveBeenCalledWith(expect.objectContaining({ page: 5 }));
+			expect(mockGithubSearch).toHaveBeenCalledWith(
+				expect.objectContaining({ page: 5 }),
+			);
 		});
 	});
 });

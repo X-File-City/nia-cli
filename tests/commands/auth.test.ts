@@ -118,7 +118,9 @@ describe("auth commands", () => {
 			const token = "nia_invalid_token";
 			configureOpenApi(token);
 
-			await expect(V2ApiService.getUsageSummaryV2V2UsageGet()).rejects.toThrow("Unauthorized");
+			await expect(V2ApiService.getUsageSummaryV2V2UsageGet()).rejects.toThrow(
+				"Unauthorized",
+			);
 
 			// Config should NOT have the token
 			const config = await readConfig();
@@ -138,7 +140,9 @@ describe("auth commands", () => {
 			const token = "nia_forbidden_token";
 			configureOpenApi(token);
 
-			await expect(V2ApiService.getUsageSummaryV2V2UsageGet()).rejects.toThrow("Forbidden");
+			await expect(V2ApiService.getUsageSummaryV2V2UsageGet()).rejects.toThrow(
+				"Forbidden",
+			);
 
 			const config = await readConfig();
 			expect(config.apiKey).toBeUndefined();
@@ -233,7 +237,9 @@ describe("auth commands", () => {
 		});
 
 		test("handles usage API failure gracefully", async () => {
-			mockGetUsage.mockImplementationOnce(() => Promise.reject(new Error("Network error")));
+			mockGetUsage.mockImplementationOnce(() =>
+				Promise.reject(new Error("Network error")),
+			);
 
 			const { configureOpenApi } = await import("../../src/services/sdk.ts");
 			const { V2ApiService } = await import("nia-ai-ts");
@@ -241,7 +247,9 @@ describe("auth commands", () => {
 			configureOpenApi("nia_test_key");
 
 			// Status command catches this and just says "Could not fetch plan info"
-			await expect(V2ApiService.getUsageSummaryV2V2UsageGet()).rejects.toThrow("Network error");
+			await expect(V2ApiService.getUsageSummaryV2V2UsageGet()).rejects.toThrow(
+				"Network error",
+			);
 		});
 	});
 

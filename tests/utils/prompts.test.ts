@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock @crustjs/prompts ---
 
@@ -132,7 +136,9 @@ describe("prompts utilities", () => {
 			// (In CI/test runners, stdout may not be a TTY)
 			const tty = !!process.stdout.isTTY;
 			if (tty) {
-				mockInput.mockImplementationOnce(() => Promise.resolve("https://prompted.com"));
+				mockInput.mockImplementationOnce(() =>
+					Promise.resolve("https://prompted.com"),
+				);
 
 				const result = await requireArg(undefined, {
 					name: "url",
@@ -184,7 +190,9 @@ describe("prompts utilities", () => {
 					}
 				};
 
-				mockInput.mockImplementationOnce(() => Promise.resolve("https://valid.com"));
+				mockInput.mockImplementationOnce(() =>
+					Promise.resolve("https://valid.com"),
+				);
 
 				await requireArg(undefined, {
 					name: "url",
@@ -267,7 +275,10 @@ describe("prompts utilities", () => {
 		test("returns default value when not in TTY", async () => {
 			const tty = !!process.stdout.isTTY;
 			if (!tty) {
-				const result = await promptConfirm({ message: "Continue?", initial: true });
+				const result = await promptConfirm({
+					message: "Continue?",
+					initial: true,
+				});
 				expect(result).toBe(true);
 				expect(mockConfirm).not.toHaveBeenCalled();
 			}

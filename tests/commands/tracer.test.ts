@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock SDK ---
 
@@ -43,7 +47,9 @@ const mockListTracerJobs = mock(() =>
 	]),
 );
 
-const mockDeleteTracerJob = mock(() => Promise.resolve({ success: true, message: "Job deleted" }));
+const mockDeleteTracerJob = mock(() =>
+	Promise.resolve({ success: true, message: "Job deleted" }),
+);
 
 const mockStreamTracerJob = mock(() => Promise.resolve({ body: null }));
 
@@ -163,9 +169,10 @@ describe("tracer commands", () => {
 		test("returns job_id and session_id on success", async () => {
 			await createSdk();
 
-			const result = await GithubSearchService.createTracerJobV2GithubTracerPost({
-				query: "test",
-			});
+			const result =
+				await GithubSearchService.createTracerJobV2GithubTracerPost({
+					query: "test",
+				});
 
 			expect(result.job_id).toBe("tracer_job_abc123");
 			expect(result.session_id).toBe("tracer_sess_xyz789");
@@ -195,7 +202,9 @@ describe("tracer commands", () => {
 		test("calls GithubSearchService.getTracerJobV2GithubTracerJobIdGet with job ID", async () => {
 			await createSdk();
 
-			await GithubSearchService.getTracerJobV2GithubTracerJobIdGet("tracer_job_abc123");
+			await GithubSearchService.getTracerJobV2GithubTracerJobIdGet(
+				"tracer_job_abc123",
+			);
 
 			expect(mockGetTracerJob).toHaveBeenCalledTimes(1);
 			expect(mockGetTracerJob).toHaveBeenCalledWith("tracer_job_abc123");
@@ -205,11 +214,15 @@ describe("tracer commands", () => {
 			await createSdk();
 
 			const result =
-				await GithubSearchService.getTracerJobV2GithubTracerJobIdGet("tracer_job_abc123");
+				await GithubSearchService.getTracerJobV2GithubTracerJobIdGet(
+					"tracer_job_abc123",
+				);
 
 			expect(result.job_id).toBe("tracer_job_abc123");
 			expect(result.status).toBe("completed");
-			expect(result.result).toEqual({ summary: "Error handling uses try/catch blocks..." });
+			expect(result.result).toEqual({
+				summary: "Error handling uses try/catch blocks...",
+			});
 			expect(result.completed_at).toBe("2026-01-20T10:03:00Z");
 		});
 
@@ -221,7 +234,9 @@ describe("tracer commands", () => {
 			await createSdk();
 
 			try {
-				await GithubSearchService.getTracerJobV2GithubTracerJobIdGet("nonexistent");
+				await GithubSearchService.getTracerJobV2GithubTracerJobIdGet(
+					"nonexistent",
+				);
 				expect(true).toBe(false); // Should not reach here
 			} catch (error) {
 				expect((error as { status: number }).status).toBe(404);
@@ -233,24 +248,44 @@ describe("tracer commands", () => {
 		test("calls GithubSearchService.listTracerJobsV2GithubTracerGet without filters", async () => {
 			await createSdk();
 
-			await GithubSearchService.listTracerJobsV2GithubTracerGet(undefined, undefined, undefined);
+			await GithubSearchService.listTracerJobsV2GithubTracerGet(
+				undefined,
+				undefined,
+				undefined,
+			);
 
 			expect(mockListTracerJobs).toHaveBeenCalledTimes(1);
-			expect(mockListTracerJobs).toHaveBeenCalledWith(undefined, undefined, undefined);
+			expect(mockListTracerJobs).toHaveBeenCalledWith(
+				undefined,
+				undefined,
+				undefined,
+			);
 		});
 
 		test("passes status filter", async () => {
 			await createSdk();
 
-			await GithubSearchService.listTracerJobsV2GithubTracerGet("completed", undefined, undefined);
+			await GithubSearchService.listTracerJobsV2GithubTracerGet(
+				"completed",
+				undefined,
+				undefined,
+			);
 
-			expect(mockListTracerJobs).toHaveBeenCalledWith("completed", undefined, undefined);
+			expect(mockListTracerJobs).toHaveBeenCalledWith(
+				"completed",
+				undefined,
+				undefined,
+			);
 		});
 
 		test("passes limit and skip parameters", async () => {
 			await createSdk();
 
-			await GithubSearchService.listTracerJobsV2GithubTracerGet(undefined, 10, 5);
+			await GithubSearchService.listTracerJobsV2GithubTracerGet(
+				undefined,
+				10,
+				5,
+			);
 
 			expect(mockListTracerJobs).toHaveBeenCalledWith(undefined, 10, 5);
 		});
@@ -258,7 +293,11 @@ describe("tracer commands", () => {
 		test("passes all filters together", async () => {
 			await createSdk();
 
-			await GithubSearchService.listTracerJobsV2GithubTracerGet("running", 20, 0);
+			await GithubSearchService.listTracerJobsV2GithubTracerGet(
+				"running",
+				20,
+				0,
+			);
 
 			expect(mockListTracerJobs).toHaveBeenCalledWith("running", 20, 0);
 		});
@@ -296,7 +335,9 @@ describe("tracer commands", () => {
 		test("calls GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete with job ID", async () => {
 			await createSdk();
 
-			await GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete("tracer_job_abc123");
+			await GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete(
+				"tracer_job_abc123",
+			);
 
 			expect(mockDeleteTracerJob).toHaveBeenCalledTimes(1);
 			expect(mockDeleteTracerJob).toHaveBeenCalledWith("tracer_job_abc123");
@@ -306,7 +347,9 @@ describe("tracer commands", () => {
 			await createSdk();
 
 			const result =
-				await GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete("tracer_job_abc123");
+				await GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete(
+					"tracer_job_abc123",
+				);
 
 			expect(result.success).toBe(true);
 		});
@@ -319,7 +362,9 @@ describe("tracer commands", () => {
 			await createSdk();
 
 			try {
-				await GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete("nonexistent");
+				await GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete(
+					"nonexistent",
+				);
 				expect(true).toBe(false); // Should not reach here
 			} catch (error) {
 				expect((error as { status: number }).status).toBe(404);
@@ -336,7 +381,9 @@ describe("tracer commands", () => {
 			await createSdk();
 
 			try {
-				await GithubSearchService.createTracerJobV2GithubTracerPost({ query: "test" });
+				await GithubSearchService.createTracerJobV2GithubTracerPost({
+					query: "test",
+				});
 				expect(true).toBe(false);
 			} catch (error) {
 				expect((error as { status: number }).status).toBe(401);
@@ -351,7 +398,9 @@ describe("tracer commands", () => {
 			await createSdk();
 
 			try {
-				await GithubSearchService.createTracerJobV2GithubTracerPost({ query: "test" });
+				await GithubSearchService.createTracerJobV2GithubTracerPost({
+					query: "test",
+				});
 				expect(true).toBe(false);
 			} catch (error) {
 				expect((error as { status: number }).status).toBe(429);
@@ -375,13 +424,17 @@ describe("tracer commands", () => {
 
 		test("handles 422 validation error", async () => {
 			mockCreateTracerJob.mockRejectedValueOnce(
-				Object.assign(new Error("Validation error: invalid query"), { status: 422 }),
+				Object.assign(new Error("Validation error: invalid query"), {
+					status: 422,
+				}),
 			);
 
 			await createSdk();
 
 			try {
-				await GithubSearchService.createTracerJobV2GithubTracerPost({ query: "" });
+				await GithubSearchService.createTracerJobV2GithubTracerPost({
+					query: "",
+				});
 				expect(true).toBe(false);
 			} catch (error) {
 				expect((error as { status: number }).status).toBe(422);
@@ -398,8 +451,10 @@ describe("tracer commands", () => {
 			await GithubSearchService.createTracerJobV2GithubTracerPost(payload);
 
 			const calledWith = (
-				mockCreateTracerJob.mock.calls as unknown as Array<[Record<string, unknown>]>
-			)[0]![0];
+				mockCreateTracerJob.mock.calls as unknown as Array<
+					[Record<string, unknown>]
+				>
+			)[0]?.[0];
 			expect(calledWith).toEqual({ query: "test" });
 			expect("repositories" in calledWith).toBe(false);
 			expect("context" in calledWith).toBe(false);
@@ -424,7 +479,13 @@ describe("tracer commands", () => {
 		});
 
 		test("status validation rejects invalid values", () => {
-			const validStatuses = ["queued", "running", "completed", "failed", "cancelled"];
+			const validStatuses = [
+				"queued",
+				"running",
+				"completed",
+				"failed",
+				"cancelled",
+			];
 			const invalidStatus = "invalid_status";
 
 			expect(validStatuses.includes(invalidStatus)).toBe(false);
@@ -435,7 +496,8 @@ describe("tracer commands", () => {
 		test("query truncation works for long queries in list display", () => {
 			const longQuery =
 				"This is a very long query that exceeds the 60 character limit and should be truncated";
-			const truncated = longQuery.length > 60 ? `${longQuery.slice(0, 57)}...` : longQuery;
+			const truncated =
+				longQuery.length > 60 ? `${longQuery.slice(0, 57)}...` : longQuery;
 
 			expect(truncated.length).toBeLessThanOrEqual(60);
 			expect(truncated.endsWith("...")).toBe(true);
@@ -444,7 +506,11 @@ describe("tracer commands", () => {
 		test("list parameters map correctly to GithubSearchService method args", async () => {
 			await createSdk();
 
-			await GithubSearchService.listTracerJobsV2GithubTracerGet("completed", 25, 10);
+			await GithubSearchService.listTracerJobsV2GithubTracerGet(
+				"completed",
+				25,
+				10,
+			);
 
 			expect(mockListTracerJobs).toHaveBeenCalledWith("completed", 25, 10);
 		});

@@ -14,14 +14,22 @@ import { createSpinner } from "../utils/spinner.ts";
 /**
  * Valid package registries supported by the API.
  */
-const VALID_REGISTRIES = ["npm", "py_pi", "crates_io", "golang_proxy", "ruby_gems"];
+const VALID_REGISTRIES = [
+	"npm",
+	"py_pi",
+	"crates_io",
+	"golang_proxy",
+	"ruby_gems",
+];
 
 /**
  * Validate registry argument against allowed values.
  */
 function validateRegistry(registry: string): void {
 	if (!VALID_REGISTRIES.includes(registry)) {
-		console.error(`Invalid registry: "${registry}". Allowed: ${VALID_REGISTRIES.join(", ")}`);
+		console.error(
+			`Invalid registry: "${registry}". Allowed: ${VALID_REGISTRIES.join(", ")}`,
+		);
 		process.exit(1);
 	}
 }
@@ -37,7 +45,8 @@ const grepCommand = defineCommand({
 		{
 			name: "registry",
 			type: "string",
-			description: "Package registry: npm, py_pi, crates_io, golang_proxy, ruby_gems",
+			description:
+				"Package registry: npm, py_pi, crates_io, golang_proxy, ruby_gems",
 			required: true,
 		},
 		{
@@ -124,7 +133,9 @@ const grepCommand = defineCommand({
 			}
 
 			const result =
-				await V2ApiPackageSearchService.packageSearchGrepV2V2PackageSearchGrepPost(payload);
+				await V2ApiPackageSearchService.packageSearchGrepV2V2PackageSearchGrepPost(
+					payload,
+				);
 
 			spinner.stop("Search complete");
 			fmt.output(result);
@@ -144,7 +155,8 @@ const hybridCommand = defineCommand({
 		{
 			name: "registry",
 			type: "string",
-			description: "Package registry: npm, py_pi, crates_io, golang_proxy, ruby_gems",
+			description:
+				"Package registry: npm, py_pi, crates_io, golang_proxy, ruby_gems",
 			required: true,
 		},
 		{
@@ -213,7 +225,9 @@ const hybridCommand = defineCommand({
 			}
 
 			const result =
-				await V2ApiPackageSearchService.packageSearchHybridV2V2PackageSearchHybridPost(payload);
+				await V2ApiPackageSearchService.packageSearchHybridV2V2PackageSearchHybridPost(
+					payload,
+				);
 
 			spinner.stop("Search complete");
 			fmt.output(result);
@@ -227,13 +241,15 @@ const hybridCommand = defineCommand({
 const readCommand = defineCommand({
 	meta: {
 		name: "read",
-		description: "Read specific lines from a package source file (max 200 lines)",
+		description:
+			"Read specific lines from a package source file (max 200 lines)",
 	},
 	args: [
 		{
 			name: "registry",
 			type: "string",
-			description: "Package registry: npm, py_pi, crates_io, golang_proxy, ruby_gems",
+			description:
+				"Package registry: npm, py_pi, crates_io, golang_proxy, ruby_gems",
 			required: true,
 		},
 		{
@@ -298,7 +314,9 @@ const readCommand = defineCommand({
 			}
 
 			const result =
-				await V2ApiPackageSearchService.packageSearchReadFileV2V2PackageSearchReadFilePost(payload);
+				await V2ApiPackageSearchService.packageSearchReadFileV2V2PackageSearchReadFilePost(
+					payload,
+				);
 
 			spinner.stop("File content retrieved");
 

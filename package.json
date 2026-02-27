@@ -1,36 +1,34 @@
 {
-  "name": "nia-cli",
-  "version": "0.0.0",
-  "type": "module",
-  "description": "CLI for the Nia platform — search code, docs, and research from the terminal",
-  "files": [
-    "dist"
-  ],
-  "bin": {
-    "nia": "dist/cli"
-  },
-  "scripts": {
-    "dev": "bun run src/cli.ts",
-    "build": "crust build",
-    "start": "./dist/cli",
-    "check:types": "tsc --noEmit",
-    "test": "bun test",
-    "lint": "biome check src/",
-    "format": "biome format src/ --write",
-    "format:check": "biome format src/"
-  },
-  "dependencies": {
-    "@crustjs/core": "0.0.9",
-    "@crustjs/plugins": "0.0.10",
-    "@crustjs/prompts": "^0.0.6",
-    "@crustjs/store": "^0.0.2",
-    "@crustjs/style": "^0.0.4",
-    "nia-ai-ts": "^0.1.0"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.4.4",
-    "@crustjs/crust": "0.0.13",
-    "@types/bun": "latest",
-    "typescript": "^5"
-  }
+	"name": "nia-cli",
+	"version": "0.0.0",
+	"type": "module",
+	"description": "CLI for the Nia — search code, docs, and research from the terminal",
+	"files": [
+		"dist"
+	],
+	"bin": {
+		"nia": "dist/cli"
+	},
+	"scripts": {
+		"dev": "bun run src/cli.ts",
+		"build": "crust build",
+		"start": "./dist/cli",
+		"check:types": "tsc --noEmit",
+		"test": "bun test",
+		"check": "biome check ."
+	},
+	"dependencies": {
+		"@crustjs/core": "0.0.9",
+		"@crustjs/plugins": "0.0.10",
+		"@crustjs/prompts": "^0.0.6",
+		"@crustjs/store": "^0.0.2",
+		"@crustjs/style": "^0.0.4",
+		"nia-ai-ts": "^0.1.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.4",
+		"@crustjs/crust": "0.0.13",
+		"@types/bun": "latest",
+		"typescript": "^5"
+	}
 }

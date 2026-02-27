@@ -57,7 +57,9 @@ const indexCommand = defineCommand({
 			}
 
 			const result =
-				await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(payload);
+				await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
+					payload,
+				);
 
 			spinner.stop("Dataset indexed");
 
@@ -129,7 +131,9 @@ const listCommand = defineCommand({
 			// In text mode, show as table
 			if (global.output !== "json") {
 				const data = result as Record<string, unknown>;
-				const datasets = (data.datasets ?? data.items ?? []) as Array<Record<string, unknown>>;
+				const datasets = (data.datasets ?? data.items ?? []) as Array<
+					Record<string, unknown>
+				>;
 
 				if (datasets.length === 0) {
 					console.log("No HuggingFace datasets found.");
@@ -140,7 +144,9 @@ const listCommand = defineCommand({
 						status: d.status ?? "",
 						created: d.created_at ?? "",
 					}));
-					console.log(fmt.formatTable(rows, ["name", "id", "status", "created"]));
+					console.log(
+						fmt.formatTable(rows, ["name", "id", "status", "created"]),
+					);
 
 					if (data.total !== undefined) {
 						console.log(`\nTotal: ${data.total} datasets`);

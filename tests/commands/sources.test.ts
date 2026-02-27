@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock SDK and low-level services ---
 
@@ -151,7 +155,9 @@ describe("sources commands", () => {
 			await sdk.sources.create({ url: "https://docs.example.com" });
 
 			expect(mockSourcesCreate).toHaveBeenCalledTimes(1);
-			expect(mockSourcesCreate).toHaveBeenCalledWith({ url: "https://docs.example.com" });
+			expect(mockSourcesCreate).toHaveBeenCalledWith({
+				url: "https://docs.example.com",
+			});
 		});
 
 		test("passes display_name parameter", async () => {
@@ -196,7 +202,9 @@ describe("sources commands", () => {
 
 		test("returns created source with id and status", async () => {
 			const sdk = await createSdk();
-			const result = await sdk.sources.create({ url: "https://docs.example.com" });
+			const result = await sdk.sources.create({
+				url: "https://docs.example.com",
+			});
 
 			expect(result.id).toBe("src-123");
 			expect(result.type).toBe("documentation");
@@ -298,7 +306,10 @@ describe("sources commands", () => {
 
 			await sdk.sources.resolve("https://docs.example.com", "documentation");
 
-			expect(mockSourcesResolve).toHaveBeenCalledWith("https://docs.example.com", "documentation");
+			expect(mockSourcesResolve).toHaveBeenCalledWith(
+				"https://docs.example.com",
+				"documentation",
+			);
 		});
 
 		test("returns resolved source id and type", async () => {
@@ -564,19 +575,25 @@ describe("sources commands", () => {
 
 			const { V2ApiSourcesService: svc } = await import("nia-ai-ts");
 
-			await expect(svc.getSourceV2SourcesSourceIdGet("nonexistent")).rejects.toThrow("Not Found");
+			await expect(
+				svc.getSourceV2SourcesSourceIdGet("nonexistent"),
+			).rejects.toThrow("Not Found");
 		});
 
 		test("handles 422 validation error", async () => {
 			mockSourcesCreate.mockImplementationOnce(() => {
-				const error = new Error("Invalid URL format") as Error & { status: number };
+				const error = new Error("Invalid URL format") as Error & {
+					status: number;
+				};
 				error.status = 422;
 				return Promise.reject(error);
 			});
 
 			const sdk = await createSdk();
 
-			await expect(sdk.sources.create({ url: "not-a-url" })).rejects.toThrow("Invalid URL format");
+			await expect(sdk.sources.create({ url: "not-a-url" })).rejects.toThrow(
+				"Invalid URL format",
+			);
 		});
 
 		test("handles 429 rate limit error", async () => {

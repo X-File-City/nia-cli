@@ -194,7 +194,8 @@ const webCommand = defineCommand({
 		},
 		category: {
 			type: "string",
-			description: "Category filter: github, company, research, news, tweet, pdf, blog",
+			description:
+				"Category filter: github, company, research, news, tweet, pdf, blog",
 		},
 		"days-back": {
 			type: "number",
@@ -209,7 +210,9 @@ const webCommand = defineCommand({
 		// Validate category if provided
 		if (
 			flags.category &&
-			!WEB_SEARCH_CATEGORIES.includes(flags.category as (typeof WEB_SEARCH_CATEGORIES)[number])
+			!WEB_SEARCH_CATEGORIES.includes(
+				flags.category as (typeof WEB_SEARCH_CATEGORIES)[number],
+			)
 		) {
 			fmt.error(
 				`Invalid category: "${flags.category}". Allowed: ${WEB_SEARCH_CATEGORIES.join(", ")}`,

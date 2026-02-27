@@ -27,7 +27,8 @@ const runCommand = defineCommand({
 	flags: {
 		repos: {
 			type: "string",
-			description: "Repositories to search in owner/repo format (comma-separated)",
+			description:
+				"Repositories to search in owner/repo format (comma-separated)",
 		},
 		context: {
 			type: "string",
@@ -62,7 +63,8 @@ const runCommand = defineCommand({
 				payload.model = flags.model;
 			}
 
-			const result = await GithubSearchService.createTracerJobV2GithubTracerPost(payload);
+			const result =
+				await GithubSearchService.createTracerJobV2GithubTracerPost(payload);
 
 			spinner.stop("Tracer job created");
 			fmt.output(result);
@@ -105,7 +107,10 @@ const statusCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await GithubSearchService.getTracerJobV2GithubTracerJobIdGet(args["job-id"]);
+			const result =
+				await GithubSearchService.getTracerJobV2GithubTracerJobIdGet(
+					args["job-id"],
+				);
 
 			spinner.stop("Job status retrieved");
 
@@ -184,7 +189,9 @@ const streamCommand = defineCommand({
 			);
 
 			if (!response.ok || !response.body) {
-				const err = new Error(`Stream request failed with status ${response.status}`);
+				const err = new Error(
+					`Stream request failed with status ${response.status}`,
+				);
 				(err as Error & { status: number }).status = response.status;
 				throw err;
 			}
@@ -236,7 +243,8 @@ const listCommand = defineCommand({
 	flags: {
 		status: {
 			type: "string",
-			description: "Filter by status: queued, running, completed, failed, cancelled",
+			description:
+				"Filter by status: queued, running, completed, failed, cancelled",
 		},
 		limit: {
 			type: "number",
@@ -253,9 +261,17 @@ const listCommand = defineCommand({
 		const spinner = createSpinner({ color: global.color });
 
 		// Validate status if provided
-		const validStatuses = ["queued", "running", "completed", "failed", "cancelled"];
+		const validStatuses = [
+			"queued",
+			"running",
+			"completed",
+			"failed",
+			"cancelled",
+		];
 		if (flags.status && !validStatuses.includes(flags.status)) {
-			fmt.error(`Invalid status: "${flags.status}". Allowed: ${validStatuses.join(", ")}`);
+			fmt.error(
+				`Invalid status: "${flags.status}". Allowed: ${validStatuses.join(", ")}`,
+			);
 			process.exit(1);
 		}
 
@@ -322,9 +338,10 @@ const deleteCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete(
-				args["job-id"],
-			);
+			const result =
+				await GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete(
+					args["job-id"],
+				);
 
 			spinner.stop("Tracer job deleted");
 

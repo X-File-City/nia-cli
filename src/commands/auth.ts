@@ -1,7 +1,12 @@
 import { defineCommand } from "@crustjs/core";
 import { password } from "@crustjs/prompts";
 import { V2ApiService } from "nia-ai-ts";
-import { getConfigDirPath, maskApiKey, readConfig, updateConfig } from "../services/config.ts";
+import {
+	getConfigDirPath,
+	maskApiKey,
+	readConfig,
+	updateConfig,
+} from "../services/config.ts";
 import { configureOpenApi } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 

@@ -26,11 +26,13 @@ const indexCommand = defineCommand({
 		branch: {
 			type: "string",
 			alias: "b",
-			description: "Branch to index (defaults to the repository's default branch)",
+			description:
+				"Branch to index (defaults to the repository's default branch)",
 		},
 		ref: {
 			type: "string",
-			description: "Git ref to index (branch, tag, or commit SHA). Takes precedence over --branch",
+			description:
+				"Git ref to index (branch, tag, or commit SHA). Takes precedence over --branch",
 		},
 		name: {
 			type: "string",
@@ -66,7 +68,9 @@ const indexCommand = defineCommand({
 			}
 
 			const result =
-				await V2ApiRepositoriesService.indexRepositoryV2V2RepositoriesPost(requestBody);
+				await V2ApiRepositoriesService.indexRepositoryV2V2RepositoriesPost(
+					requestBody,
+				);
 
 			spinner.stop("Repository indexed");
 			fmt.output(result);
@@ -110,12 +114,13 @@ const listCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiRepositoriesService.listRepositoriesV2V2RepositoriesGet(
-				flags.query,
-				flags.status,
-				flags.limit,
-				flags.offset,
-			);
+			const result =
+				await V2ApiRepositoriesService.listRepositoriesV2V2RepositoriesGet(
+					flags.query,
+					flags.status,
+					flags.limit,
+					flags.offset,
+				);
 
 			spinner.stop("Repositories retrieved");
 			fmt.output(result);
@@ -151,7 +156,9 @@ const statusCommand = defineCommand({
 			await createSdk({ apiKey: global.apiKey });
 
 			const result =
-				await V2ApiRepositoriesService.getRepositoryStatusV2V2RepositoriesRepositoryIdGet(args.id);
+				await V2ApiRepositoriesService.getRepositoryStatusV2V2RepositoriesRepositoryIdGet(
+					args.id,
+				);
 
 			spinner.stop("Status retrieved");
 
@@ -212,7 +219,9 @@ const deleteCommand = defineCommand({
 			await createSdk({ apiKey: global.apiKey });
 
 			const result =
-				await V2ApiRepositoriesService.deleteRepositoryV2V2RepositoriesRepositoryIdDelete(args.id);
+				await V2ApiRepositoriesService.deleteRepositoryV2V2RepositoriesRepositoryIdDelete(
+					args.id,
+				);
 
 			spinner.stop("Repository deleted");
 			fmt.output(result);
@@ -297,7 +306,8 @@ const readCommand = defineCommand({
 		},
 		ref: {
 			type: "string",
-			description: "Git ref (branch, tag, or commit SHA). Takes precedence over --branch",
+			description:
+				"Git ref (branch, tag, or commit SHA). Takes precedence over --branch",
 		},
 	},
 	async run({ args, flags }) {

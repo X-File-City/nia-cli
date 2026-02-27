@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock SDK ---
 
@@ -120,7 +124,13 @@ describe("search commands", () => {
 		});
 
 		test("returns empty object when no global flags", () => {
-			const flags = parseGlobalFlags(["node", "cli", "search", "universal", "test"]);
+			const flags = parseGlobalFlags([
+				"node",
+				"cli",
+				"search",
+				"universal",
+				"test",
+			]);
 			expect(flags.apiKey).toBeUndefined();
 			expect(flags.output).toBeUndefined();
 			expect(flags.verbose).toBeUndefined();
@@ -290,7 +300,9 @@ describe("search commands", () => {
 			await sdk.search.web({ query: "TypeScript best practices" });
 
 			expect(mockWeb).toHaveBeenCalledTimes(1);
-			expect(mockWeb).toHaveBeenCalledWith({ query: "TypeScript best practices" });
+			expect(mockWeb).toHaveBeenCalledWith({
+				query: "TypeScript best practices",
+			});
 		});
 
 		test("passes num_results parameter", async () => {
@@ -308,7 +320,10 @@ describe("search commands", () => {
 
 			await sdk.search.web({ query: "test", category: "github" });
 
-			expect(mockWeb).toHaveBeenCalledWith({ query: "test", category: "github" });
+			expect(mockWeb).toHaveBeenCalledWith({
+				query: "test",
+				category: "github",
+			});
 		});
 
 		test("passes days_back filter", async () => {
@@ -351,7 +366,15 @@ describe("search commands", () => {
 		});
 
 		test("validates category against allowed values", () => {
-			const validCategories = ["github", "company", "research", "news", "tweet", "pdf", "blog"];
+			const validCategories = [
+				"github",
+				"company",
+				"research",
+				"news",
+				"tweet",
+				"pdf",
+				"blog",
+			];
 
 			for (const cat of validCategories) {
 				expect(validCategories.includes(cat)).toBe(true);
@@ -398,7 +421,10 @@ describe("search commands", () => {
 		test("returns deep research results", async () => {
 			mockDeep.mockImplementationOnce(() =>
 				Promise.resolve({
-					data: { summary: "Detailed analysis...", key_findings: ["a", "b", "c"] },
+					data: {
+						summary: "Detailed analysis...",
+						key_findings: ["a", "b", "c"],
+					},
 					status: "completed",
 					citations: null,
 				}),
@@ -425,7 +451,9 @@ describe("search commands", () => {
 			const { createSdk } = await import("../../src/services/sdk.ts");
 			const sdk = await createSdk();
 
-			await expect(sdk.search.universal({ query: "test" })).rejects.toThrow("Unauthorized");
+			await expect(sdk.search.universal({ query: "test" })).rejects.toThrow(
+				"Unauthorized",
+			);
 		});
 
 		test("handles 429 rate limit error", async () => {
@@ -438,12 +466,16 @@ describe("search commands", () => {
 			const { createSdk } = await import("../../src/services/sdk.ts");
 			const sdk = await createSdk();
 
-			await expect(sdk.search.web({ query: "test" })).rejects.toThrow("Rate Limited");
+			await expect(sdk.search.web({ query: "test" })).rejects.toThrow(
+				"Rate Limited",
+			);
 		});
 
 		test("handles 500 server error", async () => {
 			mockDeep.mockImplementationOnce(() => {
-				const error = new Error("Internal Server Error") as Error & { status: number };
+				const error = new Error("Internal Server Error") as Error & {
+					status: number;
+				};
 				error.status = 500;
 				return Promise.reject(error);
 			});
@@ -451,7 +483,9 @@ describe("search commands", () => {
 			const { createSdk } = await import("../../src/services/sdk.ts");
 			const sdk = await createSdk();
 
-			await expect(sdk.search.deep({ query: "test" })).rejects.toThrow("Internal Server Error");
+			await expect(sdk.search.deep({ query: "test" })).rejects.toThrow(
+				"Internal Server Error",
+			);
 		});
 
 		test("handles missing API key error", async () => {
@@ -473,10 +507,15 @@ describe("search commands", () => {
 
 	describe("flag-to-parameter mapping", () => {
 		test("repos flag splits into repositories array", () => {
-			const reposFlag = "vercel/ai, openai/openai-node, langchain-ai/langchainjs";
+			const reposFlag =
+				"vercel/ai, openai/openai-node, langchain-ai/langchainjs";
 			const repositories = reposFlag.split(",").map((s) => s.trim());
 
-			expect(repositories).toEqual(["vercel/ai", "openai/openai-node", "langchain-ai/langchainjs"]);
+			expect(repositories).toEqual([
+				"vercel/ai",
+				"openai/openai-node",
+				"langchain-ai/langchainjs",
+			]);
 		});
 
 		test("docs flag splits into data_sources array", () => {
@@ -490,7 +529,9 @@ describe("search commands", () => {
 			const query = "How does authentication work?";
 			const messages = [{ role: "user", content: query }];
 
-			expect(messages).toEqual([{ role: "user", content: "How does authentication work?" }]);
+			expect(messages).toEqual([
+				{ role: "user", content: "How does authentication work?" },
+			]);
 		});
 
 		test("search-mode maps to search_mode", () => {

@@ -4,7 +4,12 @@ import { parseGlobalFlags } from "../../src/utils/global-flags.ts";
 describe("parseGlobalFlags", () => {
 	describe("--api-key", () => {
 		test("parses --api-key with space-separated value", () => {
-			const flags = parseGlobalFlags(["bun", "nia", "--api-key", "nia_test123"]);
+			const flags = parseGlobalFlags([
+				"bun",
+				"nia",
+				"--api-key",
+				"nia_test123",
+			]);
 			expect(flags.apiKey).toBe("nia_test123");
 		});
 
@@ -19,7 +24,13 @@ describe("parseGlobalFlags", () => {
 		});
 
 		test("does not consume next arg if it starts with -", () => {
-			const flags = parseGlobalFlags(["bun", "nia", "--api-key", "--output", "json"]);
+			const flags = parseGlobalFlags([
+				"bun",
+				"nia",
+				"--api-key",
+				"--output",
+				"json",
+			]);
 			expect(flags.apiKey).toBeUndefined();
 			expect(flags.output).toBe("json");
 		});
@@ -70,7 +81,13 @@ describe("parseGlobalFlags", () => {
 		});
 
 		test("works with other flags", () => {
-			const flags = parseGlobalFlags(["bun", "nia", "--verbose", "--output", "json"]);
+			const flags = parseGlobalFlags([
+				"bun",
+				"nia",
+				"--verbose",
+				"--output",
+				"json",
+			]);
 			expect(flags.verbose).toBe(true);
 			expect(flags.output).toBe("json");
 		});

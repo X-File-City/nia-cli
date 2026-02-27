@@ -10,7 +10,7 @@ process.env.XDG_CONFIG_HOME = "/tmp/nia-cli-test-config";
 
 // Suppress console output during tests unless DEBUG is set
 if (!process.env.DEBUG) {
-	const noop = () => {};
+	const _noop = () => {};
 	// biome-ignore lint/suspicious/noExplicitAny: test setup intentionally silences console
 	(globalThis as any).__originalConsole = {
 		log: console.log,

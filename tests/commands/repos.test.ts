@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock V2ApiRepositoriesService ---
 
@@ -39,7 +43,11 @@ const mockListRepositories = mock(() =>
 			status: "indexing",
 			display_name: null,
 			is_global: true,
-			progress: { percentage: 45, stage: "parsing", message: "Parsing files..." },
+			progress: {
+				percentage: 45,
+				stage: "parsing",
+				message: "Parsing files...",
+			},
 			error: null,
 			category_id: null,
 		},
@@ -86,7 +94,8 @@ mock.module("nia-ai-ts", () => ({
 		listRepositoriesV2V2RepositoriesGet: mockListRepositories,
 		getRepositoryStatusV2V2RepositoriesRepositoryIdGet: mockGetRepositoryStatus,
 		deleteRepositoryV2V2RepositoriesRepositoryIdDelete: mockDeleteRepository,
-		renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch: mockRenameRepository,
+		renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch:
+			mockRenameRepository,
 	},
 }));
 
@@ -131,10 +140,14 @@ describe("repos commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			await svc.indexRepositoryV2V2RepositoriesPost({ repository: "vercel/ai" });
+			await svc.indexRepositoryV2V2RepositoriesPost({
+				repository: "vercel/ai",
+			});
 
 			expect(mockIndexRepository).toHaveBeenCalledTimes(1);
-			expect(mockIndexRepository).toHaveBeenCalledWith({ repository: "vercel/ai" });
+			expect(mockIndexRepository).toHaveBeenCalledWith({
+				repository: "vercel/ai",
+			});
 		});
 
 		test("passes branch parameter", async () => {
@@ -241,9 +254,19 @@ describe("repos commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			await svc.listRepositoriesV2V2RepositoriesGet("vercel", "completed", 10, 5);
+			await svc.listRepositoriesV2V2RepositoriesGet(
+				"vercel",
+				"completed",
+				10,
+				5,
+			);
 
-			expect(mockListRepositories).toHaveBeenCalledWith("vercel", "completed", 10, 5);
+			expect(mockListRepositories).toHaveBeenCalledWith(
+				"vercel",
+				"completed",
+				10,
+				5,
+			);
 		});
 
 		test("returns array of RepositoryItem objects", async () => {
@@ -254,7 +277,9 @@ describe("repos commands", () => {
 
 			expect(result).toHaveLength(2);
 
+			// biome-ignore lint/style/noNonNullAssertion: length verified above
 			const first = result[0]!;
+			// biome-ignore lint/style/noNonNullAssertion: length verified above
 			const second = result[1]!;
 			expect(first.repository).toBe("vercel/ai");
 			expect(first.status).toBe("completed");
@@ -269,6 +294,7 @@ describe("repos commands", () => {
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
 			const result = await svc.listRepositoriesV2V2RepositoriesGet();
 
+			// biome-ignore lint/style/noNonNullAssertion: length verified in prior test
 			const indexingRepo = result[1]!;
 			expect(indexingRepo.progress).toEqual({
 				percentage: 45,
@@ -295,7 +321,10 @@ describe("repos commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			const result = await svc.getRepositoryStatusV2V2RepositoriesRepositoryIdGet("repo-001");
+			const result =
+				await svc.getRepositoryStatusV2V2RepositoriesRepositoryIdGet(
+					"repo-001",
+				);
 
 			expect(result.repository).toBe("vercel/ai");
 			expect(result.branch).toBe("main");
@@ -320,7 +349,10 @@ describe("repos commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			const result = await svc.getRepositoryStatusV2V2RepositoriesRepositoryIdGet("repo-002");
+			const result =
+				await svc.getRepositoryStatusV2V2RepositoriesRepositoryIdGet(
+					"repo-002",
+				);
 
 			expect(result.status).toBe("indexing");
 			expect(result.progress).toEqual({
@@ -344,10 +376,15 @@ describe("repos commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			const result = await svc.getRepositoryStatusV2V2RepositoriesRepositoryIdGet("repo-err");
+			const result =
+				await svc.getRepositoryStatusV2V2RepositoriesRepositoryIdGet(
+					"repo-err",
+				);
 
 			expect(result.status).toBe("error");
-			expect(result.error).toBe("Failed to clone repository: authentication required");
+			expect(result.error).toBe(
+				"Failed to clone repository: authentication required",
+			);
 		});
 	});
 
@@ -368,7 +405,10 @@ describe("repos commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			const result = await svc.deleteRepositoryV2V2RepositoriesRepositoryIdDelete("repo-001");
+			const result =
+				await svc.deleteRepositoryV2V2RepositoriesRepositoryIdDelete(
+					"repo-001",
+				);
 
 			expect(result.success).toBe(true);
 			expect(result.message).toBe("Repository deleted successfully");
@@ -382,9 +422,12 @@ describe("repos commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			await svc.renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch("repo-001", {
-				new_name: "My AI SDK",
-			});
+			await svc.renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch(
+				"repo-001",
+				{
+					new_name: "My AI SDK",
+				},
+			);
 
 			expect(mockRenameRepository).toHaveBeenCalledTimes(1);
 			expect(mockRenameRepository).toHaveBeenCalledWith("repo-001", {
@@ -396,9 +439,13 @@ describe("repos commands", () => {
 			await createSdk();
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
-			const result = await svc.renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch("repo-001", {
-				new_name: "My AI SDK",
-			});
+			const result =
+				await svc.renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch(
+					"repo-001",
+					{
+						new_name: "My AI SDK",
+					},
+				);
 
 			expect(result.success).toBe(true);
 			expect(result.message).toBe("Repository renamed successfully");
@@ -420,7 +467,9 @@ describe("repos commands", () => {
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
 
-			await expect(svc.listRepositoriesV2V2RepositoriesGet()).rejects.toThrow("Unauthorized");
+			await expect(svc.listRepositoriesV2V2RepositoriesGet()).rejects.toThrow(
+				"Unauthorized",
+			);
 		});
 
 		test("handles 404 not found error", async () => {
@@ -441,7 +490,9 @@ describe("repos commands", () => {
 
 		test("handles 422 validation error", async () => {
 			mockIndexRepository.mockImplementationOnce(() => {
-				const error = new Error("Invalid repository format") as Error & { status: number };
+				const error = new Error("Invalid repository format") as Error & {
+					status: number;
+				};
 				error.status = 422;
 				return Promise.reject(error);
 			});
@@ -466,12 +517,16 @@ describe("repos commands", () => {
 
 			const { V2ApiRepositoriesService: svc } = await import("nia-ai-ts");
 
-			await expect(svc.listRepositoriesV2V2RepositoriesGet()).rejects.toThrow("Rate Limited");
+			await expect(svc.listRepositoriesV2V2RepositoriesGet()).rejects.toThrow(
+				"Rate Limited",
+			);
 		});
 
 		test("handles 500 server error", async () => {
 			mockDeleteRepository.mockImplementationOnce(() => {
-				const error = new Error("Internal Server Error") as Error & { status: number };
+				const error = new Error("Internal Server Error") as Error & {
+					status: number;
+				};
 				error.status = 500;
 				return Promise.reject(error);
 			});

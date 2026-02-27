@@ -21,7 +21,8 @@ const jobCommand = defineCommand({
 		{
 			name: "query",
 			type: "string",
-			description: "Research question (prompted interactively if omitted in a TTY)",
+			description:
+				"Research question (prompted interactively if omitted in a TTY)",
 		},
 	] as const,
 	flags: {
@@ -39,7 +40,8 @@ const jobCommand = defineCommand({
 		},
 		model: {
 			type: "string",
-			description: "Model to use (e.g., claude-opus-4-6, claude-sonnet-4-5-20250929)",
+			description:
+				"Model to use (e.g., claude-opus-4-6, claude-sonnet-4-5-20250929)",
 		},
 	},
 	async run({ args, flags }) {
@@ -198,7 +200,10 @@ const cancelCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await DefaultService.cancelOracleJobV2OracleJobsJobIdDelete(args["job-id"]);
+			const result =
+				await DefaultService.cancelOracleJobV2OracleJobsJobIdDelete(
+					args["job-id"],
+				);
 
 			spinner.stop("Oracle job cancelled");
 
@@ -223,7 +228,8 @@ const jobsCommand = defineCommand({
 	flags: {
 		status: {
 			type: "string",
-			description: "Filter by status: queued, running, completed, failed, cancelled",
+			description:
+				"Filter by status: queued, running, completed, failed, cancelled",
 		},
 		limit: {
 			type: "number",
@@ -240,9 +246,17 @@ const jobsCommand = defineCommand({
 		const spinner = createSpinner({ color: global.color });
 
 		// Validate status if provided
-		const validStatuses = ["queued", "running", "completed", "failed", "cancelled"];
+		const validStatuses = [
+			"queued",
+			"running",
+			"completed",
+			"failed",
+			"cancelled",
+		];
 		if (flags.status && !validStatuses.includes(flags.status)) {
-			fmt.error(`Invalid status: "${flags.status}". Allowed: ${validStatuses.join(", ")}`);
+			fmt.error(
+				`Invalid status: "${flags.status}". Allowed: ${validStatuses.join(", ")}`,
+			);
 			process.exit(1);
 		}
 
@@ -409,9 +423,10 @@ const sessionCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet(
-				args["session-id"],
-			);
+			const result =
+				await DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet(
+					args["session-id"],
+				);
 
 			spinner.stop("Session details retrieved");
 
@@ -495,7 +510,9 @@ const messagesCommand = defineCommand({
 						const message = msg as Record<string, unknown>;
 						const role = String(message.role ?? "unknown");
 						const content = String(message.content ?? "");
-						const timestamp = message.created_at ? ` (${String(message.created_at)})` : "";
+						const timestamp = message.created_at
+							? ` (${String(message.created_at)})`
+							: "";
 
 						console.log(`[${role}]${timestamp}`);
 						console.log(content);
@@ -562,7 +579,9 @@ const chatCommand = defineCommand({
 			);
 
 			if (!response.ok || !response.body) {
-				const err = new Error(`Chat request failed with status ${response.status}`);
+				const err = new Error(
+					`Chat request failed with status ${response.status}`,
+				);
 				(err as Error & { status: number }).status = response.status;
 				throw err;
 			}
@@ -629,16 +648,19 @@ const deleteSessionCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete(
-				args["session-id"],
-			);
+			const result =
+				await DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete(
+					args["session-id"],
+				);
 
 			spinner.stop("Oracle session deleted");
 
 			if (global.output === "json") {
 				fmt.output(result);
 			} else {
-				console.log(`Session ${args["session-id"]} and its chat history have been deleted.`);
+				console.log(
+					`Session ${args["session-id"]} and its chat history have been deleted.`,
+				);
 			}
 		} catch (error) {
 			spinner.stop("Failed to delete Oracle session");
@@ -676,11 +698,16 @@ const oracleUsageCommand = defineCommand({
 					console.log(`Plan: ${usage.subscription_tier}`);
 				}
 				if (usage.billing_period_start && usage.billing_period_end) {
-					console.log(`Period: ${usage.billing_period_start} — ${usage.billing_period_end}`);
+					console.log(
+						`Period: ${usage.billing_period_start} — ${usage.billing_period_end}`,
+					);
 				}
 
 				const ops = usage.usage as
-					| Record<string, { used?: number; limit?: number; unlimited?: boolean }>
+					| Record<
+							string,
+							{ used?: number; limit?: number; unlimited?: boolean }
+					  >
 					| undefined;
 				if (ops) {
 					console.log("\nUsage breakdown:");

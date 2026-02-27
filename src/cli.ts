@@ -1,5 +1,9 @@
 import { defineCommand, runMain } from "@crustjs/core";
-import { autoCompletePlugin, helpPlugin, versionPlugin } from "@crustjs/plugins";
+import {
+	autoCompletePlugin,
+	helpPlugin,
+	versionPlugin,
+} from "@crustjs/plugins";
 import pkg from "../package.json";
 import { authCommand } from "./commands/auth";
 import { categoriesCommand } from "./commands/categories";

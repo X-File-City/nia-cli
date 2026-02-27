@@ -49,7 +49,9 @@ const listCommand = defineCommand({
 			// In text mode, show as table
 			if (global.output !== "json") {
 				const data = result as Record<string, unknown>;
-				const categories = (data.categories ?? data.items ?? []) as Array<Record<string, unknown>>;
+				const categories = (data.categories ?? data.items ?? []) as Array<
+					Record<string, unknown>
+				>;
 
 				if (categories.length === 0) {
 					console.log("No categories found.");
@@ -121,7 +123,8 @@ const createCommand = defineCommand({
 				payload.order = flags.order;
 			}
 
-			const result = await V2ApiCategoriesService.createCategoryV2CategoriesPost(payload);
+			const result =
+				await V2ApiCategoriesService.createCategoryV2CategoriesPost(payload);
 
 			spinner.stop("Category created");
 
@@ -185,7 +188,9 @@ const updateCommand = defineCommand({
 
 		// Require at least one update field
 		if (!flags.name && !flags.color && flags.order === undefined) {
-			fmt.error("Provide at least one field to update: --name, --color, or --order");
+			fmt.error(
+				"Provide at least one field to update: --name, --color, or --order",
+			);
 			process.exit(1);
 		}
 
@@ -208,10 +213,11 @@ const updateCommand = defineCommand({
 				payload.order = flags.order;
 			}
 
-			const result = await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch(
-				args.id,
-				payload,
-			);
+			const result =
+				await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch(
+					args.id,
+					payload,
+				);
 
 			spinner.stop("Category updated");
 
@@ -265,9 +271,10 @@ const deleteCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiCategoriesService.deleteCategoryV2CategoriesCategoryIdDelete(
-				args.id,
-			);
+			const result =
+				await V2ApiCategoriesService.deleteCategoryV2CategoriesCategoryIdDelete(
+					args.id,
+				);
 
 			spinner.stop("Category deleted");
 
@@ -313,7 +320,9 @@ const assignCommand = defineCommand({
 		const categoryId = args["category-id"];
 		const isUnassign = categoryId === "null";
 
-		spinner.start(isUnassign ? "Removing category from source..." : "Assigning category...");
+		spinner.start(
+			isUnassign ? "Removing category from source..." : "Assigning category...",
+		);
 
 		try {
 			await createSdk({ apiKey: global.apiKey });
@@ -338,7 +347,13 @@ const assignCommand = defineCommand({
 					console.log(`Category ${categoryId} assigned to source ${sourceId}.`);
 				}
 			} else {
-				fmt.output(result ?? { success: true, source_id: sourceId, category_id: categoryId });
+				fmt.output(
+					result ?? {
+						success: true,
+						source_id: sourceId,
+						category_id: categoryId,
+					},
+				);
 			}
 		} catch (error) {
 			spinner.stop("Failed to assign category");

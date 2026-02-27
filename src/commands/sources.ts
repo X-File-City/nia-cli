@@ -5,7 +5,12 @@ import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
-import { checkFirstRun, promptOptional, promptSelect, requireArg } from "../utils/prompts.ts";
+import {
+	checkFirstRun,
+	promptOptional,
+	promptSelect,
+	requireArg,
+} from "../utils/prompts.ts";
 import { createSpinner } from "../utils/spinner.ts";
 
 /**
@@ -30,7 +35,9 @@ function validateSourceType(type: string | undefined): SourceType | undefined {
 	if (SOURCE_TYPES.includes(type as SourceType)) {
 		return type as SourceType;
 	}
-	console.error(`Invalid source type: "${type}". Allowed: ${SOURCE_TYPES.join(", ")}`);
+	console.error(
+		`Invalid source type: "${type}". Allowed: ${SOURCE_TYPES.join(", ")}`,
+	);
 	process.exit(1);
 }
 
@@ -101,7 +108,9 @@ const indexCommand = defineCommand({
 
 		let displayName = flags.name;
 		if (!displayName) {
-			displayName = (await promptOptional({ message: "Display name (optional):" })) ?? undefined;
+			displayName =
+				(await promptOptional({ message: "Display name (optional):" })) ??
+				undefined;
 		}
 
 		const sourceType = await promptSelect({
@@ -167,7 +176,8 @@ const listCommand = defineCommand({
 	flags: {
 		type: {
 			type: "string",
-			description: "Filter by type: repository, documentation, research_paper, huggingface_dataset",
+			description:
+				"Filter by type: repository, documentation, research_paper, huggingface_dataset",
 		},
 		query: {
 			type: "string",
@@ -252,7 +262,10 @@ const getCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(args.id, sourceType);
+			const result = await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(
+				args.id,
+				sourceType,
+			);
 
 			spinner.stop("Source retrieved");
 			fmt.output(result);
@@ -359,11 +372,14 @@ const updateCommand = defineCommand({
 				requestBody.category_id = flags.category;
 			}
 
-			const result = await V2ApiSourcesService.updateSourceV2SourcesSourceIdPatch(
-				args.id,
-				requestBody as Parameters<typeof V2ApiSourcesService.updateSourceV2SourcesSourceIdPatch>[1],
-				sourceType,
-			);
+			const result =
+				await V2ApiSourcesService.updateSourceV2SourcesSourceIdPatch(
+					args.id,
+					requestBody as Parameters<
+						typeof V2ApiSourcesService.updateSourceV2SourcesSourceIdPatch
+					>[1],
+					sourceType,
+				);
 
 			spinner.stop("Source updated");
 			fmt.output(result);
@@ -406,10 +422,11 @@ const deleteCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiSourcesService.deleteSourceV2SourcesSourceIdDelete(
-				args.id,
-				sourceType,
-			);
+			const result =
+				await V2ApiSourcesService.deleteSourceV2SourcesSourceIdDelete(
+					args.id,
+					sourceType,
+				);
 
 			spinner.stop("Source deleted");
 			fmt.output(result);
@@ -453,12 +470,17 @@ const syncCommand = defineCommand({
 			const sdk = await createSdk({ apiKey: global.apiKey });
 
 			// Fetch the existing source to get its URL/identifier
-			const source = await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(args.id, sourceType);
+			const source = await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(
+				args.id,
+				sourceType,
+			);
 
 			const url = source.identifier;
 			if (!url) {
 				spinner.stop("Sync failed");
-				fmt.error("Could not determine the source URL. The source may not have an identifier.");
+				fmt.error(
+					"Could not determine the source URL. The source may not have an identifier.",
+				);
 				process.exit(1);
 			}
 
@@ -507,10 +529,13 @@ const renameCommand = defineCommand({
 		try {
 			await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiDataSourcesService.renameDataSourceV2V2DataSourcesRenamePatch({
-				identifier: args.identifier,
-				new_name: args["new-name"],
-			});
+			const result =
+				await V2ApiDataSourcesService.renameDataSourceV2V2DataSourcesRenamePatch(
+					{
+						identifier: args.identifier,
+						new_name: args["new-name"],
+					},
+				);
 
 			spinner.stop("Source renamed");
 			fmt.output(result);
@@ -685,10 +710,11 @@ const grepCommand = defineCommand({
 				requestBody.max_total_matches = flags["max-total"];
 			}
 
-			const result = await V2ApiDataSourcesService.grepDocumentationV2V2DataSourcesSourceIdGrepPost(
-				args.id,
-				requestBody,
-			);
+			const result =
+				await V2ApiDataSourcesService.grepDocumentationV2V2DataSourcesSourceIdGrepPost(
+					args.id,
+					requestBody,
+				);
 
 			spinner.stop("Search complete");
 			fmt.output(result);
@@ -732,7 +758,9 @@ const treeCommand = defineCommand({
 			await createSdk({ apiKey: global.apiKey });
 
 			const result =
-				await V2ApiDataSourcesService.getDocumentationTreeV2V2DataSourcesSourceIdTreeGet(args.id);
+				await V2ApiDataSourcesService.getDocumentationTreeV2V2DataSourcesSourceIdTreeGet(
+					args.id,
+				);
 
 			spinner.stop("Tree retrieved");
 

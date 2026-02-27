@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock V2ApiDataSourcesService ---
 
@@ -54,7 +58,8 @@ const mockGetTree = mock(() =>
 				{ name: "README.md" },
 			],
 		},
-		tree_string: "root\n├── src/\n│   ├── index.ts\n│   └── utils.ts\n└── README.md",
+		tree_string:
+			"root\n├── src/\n│   ├── index.ts\n│   └── utils.ts\n└── README.md",
 		tree_type: "documentation",
 		page_count: 5,
 	}),
@@ -144,7 +149,10 @@ describe("sources content commands", () => {
 			await createSdk();
 
 			const { V2ApiDataSourcesService: svc } = await import("nia-ai-ts");
-			await svc.readDocumentationFileV2V2DataSourcesSourceIdReadGet("src-123", "src/index.ts");
+			await svc.readDocumentationFileV2V2DataSourcesSourceIdReadGet(
+				"src-123",
+				"src/index.ts",
+			);
 
 			expect(mockReadFile).toHaveBeenCalledTimes(1);
 			expect(mockReadFile).toHaveBeenCalledWith("src-123", "src/index.ts");
@@ -202,10 +210,11 @@ describe("sources content commands", () => {
 			await createSdk();
 
 			const { V2ApiDataSourcesService: svc } = await import("nia-ai-ts");
-			const result = await svc.readDocumentationFileV2V2DataSourcesSourceIdReadGet(
-				"src-123",
-				"src/index.ts",
-			);
+			const result =
+				await svc.readDocumentationFileV2V2DataSourcesSourceIdReadGet(
+					"src-123",
+					"src/index.ts",
+				);
 
 			expect(result.success).toBe(true);
 			expect(result.content).toBe('console.log("hello world");');
@@ -225,7 +234,10 @@ describe("sources content commands", () => {
 			const { V2ApiDataSourcesService: svc } = await import("nia-ai-ts");
 
 			await expect(
-				svc.readDocumentationFileV2V2DataSourcesSourceIdReadGet("src-123", "nonexistent.ts"),
+				svc.readDocumentationFileV2V2DataSourcesSourceIdReadGet(
+					"src-123",
+					"nonexistent.ts",
+				),
 			).rejects.toThrow("Not Found");
 		});
 	});
@@ -313,9 +325,12 @@ describe("sources content commands", () => {
 			await createSdk();
 
 			const { V2ApiDataSourcesService: svc } = await import("nia-ai-ts");
-			const result = await svc.grepDocumentationV2V2DataSourcesSourceIdGrepPost("src-123", {
-				pattern: "hello",
-			});
+			const result = await svc.grepDocumentationV2V2DataSourcesSourceIdGrepPost(
+				"src-123",
+				{
+					pattern: "hello",
+				},
+			);
 
 			expect(result.success).toBe(true);
 			expect(result.pattern).toBe("hello");
@@ -343,9 +358,12 @@ describe("sources content commands", () => {
 			await createSdk();
 
 			const { V2ApiDataSourcesService: svc } = await import("nia-ai-ts");
-			const result = await svc.grepDocumentationV2V2DataSourcesSourceIdGrepPost("src-123", {
-				pattern: "nonexistent",
-			});
+			const result = await svc.grepDocumentationV2V2DataSourcesSourceIdGrepPost(
+				"src-123",
+				{
+					pattern: "nonexistent",
+				},
+			);
 
 			expect(result.total_matches).toBe(0);
 			expect(result.matches).toHaveLength(0);
@@ -367,7 +385,8 @@ describe("sources content commands", () => {
 			await createSdk();
 
 			const { V2ApiDataSourcesService: svc } = await import("nia-ai-ts");
-			const result = await svc.getDocumentationTreeV2V2DataSourcesSourceIdTreeGet("src-123");
+			const result =
+				await svc.getDocumentationTreeV2V2DataSourcesSourceIdTreeGet("src-123");
 
 			expect(result.success).toBe(true);
 			expect(result.tree).toBeDefined();
@@ -401,7 +420,9 @@ describe("sources content commands", () => {
 			await createSdk();
 
 			const { V2ApiDataSourcesService: svc } = await import("nia-ai-ts");
-			await svc.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet("src-123");
+			await svc.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet(
+				"src-123",
+			);
 
 			expect(mockLsDir).toHaveBeenCalledTimes(1);
 			expect(mockLsDir).toHaveBeenCalledWith("src-123");
@@ -411,7 +432,10 @@ describe("sources content commands", () => {
 			await createSdk();
 
 			const { V2ApiDataSourcesService: svc } = await import("nia-ai-ts");
-			await svc.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet("src-123", "src/");
+			await svc.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet(
+				"src-123",
+				"src/",
+			);
 
 			expect(mockLsDir).toHaveBeenCalledWith("src-123", "src/");
 		});
@@ -420,12 +444,19 @@ describe("sources content commands", () => {
 			await createSdk();
 
 			const { V2ApiDataSourcesService: svc } = await import("nia-ai-ts");
-			const result = await svc.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet("src-123");
+			const result =
+				await svc.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet(
+					"src-123",
+				);
 
 			expect(result.success).toBe(true);
 			expect(result.path).toBe("/");
 			expect(result.directories).toEqual(["src", "tests", "docs"]);
-			expect(result.files).toEqual(["README.md", "package.json", "tsconfig.json"]);
+			expect(result.files).toEqual([
+				"README.md",
+				"package.json",
+				"tsconfig.json",
+			]);
 			expect(result.total).toBe(6);
 		});
 
@@ -443,10 +474,11 @@ describe("sources content commands", () => {
 			await createSdk();
 
 			const { V2ApiDataSourcesService: svc } = await import("nia-ai-ts");
-			const result = await svc.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet(
-				"src-123",
-				"empty-dir/",
-			);
+			const result =
+				await svc.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet(
+					"src-123",
+					"empty-dir/",
+				);
 
 			expect(result.total).toBe(0);
 			expect(result.directories).toHaveLength(0);
@@ -465,7 +497,10 @@ describe("sources content commands", () => {
 			const { V2ApiDataSourcesService: svc } = await import("nia-ai-ts");
 
 			await expect(
-				svc.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet("src-123", "nonexistent/"),
+				svc.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet(
+					"src-123",
+					"nonexistent/",
+				),
 			).rejects.toThrow("Not Found");
 		});
 	});
@@ -546,7 +581,10 @@ describe("sources content commands", () => {
 			const { V2ApiDataSourcesService: svc } = await import("nia-ai-ts");
 
 			await expect(
-				svc.readDocumentationFileV2V2DataSourcesSourceIdReadGet("src-123", "test.ts"),
+				svc.readDocumentationFileV2V2DataSourcesSourceIdReadGet(
+					"src-123",
+					"test.ts",
+				),
 			).rejects.toThrow("Unauthorized");
 		});
 
@@ -570,7 +608,9 @@ describe("sources content commands", () => {
 
 		test("handles server error on tree", async () => {
 			mockGetTree.mockImplementationOnce(() => {
-				const error = new Error("Internal Server Error") as Error & { status: number };
+				const error = new Error("Internal Server Error") as Error & {
+					status: number;
+				};
 				error.status = 500;
 				return Promise.reject(error);
 			});

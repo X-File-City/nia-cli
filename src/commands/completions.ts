@@ -8,7 +8,16 @@ import { defineCommand } from "@crustjs/core";
 const COMMAND_TREE: Record<string, string[]> = {
 	auth: ["login", "logout", "status"],
 	search: ["universal", "query", "web", "deep"],
-	repos: ["index", "list", "status", "delete", "rename", "read", "grep", "tree"],
+	repos: [
+		"index",
+		"list",
+		"status",
+		"delete",
+		"rename",
+		"read",
+		"grep",
+		"tree",
+	],
 	sources: [
 		"index",
 		"list",
@@ -54,7 +63,9 @@ const TOP_COMMANDS = Object.keys(COMMAND_TREE);
  * Generate a Bash completion script for the nia CLI.
  */
 function generateBashCompletions(): string {
-	const subcommandCases = TOP_COMMANDS.filter((cmd) => (COMMAND_TREE[cmd]?.length ?? 0) > 0)
+	const subcommandCases = TOP_COMMANDS.filter(
+		(cmd) => (COMMAND_TREE[cmd]?.length ?? 0) > 0,
+	)
 		.map((cmd) => {
 			const subs = COMMAND_TREE[cmd]?.join(" ") ?? "";
 			return `        ${cmd}) COMPREPLY=( $(compgen -W "${subs}" -- "\${cur}") ) ;;`;
@@ -89,7 +100,9 @@ complete -F _nia_completions nia
  * Generate a Zsh completion script for the nia CLI.
  */
 function generateZshCompletions(): string {
-	const subcommandCases = TOP_COMMANDS.filter((cmd) => (COMMAND_TREE[cmd]?.length ?? 0) > 0)
+	const subcommandCases = TOP_COMMANDS.filter(
+		(cmd) => (COMMAND_TREE[cmd]?.length ?? 0) > 0,
+	)
 		.map((cmd) => {
 			const subs = COMMAND_TREE[cmd]?.map((s) => `'${s}'`).join(" ") ?? "";
 			return `            ${cmd}) compadd ${subs} ;;`;
@@ -124,13 +137,17 @@ _nia "$@"
  */
 function generateFishCompletions(): string {
 	const topCompletions = TOP_COMMANDS.map(
-		(cmd) => `complete -c nia -n "__fish_use_subcommand" -a "${cmd}" -d "${cmd} commands"`,
+		(cmd) =>
+			`complete -c nia -n "__fish_use_subcommand" -a "${cmd}" -d "${cmd} commands"`,
 	).join("\n");
 
-	const subCompletions = TOP_COMMANDS.filter((cmd) => (COMMAND_TREE[cmd]?.length ?? 0) > 0)
+	const subCompletions = TOP_COMMANDS.filter(
+		(cmd) => (COMMAND_TREE[cmd]?.length ?? 0) > 0,
+	)
 		.flatMap((cmd) =>
 			(COMMAND_TREE[cmd] ?? []).map(
-				(sub) => `complete -c nia -n "__fish_seen_subcommand_from ${cmd}" -a "${sub}"`,
+				(sub) =>
+					`complete -c nia -n "__fish_seen_subcommand_from ${cmd}" -a "${sub}"`,
 			),
 		)
 		.join("\n");
@@ -199,4 +216,8 @@ export const completionsCommand = defineCommand({
 });
 
 // Exported for testing
-export { generateBashCompletions, generateZshCompletions, generateFishCompletions };
+export {
+	generateBashCompletions,
+	generateZshCompletions,
+	generateFishCompletions,
+};

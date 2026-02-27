@@ -266,7 +266,10 @@ describe("config CLI commands", () => {
 
 			// Simulate sequential updates (not truly concurrent due to file locking)
 			await updateConfig((config) => ({ ...config, output: "json" }));
-			await updateConfig((config) => ({ ...config, baseUrl: "https://custom.com" }));
+			await updateConfig((config) => ({
+				...config,
+				baseUrl: "https://custom.com",
+			}));
 
 			const config = await readConfig();
 			expect(config.output).toBe("json");

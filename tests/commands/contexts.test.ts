@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
-import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import {
+	getConfigDirPath,
+	resetConfig,
+	writeConfig,
+} from "../../src/services/config.ts";
 
 // --- Mock SDK ---
 
@@ -343,7 +347,13 @@ describe("contexts commands", () => {
 				undefined,
 			);
 
-			expect(mockListContexts).toHaveBeenCalledWith(10, 5, undefined, undefined, undefined);
+			expect(mockListContexts).toHaveBeenCalledWith(
+				10,
+				5,
+				undefined,
+				undefined,
+				undefined,
+			);
 		});
 
 		test("passes tags filter", async () => {
@@ -425,9 +435,21 @@ describe("contexts commands", () => {
 		test("passes all filters together", async () => {
 			await createSdk();
 
-			await V2ApiContextsService.listContextsV2V2ContextsGet(20, 10, "test", "nia-cli", "fact");
+			await V2ApiContextsService.listContextsV2V2ContextsGet(
+				20,
+				10,
+				"test",
+				"nia-cli",
+				"fact",
+			);
 
-			expect(mockListContexts).toHaveBeenCalledWith(20, 10, "test", "nia-cli", "fact");
+			expect(mockListContexts).toHaveBeenCalledWith(
+				20,
+				10,
+				"test",
+				"nia-cli",
+				"fact",
+			);
 		});
 	});
 
@@ -463,7 +485,12 @@ describe("contexts commands", () => {
 				undefined,
 			);
 
-			expect(mockSearchContexts).toHaveBeenCalledWith("test query", 5, undefined, undefined);
+			expect(mockSearchContexts).toHaveBeenCalledWith(
+				"test query",
+				5,
+				undefined,
+				undefined,
+			);
 		});
 
 		test("passes tags and agent filters", async () => {
@@ -476,18 +503,24 @@ describe("contexts commands", () => {
 				"nia-cli",
 			);
 
-			expect(mockSearchContexts).toHaveBeenCalledWith("test query", 10, "test", "nia-cli");
+			expect(mockSearchContexts).toHaveBeenCalledWith(
+				"test query",
+				10,
+				"test",
+				"nia-cli",
+			);
 		});
 
 		test("returns search results with total", async () => {
 			await createSdk();
 
-			const result = await V2ApiContextsService.searchContextsV2V2ContextsSearchGet(
-				"test query",
-				undefined,
-				undefined,
-				undefined,
-			);
+			const result =
+				await V2ApiContextsService.searchContextsV2V2ContextsSearchGet(
+					"test query",
+					undefined,
+					undefined,
+					undefined,
+				);
 
 			expect(result.contexts).toHaveLength(1);
 			expect(result.search_query).toBe("test query");
@@ -503,12 +536,13 @@ describe("contexts commands", () => {
 
 			await createSdk();
 
-			const result = await V2ApiContextsService.searchContextsV2V2ContextsSearchGet(
-				"nonexistent",
-				undefined,
-				undefined,
-				undefined,
-			);
+			const result =
+				await V2ApiContextsService.searchContextsV2V2ContextsSearchGet(
+					"nonexistent",
+					undefined,
+					undefined,
+					undefined,
+				);
 
 			expect(result.contexts).toHaveLength(0);
 			expect(result.total_results).toBe(0);
@@ -547,7 +581,12 @@ describe("contexts commands", () => {
 				undefined,
 			);
 
-			expect(mockSemanticSearch).toHaveBeenCalledWith("semantic query", 5, undefined, undefined);
+			expect(mockSemanticSearch).toHaveBeenCalledWith(
+				"semantic query",
+				5,
+				undefined,
+				undefined,
+			);
 		});
 
 		test("passes highlights flag", async () => {
@@ -560,7 +599,12 @@ describe("contexts commands", () => {
 				undefined,
 			);
 
-			expect(mockSemanticSearch).toHaveBeenCalledWith("semantic query", undefined, true, undefined);
+			expect(mockSemanticSearch).toHaveBeenCalledWith(
+				"semantic query",
+				undefined,
+				true,
+				undefined,
+			);
 		});
 
 		test("passes workspace filter", async () => {
@@ -584,12 +628,13 @@ describe("contexts commands", () => {
 		test("returns results with scores and metadata", async () => {
 			await createSdk();
 
-			const result = await V2ApiContextsService.semanticSearchContextsV2V2ContextsSemanticSearchGet(
-				"semantic query",
-				undefined,
-				undefined,
-				undefined,
-			);
+			const result =
+				await V2ApiContextsService.semanticSearchContextsV2V2ContextsSemanticSearchGet(
+					"semantic query",
+					undefined,
+					undefined,
+					undefined,
+				);
 
 			expect(result.results).toHaveLength(1);
 			expect(result.results?.[0]?.score).toBe(0.95);
@@ -600,12 +645,13 @@ describe("contexts commands", () => {
 		test("returns suggestions", async () => {
 			await createSdk();
 
-			const result = await V2ApiContextsService.semanticSearchContextsV2V2ContextsSemanticSearchGet(
-				"semantic query",
-				undefined,
-				undefined,
-				undefined,
-			);
+			const result =
+				await V2ApiContextsService.semanticSearchContextsV2V2ContextsSemanticSearchGet(
+					"semantic query",
+					undefined,
+					undefined,
+					undefined,
+				);
 
 			expect(result.suggestions.tips).toHaveLength(1);
 			expect(result.suggestions.related_tags).toEqual(["test"]);
@@ -621,7 +667,12 @@ describe("contexts commands", () => {
 				"workspace-1",
 			);
 
-			expect(mockSemanticSearch).toHaveBeenCalledWith("full query", 10, true, "workspace-1");
+			expect(mockSemanticSearch).toHaveBeenCalledWith(
+				"full query",
+				10,
+				true,
+				"workspace-1",
+			);
 		});
 	});
 
@@ -631,7 +682,9 @@ describe("contexts commands", () => {
 		test("calls getContextV2V2ContextsContextIdGet with ID", async () => {
 			await createSdk();
 
-			await V2ApiContextsService.getContextV2V2ContextsContextIdGet("ctx_abc123");
+			await V2ApiContextsService.getContextV2V2ContextsContextIdGet(
+				"ctx_abc123",
+			);
 
 			expect(mockGetContext).toHaveBeenCalledTimes(1);
 			expect(mockGetContext).toHaveBeenCalledWith("ctx_abc123");
@@ -640,7 +693,10 @@ describe("contexts commands", () => {
 		test("returns full context with content", async () => {
 			await createSdk();
 
-			const result = await V2ApiContextsService.getContextV2V2ContextsContextIdGet("ctx_abc123");
+			const result =
+				await V2ApiContextsService.getContextV2V2ContextsContextIdGet(
+					"ctx_abc123",
+				);
 
 			expect(result.id).toBe("ctx_abc123");
 			expect(result.title).toBe("Test Context");
@@ -651,7 +707,10 @@ describe("contexts commands", () => {
 		test("returns timestamps and metadata", async () => {
 			await createSdk();
 
-			const result = await V2ApiContextsService.getContextV2V2ContextsContextIdGet("ctx_abc123");
+			const result =
+				await V2ApiContextsService.getContextV2V2ContextsContextIdGet(
+					"ctx_abc123",
+				);
 
 			expect(result.created_at).toBe("2026-01-25T10:00:00Z");
 			expect(result.updated_at).toBe("2026-01-26T10:00:00Z");
@@ -660,12 +719,16 @@ describe("contexts commands", () => {
 		});
 
 		test("handles context not found error", async () => {
-			mockGetContext.mockRejectedValueOnce(Object.assign(new Error("Not found"), { status: 404 }));
+			mockGetContext.mockRejectedValueOnce(
+				Object.assign(new Error("Not found"), { status: 404 }),
+			);
 
 			await createSdk();
 
 			try {
-				await V2ApiContextsService.getContextV2V2ContextsContextIdGet("ctx_nonexistent");
+				await V2ApiContextsService.getContextV2V2ContextsContextIdGet(
+					"ctx_nonexistent",
+				);
 				expect(true).toBe(false); // Should not reach here
 			} catch (error) {
 				expect((error as { status: number }).status).toBe(404);
@@ -679,9 +742,12 @@ describe("contexts commands", () => {
 		test("calls updateContextV2V2ContextsContextIdPut with title", async () => {
 			await createSdk();
 
-			await V2ApiContextsService.updateContextV2V2ContextsContextIdPut("ctx_abc123", {
-				title: "Updated Title",
-			});
+			await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
+				"ctx_abc123",
+				{
+					title: "Updated Title",
+				},
+			);
 
 			expect(mockUpdateContext).toHaveBeenCalledTimes(1);
 			expect(mockUpdateContext).toHaveBeenCalledWith("ctx_abc123", {
@@ -692,13 +758,16 @@ describe("contexts commands", () => {
 		test("passes multiple update fields", async () => {
 			await createSdk();
 
-			await V2ApiContextsService.updateContextV2V2ContextsContextIdPut("ctx_abc123", {
-				title: "Updated Title",
-				summary: "Updated summary",
-				content: "Updated content",
-				tags: ["updated"],
-				memory_type: "fact",
-			});
+			await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
+				"ctx_abc123",
+				{
+					title: "Updated Title",
+					summary: "Updated summary",
+					content: "Updated content",
+					tags: ["updated"],
+					memory_type: "fact",
+				},
+			);
 
 			expect(mockUpdateContext).toHaveBeenCalledWith("ctx_abc123", {
 				title: "Updated Title",
@@ -712,10 +781,11 @@ describe("contexts commands", () => {
 		test("returns updated context", async () => {
 			await createSdk();
 
-			const result = await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
-				"ctx_abc123",
-				{ title: "Updated Title" },
-			);
+			const result =
+				await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
+					"ctx_abc123",
+					{ title: "Updated Title" },
+				);
 
 			expect(result.id).toBe("ctx_abc123");
 			expect(result.title).toBe("Updated Title");
@@ -730,9 +800,12 @@ describe("contexts commands", () => {
 			await createSdk();
 
 			try {
-				await V2ApiContextsService.updateContextV2V2ContextsContextIdPut("ctx_nonexistent", {
-					title: "New",
-				});
+				await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
+					"ctx_nonexistent",
+					{
+						title: "New",
+					},
+				);
 				expect(true).toBe(false); // Should not reach here
 			} catch (error) {
 				expect((error as { status: number }).status).toBe(404);
@@ -746,7 +819,9 @@ describe("contexts commands", () => {
 		test("calls deleteContextV2V2ContextsContextIdDelete with ID", async () => {
 			await createSdk();
 
-			await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete("ctx_abc123");
+			await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete(
+				"ctx_abc123",
+			);
 
 			expect(mockDeleteContext).toHaveBeenCalledTimes(1);
 			expect(mockDeleteContext).toHaveBeenCalledWith("ctx_abc123");
@@ -756,7 +831,9 @@ describe("contexts commands", () => {
 			await createSdk();
 
 			const result =
-				await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete("ctx_abc123");
+				await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete(
+					"ctx_abc123",
+				);
 
 			expect(result.success).toBe(true);
 		});
@@ -769,7 +846,9 @@ describe("contexts commands", () => {
 			await createSdk();
 
 			try {
-				await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete("ctx_nonexistent");
+				await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete(
+					"ctx_nonexistent",
+				);
 				expect(true).toBe(false); // Should not reach here
 			} catch (error) {
 				expect((error as { status: number }).status).toBe(404);
@@ -843,7 +922,9 @@ describe("contexts commands", () => {
 
 		test("handles 422 validation error", async () => {
 			mockSaveContext.mockRejectedValueOnce(
-				Object.assign(new Error("Missing required field: content"), { status: 422 }),
+				Object.assign(new Error("Missing required field: content"), {
+					status: 422,
+				}),
 			);
 
 			await createSdk();
@@ -977,7 +1058,12 @@ describe("contexts commands", () => {
 				undefined,
 			);
 
-			expect(mockSemanticSearch).toHaveBeenCalledWith("query", undefined, true, undefined);
+			expect(mockSemanticSearch).toHaveBeenCalledWith(
+				"query",
+				undefined,
+				true,
+				undefined,
+			);
 		});
 
 		test("update maps --tags to tags array", async () => {
@@ -986,9 +1072,12 @@ describe("contexts commands", () => {
 			const tagsString = "new-tag, updated";
 			const tags = tagsString.split(",").map((s) => s.trim());
 
-			await V2ApiContextsService.updateContextV2V2ContextsContextIdPut("ctx_abc123", {
-				tags,
-			});
+			await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
+				"ctx_abc123",
+				{
+					tags,
+				},
+			);
 
 			expect(mockUpdateContext).toHaveBeenCalledWith("ctx_abc123", {
 				tags: ["new-tag", "updated"],

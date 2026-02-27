@@ -32,7 +32,16 @@ const ALL_TOP_COMMANDS = [
 const EXPECTED_SUBCOMMANDS: Record<string, string[]> = {
 	auth: ["login", "logout", "status"],
 	search: ["universal", "query", "web", "deep"],
-	repos: ["index", "list", "status", "delete", "rename", "read", "grep", "tree"],
+	repos: [
+		"index",
+		"list",
+		"status",
+		"delete",
+		"rename",
+		"read",
+		"grep",
+		"tree",
+	],
 	sources: [
 		"index",
 		"list",
