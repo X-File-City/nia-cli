@@ -1,4 +1,5 @@
 import { defineCommand } from "@crustjs/core";
+import type { GrepRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService, V2ApiSourcesService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
 import { createFormatter } from "../utils/formatter.ts";
@@ -510,6 +511,278 @@ const renameCommand = defineCommand({
 	},
 });
 
+// --- Content subcommands ---
+
+const readCommand = defineCommand({
+	meta: {
+		name: "read",
+		description: "Read a file from an indexed source",
+	},
+	args: [
+		{
+			name: "id",
+			type: "string",
+			description: "Source ID",
+			required: true,
+		},
+		{
+			name: "path",
+			type: "string",
+			description: "File path within the source",
+			required: true,
+		},
+	] as const,
+	flags: {
+		"line-start": {
+			type: "number",
+			description: "Starting line number",
+		},
+		"line-end": {
+			type: "number",
+			description: "Ending line number",
+		},
+		"max-length": {
+			type: "number",
+			description: "Maximum content length to return",
+		},
+		type: {
+			type: "string",
+			description:
+				"Source type hint: repository, documentation, research_paper, huggingface_dataset",
+		},
+	},
+	async run({ args, flags }) {
+		const global = parseGlobalFlags();
+		const fmt = createFormatter({ output: global.output, color: global.color });
+		const spinner = createSpinner({ color: global.color });
+
+		validateSourceType(flags.type);
+
+		spinner.start("Reading file...");
+
+		try {
+			await createSdk({ apiKey: global.apiKey });
+
+			const result =
+				await V2ApiDataSourcesService.readDocumentationFileV2V2DataSourcesSourceIdReadGet(
+					args.id,
+					args.path,
+					undefined, // page
+					undefined, // treeNodeId
+					flags["line-start"] ?? undefined,
+					flags["line-end"] ?? undefined,
+					flags["max-length"] ?? undefined,
+				);
+
+			spinner.stop("File retrieved");
+			fmt.output(result);
+		} catch (error) {
+			spinner.stop("Read failed");
+			handleSourcesError(error);
+		}
+	},
+});
+
+const grepCommand = defineCommand({
+	meta: {
+		name: "grep",
+		description: "Search for a pattern in source files",
+	},
+	args: [
+		{
+			name: "id",
+			type: "string",
+			description: "Source ID",
+			required: true,
+		},
+		{
+			name: "pattern",
+			type: "string",
+			description: "Search pattern (regex)",
+			required: true,
+		},
+	] as const,
+	flags: {
+		path: {
+			type: "string",
+			description: "Filter by file path prefix",
+		},
+		"case-sensitive": {
+			type: "boolean",
+			description: "Enable case-sensitive matching",
+		},
+		"whole-word": {
+			type: "boolean",
+			description: "Match whole words only",
+		},
+		"lines-before": {
+			type: "number",
+			description: "Number of context lines before each match",
+		},
+		"lines-after": {
+			type: "number",
+			description: "Number of context lines after each match",
+		},
+		"max-per-file": {
+			type: "number",
+			description: "Maximum matches per file",
+		},
+		"max-total": {
+			type: "number",
+			description: "Maximum total matches",
+		},
+		type: {
+			type: "string",
+			description:
+				"Source type hint: repository, documentation, research_paper, huggingface_dataset",
+		},
+	},
+	async run({ args, flags }) {
+		const global = parseGlobalFlags();
+		const fmt = createFormatter({ output: global.output, color: global.color });
+		const spinner = createSpinner({ color: global.color });
+
+		validateSourceType(flags.type);
+
+		spinner.start("Searching source files...");
+
+		try {
+			await createSdk({ apiKey: global.apiKey });
+
+			const requestBody: GrepRequest = {
+				pattern: args.pattern,
+			};
+
+			if (flags.path) {
+				requestBody.path = flags.path;
+			}
+			if (flags["case-sensitive"] !== undefined) {
+				requestBody.case_sensitive = flags["case-sensitive"];
+			}
+			if (flags["whole-word"] !== undefined) {
+				requestBody.whole_word = flags["whole-word"];
+			}
+			if (flags["lines-before"] !== undefined) {
+				requestBody.B = flags["lines-before"];
+			}
+			if (flags["lines-after"] !== undefined) {
+				requestBody.A = flags["lines-after"];
+			}
+			if (flags["max-per-file"] !== undefined) {
+				requestBody.max_matches_per_file = flags["max-per-file"];
+			}
+			if (flags["max-total"] !== undefined) {
+				requestBody.max_total_matches = flags["max-total"];
+			}
+
+			const result = await V2ApiDataSourcesService.grepDocumentationV2V2DataSourcesSourceIdGrepPost(
+				args.id,
+				requestBody,
+			);
+
+			spinner.stop("Search complete");
+			fmt.output(result);
+		} catch (error) {
+			spinner.stop("Grep failed");
+			handleSourcesError(error);
+		}
+	},
+});
+
+const treeCommand = defineCommand({
+	meta: {
+		name: "tree",
+		description: "View the file tree of an indexed source",
+	},
+	args: [
+		{
+			name: "id",
+			type: "string",
+			description: "Source ID",
+			required: true,
+		},
+	] as const,
+	flags: {
+		type: {
+			type: "string",
+			description:
+				"Source type hint: repository, documentation, research_paper, huggingface_dataset",
+		},
+	},
+	async run({ args, flags }) {
+		const global = parseGlobalFlags();
+		const fmt = createFormatter({ output: global.output, color: global.color });
+		const spinner = createSpinner({ color: global.color });
+
+		validateSourceType(flags.type);
+
+		spinner.start("Fetching tree...");
+
+		try {
+			await createSdk({ apiKey: global.apiKey });
+
+			const result =
+				await V2ApiDataSourcesService.getDocumentationTreeV2V2DataSourcesSourceIdTreeGet(args.id);
+
+			spinner.stop("Tree retrieved");
+
+			// If there's a tree_string, show it directly in text mode for readability
+			if (global.output !== "json" && result.tree_string) {
+				console.log(result.tree_string);
+			} else {
+				fmt.output(result);
+			}
+		} catch (error) {
+			spinner.stop("Tree failed");
+			handleSourcesError(error);
+		}
+	},
+});
+
+const lsCommand = defineCommand({
+	meta: {
+		name: "ls",
+		description: "List files and directories in a source path",
+	},
+	args: [
+		{
+			name: "id",
+			type: "string",
+			description: "Source ID",
+			required: true,
+		},
+	] as const,
+	flags: {
+		path: {
+			type: "string",
+			description: "Directory path within the source (default: root)",
+		},
+	},
+	async run({ args, flags }) {
+		const global = parseGlobalFlags();
+		const fmt = createFormatter({ output: global.output, color: global.color });
+		const spinner = createSpinner({ color: global.color });
+
+		spinner.start("Listing directory...");
+
+		try {
+			await createSdk({ apiKey: global.apiKey });
+
+			const result =
+				await V2ApiDataSourcesService.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet(
+					args.id,
+					flags.path,
+				);
+
+			spinner.stop("Directory listed");
+			fmt.output(result);
+		} catch (error) {
+			spinner.stop("Listing failed");
+			handleSourcesError(error);
+		}
+	},
+});
+
 // --- Parent command ---
 
 export const sourcesCommand = defineCommand({
@@ -526,5 +799,9 @@ export const sourcesCommand = defineCommand({
 		delete: deleteCommand,
 		sync: syncCommand,
 		rename: renameCommand,
+		read: readCommand,
+		grep: grepCommand,
+		tree: treeCommand,
+		ls: lsCommand,
 	},
 });
