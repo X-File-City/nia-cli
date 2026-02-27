@@ -1,0 +1,96 @@
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { rmSync } from "node:fs";
+import { OpenAPI } from "nia-ai-ts";
+import { getConfigDirPath, resetConfig, writeConfig } from "../../src/services/config.ts";
+import { configureOpenApi, createSdk } from "../../src/services/sdk.ts";
+
+describe("sdk service", () => {
+	beforeEach(async () => {
+		try {
+			await resetConfig();
+		} catch {
+			// Ignore
+		}
+		delete process.env.NIA_API_KEY;
+	});
+
+	afterEach(() => {
+		const dir = getConfigDirPath();
+		try {
+			rmSync(dir, { recursive: true, force: true });
+		} catch {
+			// Ignore
+		}
+		delete process.env.NIA_API_KEY;
+	});
+
+	describe("createSdk", () => {
+		test("throws when no API key is found", async () => {
+			await expect(createSdk()).rejects.toThrow("No API key found");
+		});
+
+		test("throws with helpful message suggesting auth login", async () => {
+			await expect(createSdk()).rejects.toThrow("nia auth login");
+		});
+
+		test("creates SDK with override API key", async () => {
+			const sdk = await createSdk({ apiKey: "nia_test_key" });
+			expect(sdk).toBeDefined();
+			expect(sdk.search).toBeDefined();
+			expect(sdk.sources).toBeDefined();
+			expect(sdk.oracle).toBeDefined();
+		});
+
+		test("creates SDK with env var API key", async () => {
+			process.env.NIA_API_KEY = "nia_from_env";
+			const sdk = await createSdk();
+			expect(sdk).toBeDefined();
+		});
+
+		test("creates SDK with config file API key", async () => {
+			await writeConfig({
+				apiKey: "nia_from_config",
+				baseUrl: "https://apigcp.trynia.ai/v2",
+				output: undefined,
+			});
+
+			const sdk = await createSdk();
+			expect(sdk).toBeDefined();
+		});
+
+		test("configures OpenAPI singleton with BASE and TOKEN", async () => {
+			await createSdk({
+				apiKey: "nia_test_123",
+				baseUrl: "https://custom-api.com",
+			});
+
+			expect(OpenAPI.BASE).toBe("https://custom-api.com");
+			expect(OpenAPI.TOKEN).toBe("nia_test_123");
+		});
+
+		test("uses default base URL when none specified", async () => {
+			await createSdk({ apiKey: "nia_test_123" });
+			expect(OpenAPI.BASE).toBe("https://apigcp.trynia.ai/v2");
+		});
+
+		test("override API key takes priority over env", async () => {
+			process.env.NIA_API_KEY = "nia_env_key";
+			await createSdk({ apiKey: "nia_override" });
+			expect(OpenAPI.TOKEN).toBe("nia_override");
+		});
+	});
+
+	describe("configureOpenApi", () => {
+		test("sets OpenAPI BASE and TOKEN", () => {
+			configureOpenApi("nia_key_123", "https://api.example.com");
+			expect(OpenAPI.BASE).toBe("https://api.example.com");
+			expect(OpenAPI.TOKEN).toBe("nia_key_123");
+		});
+
+		test("uses default base URL when not specified", () => {
+			configureOpenApi("nia_key_456");
+			expect(OpenAPI.BASE).toBe("https://apigcp.trynia.ai/v2");
+			expect(OpenAPI.TOKEN).toBe("nia_key_456");
+		});
+	});
+});
