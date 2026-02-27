@@ -3,6 +3,7 @@ import { autoCompletePlugin, helpPlugin, versionPlugin } from "@crustjs/plugins"
 import pkg from "../package.json";
 import { authCommand } from "./commands/auth";
 import { categoriesCommand } from "./commands/categories";
+import { completionsCommand } from "./commands/completions";
 import { configCommand } from "./commands/config";
 import { contextsCommand } from "./commands/contexts";
 import { datasetsCommand } from "./commands/datasets";
@@ -56,6 +57,7 @@ const main = defineCommand({
 		categories: categoriesCommand,
 		usage: usageCommand,
 		config: configCommand,
+		completions: completionsCommand,
 	},
 });
 
