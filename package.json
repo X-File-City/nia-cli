@@ -1,27 +1,28 @@
 {
-	"name": "nia-cli",
-	"version": "0.0.0",
-	"type": "module",
-	"description": "A CLI built with Crust",
-	"files": [
-		"dist"
-	],
-	"bin": {
-		"nia-cli": "dist/cli"
-	},
-	"scripts": {
-		"dev": "bun run src/cli.ts",
-		"build": "crust build",
-		"start": "./dist/cli",
-		"check:types": "tsc --noEmit"
-	},
-	"dependencies": {
-		"@crustjs/core": "latest",
-		"@crustjs/plugins": "latest"
-	},
-	"devDependencies": {
-		"@crustjs/crust": "latest",
-		"@types/bun": "latest",
-		"typescript": "^5"
-	}
+  "name": "nia-cli",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "A CLI built with Crust",
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "nia": "dist/cli"
+  },
+  "scripts": {
+    "dev": "bun run src/cli.ts",
+    "build": "crust build",
+    "start": "./dist/cli",
+    "check:types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@crustjs/core": "0.0.9",
+    "@crustjs/plugins": "0.0.10",
+    "nia-ai-ts": "^0.1.0"
+  },
+  "devDependencies": {
+    "@crustjs/crust": "0.0.13",
+    "@types/bun": "latest",
+    "typescript": "^5"
+  }
 }

@@ -5,28 +5,33 @@
     "": {
       "name": "nia-cli",
       "dependencies": {
-        "@crustjs/core": "latest",
-        "@crustjs/plugins": "latest",
+        "@crustjs/core": "0.0.9",
+        "@crustjs/plugins": "0.0.10",
+        "nia-ai-ts": "^0.1.0",
       },
       "devDependencies": {
-        "@crustjs/crust": "latest",
+        "@crustjs/crust": "0.0.13",
         "@types/bun": "latest",
         "typescript": "^5",
       },
     },
   },
   "packages": {
-    "@crustjs/core": ["@crustjs/core@0.0.8", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-8TpYPcczETl/unVC7eOVAZA4xpymAUQLzuauTlBJWpVNd/lHBZLIDjSJObXudOai0K6xp3UO414CWouPDhklzw=="],
+    "@crustjs/core": ["@crustjs/core@0.0.9", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-/P0W+3Q+VZ4IIFbOvKqFGEVmZe9UDlwq0WB4gtc4MzUAExWeO9KZbaYxdmbFEXo9goFuHUv7dYoA0BL9bZKyww=="],
 
-    "@crustjs/crust": ["@crustjs/crust@0.0.12", "", { "dependencies": { "@crustjs/core": "0.0.8", "@crustjs/plugins": "0.0.9" }, "peerDependencies": { "typescript": "^5" }, "bin": { "crust": "dist/cli" } }, "sha512-6+kRq95s3lwRPyiNxK3s15tw1M761ufJG+isVZXGSl+7w7yVv9WCdmXdarAsXldiG+Xfe0RUCyOQ5RcnSJACPg=="],
+    "@crustjs/crust": ["@crustjs/crust@0.0.13", "", { "dependencies": { "@crustjs/core": "0.0.9", "@crustjs/plugins": "0.0.10", "@crustjs/style": "0.0.4" }, "peerDependencies": { "typescript": "^5" }, "bin": { "crust": "dist/cli" } }, "sha512-3LpV/70xTS5PkSWAQopjVF+ZkkdkCVy6W4gflzhHYzxH6Y/uWF0McVfUXDkq7H0+plcQeE8A5vGD9pT07Js8wg=="],
 
-    "@crustjs/plugins": ["@crustjs/plugins@0.0.9", "", { "peerDependencies": { "@crustjs/core": "0.0.8", "typescript": "^5" } }, "sha512-drGUBYCLO04t/5mTDaL1AzMwlrppkiv0TJ0wIzTamwTEbG0YQQXALYryMSGvoUQgGSy9pdh+g1u9QvHXInPQBw=="],
+    "@crustjs/plugins": ["@crustjs/plugins@0.0.10", "", { "peerDependencies": { "@crustjs/core": "0.0.9", "typescript": "^5" } }, "sha512-7XQ5ekZl+BBU4l01RJ0je58XmQKjxrJNeVnP0Idh1No2ixlZuoqv7Ydxpg99ov+ZWAmCyDDEfXDZmUGSD2j7Nw=="],
+
+    "@crustjs/style": ["@crustjs/style@0.0.4", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-yCpXARz8+i8FBceu6dCAxf1ebc53E0bSyWXLeop2GD1RtbVpS2i6p8QmQOdTGB1zdadYpf6V+HRFoz//AlQ0ew=="],
 
     "@types/bun": ["@types/bun@1.3.9", "", { "dependencies": { "bun-types": "1.3.9" } }, "sha512-KQ571yULOdWJiMH+RIWIOZ7B2RXQGpL1YQrBtLIV3FqDcCu6FsbFUBwhdKUlCKUpS3PJDsHlJ1QKlpxoVR+xtw=="],
 
     "@types/node": ["@types/node@25.3.2", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-RpV6r/ij22zRRdyBPcxDeKAzH43phWVKEjL2iksqo1Vz3CuBUrgmPpPhALKiRfU7OMCmeeO9vECBMsV0hMTG8Q=="],
 
     "bun-types": ["bun-types@1.3.9", "", { "dependencies": { "@types/node": "*" } }, "sha512-+UBWWOakIP4Tswh0Bt0QD0alpTY8cb5hvgiYeWCMet9YukHbzuruIEeXC2D7nMJPB12kbh8C7XJykSexEqGKJg=="],
+
+    "nia-ai-ts": ["nia-ai-ts@0.1.0", "", {}, "sha512-m9GB0POtCbT9Zj6W0Yc6OMMTCukWvrdFshpA3a9o7TaR2CMcabwWFm8NT3dtMwtNBA/rKFb7fmiy7ngJAT4lCg=="],
 
     "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
