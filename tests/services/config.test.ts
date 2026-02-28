@@ -1,10 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { rmSync } from "node:fs";
 import {
-	ALL_CONFIG_KEYS,
 	getConfigDirPath,
-	isConfigKey,
-	isSettableKey,
 	maskApiKey,
 	readConfig,
 	resetConfig,
@@ -12,7 +9,7 @@ import {
 	resolveBaseUrl,
 	updateConfig,
 	writeConfig,
-} from "../../src/services/config.ts";
+} from "../helpers/config-store.ts";
 
 describe("config service", () => {
 	beforeEach(async () => {
@@ -42,20 +39,17 @@ describe("config service", () => {
 			const config = await readConfig();
 			expect(config.apiKey).toBeUndefined();
 			expect(config.baseUrl).toBe("https://apigcp.trynia.ai/v2");
-			expect(config.output).toBeUndefined();
 		});
 
 		test("reads persisted config values", async () => {
 			await writeConfig({
 				apiKey: "nia_test1234",
 				baseUrl: "https://custom.api.com",
-				output: "json",
 			});
 
 			const config = await readConfig();
 			expect(config.apiKey).toBe("nia_test1234");
 			expect(config.baseUrl).toBe("https://custom.api.com");
-			expect(config.output).toBe("json");
 		});
 	});
 
@@ -64,12 +58,11 @@ describe("config service", () => {
 			await writeConfig({
 				apiKey: "nia_abcd",
 				baseUrl: "https://apigcp.trynia.ai/v2",
-				output: "table",
 			});
 
 			const config = await readConfig();
 			expect(config.apiKey).toBe("nia_abcd");
-			expect(config.output).toBe("table");
+			expect(config.baseUrl).toBe("https://apigcp.trynia.ai/v2");
 		});
 	});
 
@@ -78,17 +71,15 @@ describe("config service", () => {
 			await writeConfig({
 				apiKey: undefined,
 				baseUrl: "https://apigcp.trynia.ai/v2",
-				output: undefined,
 			});
 
 			await updateConfig((current) => ({
 				...current,
-				output: "json",
+				baseUrl: "https://custom.example.com",
 			}));
 
 			const config = await readConfig();
-			expect(config.output).toBe("json");
-			expect(config.baseUrl).toBe("https://apigcp.trynia.ai/v2");
+			expect(config.baseUrl).toBe("https://custom.example.com");
 		});
 	});
 
@@ -97,7 +88,6 @@ describe("config service", () => {
 			await writeConfig({
 				apiKey: "nia_secret",
 				baseUrl: "https://custom.com",
-				output: "json",
 			});
 
 			await resetConfig();
@@ -130,43 +120,12 @@ describe("config service", () => {
 		});
 	});
 
-	describe("isSettableKey", () => {
-		test("allows 'output' key", () => {
-			expect(isSettableKey("output")).toBe(true);
-		});
-
-		test("allows 'baseUrl' key", () => {
-			expect(isSettableKey("baseUrl")).toBe(true);
-		});
-
-		test("rejects 'apiKey' key", () => {
-			expect(isSettableKey("apiKey")).toBe(false);
-		});
-
-		test("rejects unknown keys", () => {
-			expect(isSettableKey("unknown")).toBe(false);
-		});
-	});
-
-	describe("isConfigKey", () => {
-		test("recognizes all valid config keys", () => {
-			for (const key of ALL_CONFIG_KEYS) {
-				expect(isConfigKey(key)).toBe(true);
-			}
-		});
-
-		test("rejects unknown keys", () => {
-			expect(isConfigKey("notAKey")).toBe(false);
-		});
-	});
-
 	describe("resolveApiKey", () => {
 		test("returns override when provided", async () => {
 			process.env.NIA_API_KEY = "env_key";
 			await writeConfig({
 				apiKey: "config_key",
 				baseUrl: "https://apigcp.trynia.ai/v2",
-				output: undefined,
 			});
 
 			const key = await resolveApiKey("override_key");
@@ -178,7 +137,6 @@ describe("config service", () => {
 			await writeConfig({
 				apiKey: "config_key",
 				baseUrl: "https://apigcp.trynia.ai/v2",
-				output: undefined,
 			});
 
 			const key = await resolveApiKey();
@@ -190,7 +148,6 @@ describe("config service", () => {
 			await writeConfig({
 				apiKey: "config_key",
 				baseUrl: "https://apigcp.trynia.ai/v2",
-				output: undefined,
 			});
 
 			const key = await resolveApiKey();
@@ -209,7 +166,6 @@ describe("config service", () => {
 			await writeConfig({
 				apiKey: "config",
 				baseUrl: "https://apigcp.trynia.ai/v2",
-				output: undefined,
 			});
 
 			// Override beats env and config
@@ -234,7 +190,6 @@ describe("config service", () => {
 			await writeConfig({
 				apiKey: undefined,
 				baseUrl: "https://configured.com",
-				output: undefined,
 			});
 
 			const url = await resolveBaseUrl();

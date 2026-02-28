@@ -22,7 +22,6 @@ const ALL_TOP_COMMANDS = [
 	"datasets",
 	"categories",
 	"usage",
-	"config",
 	"completions",
 ];
 
@@ -77,7 +76,6 @@ const EXPECTED_SUBCOMMANDS: Record<string, string[]> = {
 	datasets: ["index", "list"],
 	categories: ["list", "create", "update", "delete", "assign"],
 	usage: [],
-	config: ["set", "get", "list"],
 	completions: ["bash", "zsh", "fish"],
 };
 
@@ -85,21 +83,21 @@ describe("shell completions", () => {
 	// --- COMMAND_TREE coverage ---
 
 	describe("command tree completeness", () => {
-		test("all 15 top-level commands are present in bash output", () => {
+		test("all top-level commands are present in bash output", () => {
 			const script = generateBashCompletions();
 			for (const cmd of ALL_TOP_COMMANDS) {
 				expect(script).toContain(cmd);
 			}
 		});
 
-		test("all 15 top-level commands are present in zsh output", () => {
+		test("all top-level commands are present in zsh output", () => {
 			const script = generateZshCompletions();
 			for (const cmd of ALL_TOP_COMMANDS) {
 				expect(script).toContain(cmd);
 			}
 		});
 
-		test("all 15 top-level commands are present in fish output", () => {
+		test("all top-level commands are present in fish output", () => {
 			const script = generateFishCompletions();
 			for (const cmd of ALL_TOP_COMMANDS) {
 				expect(script).toContain(cmd);

@@ -2,13 +2,12 @@ import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { rmSync } from "node:fs";
 import {
 	getConfigDirPath,
-	isSettableKey,
 	maskApiKey,
 	readConfig,
 	resetConfig,
 	resolveApiKey,
 	writeConfig,
-} from "../../src/services/config.ts";
+} from "../helpers/config-store.ts";
 
 // --- Mock SDK ---
 
@@ -448,27 +447,6 @@ describe("edge cases", () => {
 			expect(masked).not.toContain("super_secret");
 			// Must end with last 4 chars
 			expect(masked).toContain("99zz");
-		});
-	});
-
-	// --- Config key guards for apiKey rejection ---
-
-	describe("apiKey rejection in config set", () => {
-		test("isSettableKey rejects apiKey", () => {
-			expect(isSettableKey("apiKey")).toBe(false);
-		});
-
-		test("isSettableKey accepts output", () => {
-			expect(isSettableKey("output")).toBe(true);
-		});
-
-		test("isSettableKey accepts baseUrl", () => {
-			expect(isSettableKey("baseUrl")).toBe(true);
-		});
-
-		test("error message directs to auth login", () => {
-			const message = "Use `nia auth login` to set your API key.";
-			expect(message).toContain("nia auth login");
 		});
 	});
 

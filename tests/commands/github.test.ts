@@ -4,7 +4,7 @@ import {
 	getConfigDirPath,
 	resetConfig,
 	writeConfig,
-} from "../../src/services/config.ts";
+} from "../helpers/config-store.ts";
 
 // --- Mock SDK ---
 
@@ -174,6 +174,8 @@ describe("github commands", () => {
 			const calledWith = (
 				mockGithubGlob.mock.calls as unknown as Array<[Record<string, unknown>]>
 			)[0]?.[0];
+			expect(calledWith).toBeDefined();
+			if (!calledWith) throw new Error("Expected github glob payload");
 			expect(calledWith).toEqual({ repository: "owner/repo", pattern: "*.ts" });
 			expect("ref" in calledWith).toBe(false);
 		});
@@ -275,6 +277,8 @@ describe("github commands", () => {
 			const calledWith = (
 				mockGithubRead.mock.calls as unknown as Array<[Record<string, unknown>]>
 			)[0]?.[0];
+			expect(calledWith).toBeDefined();
+			if (!calledWith) throw new Error("Expected github read payload");
 			expect(calledWith).toEqual({ repository: "owner/repo", path: "file.ts" });
 			expect("ref" in calledWith).toBe(false);
 			expect("start_line" in calledWith).toBe(false);
@@ -391,6 +395,8 @@ describe("github commands", () => {
 					[Record<string, unknown>]
 				>
 			)[0]?.[0];
+			expect(calledWith).toBeDefined();
+			if (!calledWith) throw new Error("Expected github search payload");
 			expect(calledWith).toEqual({ query: "test", repository: "owner/repo" });
 			expect("per_page" in calledWith).toBe(false);
 			expect("page" in calledWith).toBe(false);

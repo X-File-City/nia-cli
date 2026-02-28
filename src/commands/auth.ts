@@ -2,10 +2,9 @@ import { defineCommand } from "@crustjs/core";
 import { password } from "@crustjs/prompts";
 import { V2ApiService } from "nia-ai-ts";
 import {
+	configStore,
 	getConfigDirPath,
 	maskApiKey,
-	readConfig,
-	updateConfig,
 } from "../services/config.ts";
 import { configureOpenApi } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
@@ -48,7 +47,7 @@ const loginCommand = defineCommand({
 			const usage = await V2ApiService.getUsageSummaryV2V2UsageGet();
 
 			// API key is valid — store it in config
-			await updateConfig((config) => ({
+			await configStore.update((config) => ({
 				...config,
 				apiKey: apiKey,
 			}));
@@ -81,7 +80,7 @@ const logoutCommand = defineCommand({
 		description: "Remove stored API credentials",
 	},
 	async run() {
-		await updateConfig((config) => ({
+		await configStore.update((config) => ({
 			...config,
 			apiKey: undefined,
 		}));
@@ -103,7 +102,7 @@ const statusCommand = defineCommand({
 	async run() {
 		// Determine the API key source and value
 		const envKey = process.env.NIA_API_KEY;
-		const config = await readConfig();
+		const config = await configStore.read();
 		const configKey = config.apiKey;
 
 		let source: "env" | "config" | "none";

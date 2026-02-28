@@ -1,5 +1,5 @@
 import { NiaSDK, OpenAPI } from "nia-ai-ts";
-import { resolveApiKey, resolveBaseUrl } from "./config.ts";
+import { DEFAULT_BASE_URL, resolveApiKey, resolveBaseUrl } from "./config.ts";
 
 export interface CreateSdkOptions {
 	/** CLI --api-key flag override */
@@ -48,6 +48,6 @@ export async function createSdk(
  * Useful for validation calls (e.g., auth login) that only need low-level services.
  */
 export function configureOpenApi(apiKey: string, baseUrl?: string): void {
-	OpenAPI.BASE = baseUrl ?? "https://apigcp.trynia.ai/v2";
+	OpenAPI.BASE = baseUrl ?? DEFAULT_BASE_URL;
 	OpenAPI.TOKEN = apiKey;
 }

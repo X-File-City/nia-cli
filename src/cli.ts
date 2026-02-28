@@ -8,7 +8,6 @@ import pkg from "../package.json";
 import { authCommand } from "./commands/auth";
 import { categoriesCommand } from "./commands/categories";
 import { completionsCommand } from "./commands/completions";
-import { configCommand } from "./commands/config";
 import { contextsCommand } from "./commands/contexts";
 import { datasetsCommand } from "./commands/datasets";
 import { githubCommand } from "./commands/github";
@@ -60,11 +59,14 @@ const main = defineCommand({
 		datasets: datasetsCommand,
 		categories: categoriesCommand,
 		usage: usageCommand,
-		config: configCommand,
 		completions: completionsCommand,
 	},
 });
 
 runMain(main, {
-	plugins: [versionPlugin(pkg.version), helpPlugin(), autoCompletePlugin()],
+	plugins: [
+		versionPlugin(pkg.version),
+		helpPlugin(),
+		autoCompletePlugin({ mode: "help" }),
+	],
 });

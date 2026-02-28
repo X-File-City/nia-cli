@@ -4,7 +4,7 @@ import {
 	getConfigDirPath,
 	resetConfig,
 	writeConfig,
-} from "../../src/services/config.ts";
+} from "../helpers/config-store.ts";
 
 // --- Mock SDK and low-level services ---
 

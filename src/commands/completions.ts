@@ -53,7 +53,6 @@ const COMMAND_TREE: Record<string, string[]> = {
 	datasets: ["index", "list"],
 	categories: ["list", "create", "update", "delete", "assign"],
 	usage: [],
-	config: ["set", "get", "list"],
 	completions: ["bash", "zsh", "fish"],
 };
 

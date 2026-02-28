@@ -4,7 +4,7 @@ import {
 	getConfigDirPath,
 	resetConfig,
 	writeConfig,
-} from "../../src/services/config.ts";
+} from "../helpers/config-store.ts";
 
 // --- Mock SDK ---
 
@@ -455,6 +455,8 @@ describe("tracer commands", () => {
 					[Record<string, unknown>]
 				>
 			)[0]?.[0];
+			expect(calledWith).toBeDefined();
+			if (!calledWith) throw new Error("Expected tracer payload");
 			expect(calledWith).toEqual({ query: "test" });
 			expect("repositories" in calledWith).toBe(false);
 			expect("context" in calledWith).toBe(false);
