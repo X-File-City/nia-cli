@@ -1,6 +1,6 @@
 import { configDir, createStore } from "@crustjs/store";
 
-const CONFIG_APP_NAME = "nia";
+export const CONFIG_APP_NAME = "nia";
 export const DEFAULT_BASE_URL = "https://apigcp.trynia.ai/v2";
 
 export const configStore = createStore({

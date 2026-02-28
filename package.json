@@ -21,6 +21,7 @@
 		"@crustjs/core": "0.0.9",
 		"@crustjs/plugins": "0.0.10",
 		"@crustjs/prompts": "^0.0.7",
+		"@crustjs/skills": "^0.0.8",
 		"@crustjs/store": "^0.0.4",
 		"@crustjs/style": "^0.0.4",
 		"nia-ai-ts": "^0.1.0"

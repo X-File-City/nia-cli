@@ -4,6 +4,7 @@ import {
 	helpPlugin,
 	versionPlugin,
 } from "@crustjs/plugins";
+import { skillPlugin } from "@crustjs/skills";
 import pkg from "../package.json";
 import { authCommand } from "./commands/auth";
 import { categoriesCommand } from "./commands/categories";
@@ -18,10 +19,11 @@ import { searchCommand } from "./commands/search";
 import { sourcesCommand } from "./commands/sources";
 import { tracerCommand } from "./commands/tracer";
 import { usageCommand } from "./commands/usage";
+import { CONFIG_APP_NAME } from "./services/config";
 
 const main = defineCommand({
 	meta: {
-		name: "nia",
+		name: CONFIG_APP_NAME,
 		description: pkg.description,
 	},
 	flags: {
@@ -66,5 +68,8 @@ runMain(main, {
 		versionPlugin(pkg.version),
 		helpPlugin(),
 		autoCompletePlugin({ mode: "help" }),
+		skillPlugin({
+			version: pkg.version,
+		}),
 	],
 });
