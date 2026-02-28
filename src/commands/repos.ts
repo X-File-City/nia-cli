@@ -1,11 +1,11 @@
 import { defineCommand } from "@crustjs/core";
+import { spinner } from "@crustjs/prompts";
 import type { CodeGrepRequest, RepositoryRequest } from "nia-ai-ts";
 import { V2ApiRepositoriesService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
-import { createSpinner } from "../utils/spinner.ts";
 
 // --- Subcommands ---
 
@@ -46,36 +46,35 @@ const indexCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Indexing repository...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Indexing repository...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const requestBody: RepositoryRequest = {
-				repository: args.repo,
-			};
+					const requestBody: RepositoryRequest = {
+						repository: args.repo,
+					};
 
-			if (flags.branch) {
-				requestBody.branch = flags.branch;
-			}
-			if (flags.ref) {
-				requestBody.ref = flags.ref;
-			}
-			if (flags.private !== undefined) {
-				requestBody.add_as_global_source = !flags.private;
-			}
+					if (flags.branch) {
+						requestBody.branch = flags.branch;
+					}
+					if (flags.ref) {
+						requestBody.ref = flags.ref;
+					}
+					if (flags.private !== undefined) {
+						requestBody.add_as_global_source = !flags.private;
+					}
 
-			const result =
-				await V2ApiRepositoriesService.indexRepositoryV2V2RepositoriesPost(
-					requestBody,
-				);
+					return await V2ApiRepositoriesService.indexRepositoryV2V2RepositoriesPost(
+						requestBody,
+					);
+				},
+			});
 
-			spinner.stop("Repository indexed");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Indexing failed");
 			handleError(error, { domain: "Repository" });
 		}
 	},
@@ -107,25 +106,24 @@ const listCommand = defineCommand({
 	async run({ flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Listing repositories...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Listing repositories...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiRepositoriesService.listRepositoriesV2V2RepositoriesGet(
-					flags.query,
-					flags.status,
-					flags.limit,
-					flags.offset,
-				);
+					return await V2ApiRepositoriesService.listRepositoriesV2V2RepositoriesGet(
+						flags.query,
+						flags.status,
+						flags.limit,
+						flags.offset,
+					);
+				},
+			});
 
-			spinner.stop("Repositories retrieved");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("List failed");
 			handleError(error, { domain: "Repository" });
 		}
 	},
@@ -148,19 +146,18 @@ const statusCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Checking repository status...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Checking repository status...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiRepositoriesService.getRepositoryStatusV2V2RepositoriesRepositoryIdGet(
-					args.id,
-				);
-
-			spinner.stop("Status retrieved");
+					return await V2ApiRepositoriesService.getRepositoryStatusV2V2RepositoriesRepositoryIdGet(
+						args.id,
+					);
+				},
+			});
 
 			// In text mode, show progress info if available
 			if (global.output !== "json" && result.progress) {
@@ -188,7 +185,6 @@ const statusCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Status check failed");
 			handleError(error, { domain: "Repository" });
 		}
 	},
@@ -211,22 +207,21 @@ const deleteCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Deleting repository...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Deleting repository...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiRepositoriesService.deleteRepositoryV2V2RepositoriesRepositoryIdDelete(
-					args.id,
-				);
+					return await V2ApiRepositoriesService.deleteRepositoryV2V2RepositoriesRepositoryIdDelete(
+						args.id,
+					);
+				},
+			});
 
-			spinner.stop("Repository deleted");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Delete failed");
 			handleError(error, { domain: "Repository" });
 		}
 	},
@@ -255,23 +250,22 @@ const renameCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Renaming repository...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Renaming repository...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiRepositoriesService.renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch(
-					args.id,
-					{ new_name: args["new-name"] },
-				);
+					return await V2ApiRepositoriesService.renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch(
+						args.id,
+						{ new_name: args["new-name"] },
+					);
+				},
+			});
 
-			spinner.stop("Repository renamed");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Rename failed");
 			handleError(error, { domain: "Repository" });
 		}
 	},
@@ -313,22 +307,21 @@ const readCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Reading file...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Reading file...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiRepositoriesService.getRepositoryContentV2V2RepositoriesRepositoryIdContentGet(
-					args["repo-id"],
-					args.path,
-					flags.branch ?? undefined,
-					flags.ref ?? undefined,
-				);
-
-			spinner.stop("File retrieved");
+					return await V2ApiRepositoriesService.getRepositoryContentV2V2RepositoriesRepositoryIdContentGet(
+						args["repo-id"],
+						args.path,
+						flags.branch ?? undefined,
+						flags.ref ?? undefined,
+					);
+				},
+			});
 
 			// In text mode, show file content with line numbers for readability
 			if (global.output !== "json" && result.success && result.content) {
@@ -342,7 +335,6 @@ const readCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Read failed");
 			handleError(error, { domain: "Repository" });
 		}
 	},
@@ -412,58 +404,57 @@ const grepCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Searching repository files...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Searching repository files...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const requestBody: CodeGrepRequest = {
-				pattern: args.pattern,
-			};
+					const requestBody: CodeGrepRequest = {
+						pattern: args.pattern,
+					};
 
-			if (flags.path) {
-				requestBody.path = flags.path;
-			}
-			if (flags.ref) {
-				requestBody.ref = flags.ref;
-			}
-			if (flags["case-sensitive"] !== undefined) {
-				requestBody.case_sensitive = flags["case-sensitive"];
-			}
-			if (flags["whole-word"] !== undefined) {
-				requestBody.whole_word = flags["whole-word"];
-			}
-			if (flags["fixed-string"] !== undefined) {
-				requestBody.fixed_string = flags["fixed-string"];
-			}
-			if (flags["lines-before"] !== undefined) {
-				requestBody.B = flags["lines-before"];
-			}
-			if (flags["lines-after"] !== undefined) {
-				requestBody.A = flags["lines-after"];
-			}
-			if (flags["max-per-file"] !== undefined) {
-				requestBody.max_matches_per_file = flags["max-per-file"];
-			}
-			if (flags["max-total"] !== undefined) {
-				requestBody.max_total_matches = flags["max-total"];
-			}
-			if (flags.exhaustive !== undefined) {
-				requestBody.exhaustive = flags.exhaustive;
-			}
+					if (flags.path) {
+						requestBody.path = flags.path;
+					}
+					if (flags.ref) {
+						requestBody.ref = flags.ref;
+					}
+					if (flags["case-sensitive"] !== undefined) {
+						requestBody.case_sensitive = flags["case-sensitive"];
+					}
+					if (flags["whole-word"] !== undefined) {
+						requestBody.whole_word = flags["whole-word"];
+					}
+					if (flags["fixed-string"] !== undefined) {
+						requestBody.fixed_string = flags["fixed-string"];
+					}
+					if (flags["lines-before"] !== undefined) {
+						requestBody.B = flags["lines-before"];
+					}
+					if (flags["lines-after"] !== undefined) {
+						requestBody.A = flags["lines-after"];
+					}
+					if (flags["max-per-file"] !== undefined) {
+						requestBody.max_matches_per_file = flags["max-per-file"];
+					}
+					if (flags["max-total"] !== undefined) {
+						requestBody.max_total_matches = flags["max-total"];
+					}
+					if (flags.exhaustive !== undefined) {
+						requestBody.exhaustive = flags.exhaustive;
+					}
 
-			const result =
-				await V2ApiRepositoriesService.grepRepositoryV2V2RepositoriesRepositoryIdGrepPost(
-					args["repo-id"],
-					requestBody,
-				);
+					return await V2ApiRepositoriesService.grepRepositoryV2V2RepositoriesRepositoryIdGrepPost(
+						args["repo-id"],
+						requestBody,
+					);
+				},
+			});
 
-			spinner.stop("Search complete");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Grep failed");
 			handleError(error, { domain: "Repository" });
 		}
 	},
@@ -512,25 +503,24 @@ const treeCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Fetching tree...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching tree...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiRepositoriesService.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet(
-					args["repo-id"],
-					flags.branch ?? undefined,
-					flags["include-paths"] ?? undefined,
-					flags["exclude-paths"] ?? undefined,
-					flags.extensions ?? undefined,
-					flags["exclude-extensions"] ?? undefined,
-					flags["full-paths"] ?? undefined,
-				);
-
-			spinner.stop("Tree retrieved");
+					return await V2ApiRepositoriesService.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet(
+						args["repo-id"],
+						flags.branch ?? undefined,
+						flags["include-paths"] ?? undefined,
+						flags["exclude-paths"] ?? undefined,
+						flags.extensions ?? undefined,
+						flags["exclude-extensions"] ?? undefined,
+						flags["full-paths"] ?? undefined,
+					);
+				},
+			});
 
 			// If there's a tree_text, show it directly in text mode for readability
 			if (global.output !== "json" && result.tree_text) {
@@ -554,7 +544,6 @@ const treeCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Tree failed");
 			handleError(error, { domain: "Repository" });
 		}
 	},

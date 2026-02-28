@@ -2,26 +2,24 @@ import { configDir, createStore } from "@crustjs/store";
 
 const CONFIG_APP_NAME = "nia";
 
-const fields = {
-	apiKey: {
-		type: "string",
-		description: "Nia API key (managed via `nia auth login`)",
-	},
-	baseUrl: {
-		type: "string",
-		description: "Nia API base URL",
-		default: "https://apigcp.trynia.ai/v2",
-	},
-	output: {
-		type: "string",
-		description: "Default output format: json, table, text",
-	},
-} as const;
-
 const store = createStore({
 	dirPath: configDir(CONFIG_APP_NAME),
 	name: "config",
-	fields,
+	fields: {
+		apiKey: {
+			type: "string",
+			description: "Nia API key (managed via `nia auth login`)",
+		},
+		baseUrl: {
+			type: "string",
+			default: "https://apigcp.trynia.ai/v2",
+			description: "Nia API base URL",
+		},
+		output: {
+			type: "string",
+			description: "Default output format: json, table, text",
+		},
+	},
 });
 
 export type NiaConfig = Awaited<ReturnType<typeof store.read>>;

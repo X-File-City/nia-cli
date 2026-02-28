@@ -1,4 +1,5 @@
 import { defineCommand } from "@crustjs/core";
+import { spinner } from "@crustjs/prompts";
 import type { GrepRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService, V2ApiSourcesService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
@@ -11,7 +12,6 @@ import {
 	promptSelect,
 	requireArg,
 } from "../utils/prompts.ts";
-import { createSpinner } from "../utils/spinner.ts";
 
 /**
  * Valid source type values accepted by the API.
@@ -90,7 +90,6 @@ const indexCommand = defineCommand({
 		await checkFirstRun(global.apiKey);
 
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		// Interactive mode: prompt for missing required arg and optional fields
 		const url = await requireArg(args.url, {
@@ -123,46 +122,47 @@ const indexCommand = defineCommand({
 			],
 		});
 
-		spinner.start("Indexing source...");
-
 		try {
-			const sdk = await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Indexing source...",
+				task: async () => {
+					const sdk = await createSdk({ apiKey: global.apiKey });
 
-			const params: Record<string, unknown> = {
-				url,
-			};
+					const params: Record<string, unknown> = {
+						url,
+					};
 
-			if (displayName) {
-				params.display_name = displayName;
-			}
-			if (sourceType) {
-				params.type = sourceType;
-			}
-			if (flags.branch) {
-				params.branch = flags.branch;
-			}
-			if (flags.focus) {
-				params.focus_instructions = flags.focus;
-			}
-			if (flags["extract-branding"] !== undefined) {
-				params.extract_branding = flags["extract-branding"];
-			}
-			if (flags["max-depth"] !== undefined) {
-				params.max_depth = flags["max-depth"];
-			}
-			if (flags["check-llms-txt"] !== undefined) {
-				params.check_llms_txt = flags["check-llms-txt"];
-			}
-			if (flags["only-main-content"] !== undefined) {
-				params.only_main_content = flags["only-main-content"];
-			}
+					if (displayName) {
+						params.display_name = displayName;
+					}
+					if (sourceType) {
+						params.type = sourceType;
+					}
+					if (flags.branch) {
+						params.branch = flags.branch;
+					}
+					if (flags.focus) {
+						params.focus_instructions = flags.focus;
+					}
+					if (flags["extract-branding"] !== undefined) {
+						params.extract_branding = flags["extract-branding"];
+					}
+					if (flags["max-depth"] !== undefined) {
+						params.max_depth = flags["max-depth"];
+					}
+					if (flags["check-llms-txt"] !== undefined) {
+						params.check_llms_txt = flags["check-llms-txt"];
+					}
+					if (flags["only-main-content"] !== undefined) {
+						params.only_main_content = flags["only-main-content"];
+					}
 
-			const result = await sdk.sources.create(params);
+					return await sdk.sources.create(params);
+				},
+			});
 
-			spinner.stop("Source indexed");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Indexing failed");
 			handleError(error, { domain: "Source" });
 		}
 	},
@@ -203,28 +203,28 @@ const listCommand = defineCommand({
 	async run({ flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		const sourceType = validateSourceType(flags.type);
 
-		spinner.start("Listing sources...");
-
 		try {
-			const sdk = await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Listing sources...",
+				task: async () => {
+					const sdk = await createSdk({ apiKey: global.apiKey });
 
-			const result = await sdk.sources.list({
-				type: sourceType,
-				query: flags.query,
-				status: flags.status,
-				categoryId: flags.category,
-				limit: flags.limit,
-				offset: flags.offset,
+					return await sdk.sources.list({
+						type: sourceType,
+						query: flags.query,
+						status: flags.status,
+						categoryId: flags.category,
+						limit: flags.limit,
+						offset: flags.offset,
+					});
+				},
 			});
 
-			spinner.stop("Sources retrieved");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("List failed");
 			handleError(error, { domain: "Source" });
 		}
 	},
@@ -253,24 +253,24 @@ const getCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		const sourceType = validateSourceType(flags.type);
 
-		spinner.start("Fetching source...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching source...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(
-				args.id,
-				sourceType,
-			);
+					return await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(
+						args.id,
+						sourceType,
+					);
+				},
+			});
 
-			spinner.stop("Source retrieved");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Fetch failed");
 			handleError(error, { domain: "Source" });
 		}
 	},
@@ -299,21 +299,21 @@ const resolveCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		const sourceType = validateSourceType(flags.type);
 
-		spinner.start("Resolving source...");
-
 		try {
-			const sdk = await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Resolving source...",
+				task: async () => {
+					const sdk = await createSdk({ apiKey: global.apiKey });
 
-			const result = await sdk.sources.resolve(args.identifier, sourceType);
+					return await sdk.sources.resolve(args.identifier, sourceType);
+				},
+			});
 
-			spinner.stop("Source resolved");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Resolve failed");
 			handleError(error, { domain: "Source" });
 		}
 	},
@@ -350,7 +350,6 @@ const updateCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		const sourceType = validateSourceType(flags.type);
 
@@ -359,32 +358,32 @@ const updateCommand = defineCommand({
 			process.exit(1);
 		}
 
-		spinner.start("Updating source...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Updating source...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const requestBody: Record<string, unknown> = {};
-			if (flags.name) {
-				requestBody.display_name = flags.name;
-			}
-			if (flags.category) {
-				requestBody.category_id = flags.category;
-			}
+					const requestBody: Record<string, unknown> = {};
+					if (flags.name) {
+						requestBody.display_name = flags.name;
+					}
+					if (flags.category) {
+						requestBody.category_id = flags.category;
+					}
 
-			const result =
-				await V2ApiSourcesService.updateSourceV2SourcesSourceIdPatch(
-					args.id,
-					requestBody as Parameters<
-						typeof V2ApiSourcesService.updateSourceV2SourcesSourceIdPatch
-					>[1],
-					sourceType,
-				);
+					return await V2ApiSourcesService.updateSourceV2SourcesSourceIdPatch(
+						args.id,
+						requestBody as Parameters<
+							typeof V2ApiSourcesService.updateSourceV2SourcesSourceIdPatch
+						>[1],
+						sourceType,
+					);
+				},
+			});
 
-			spinner.stop("Source updated");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Update failed");
 			handleError(error, { domain: "Source" });
 		}
 	},
@@ -413,25 +412,24 @@ const deleteCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		const sourceType = validateSourceType(flags.type);
 
-		spinner.start("Deleting source...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Deleting source...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiSourcesService.deleteSourceV2SourcesSourceIdDelete(
-					args.id,
-					sourceType,
-				);
+					return await V2ApiSourcesService.deleteSourceV2SourcesSourceIdDelete(
+						args.id,
+						sourceType,
+					);
+				},
+			});
 
-			spinner.stop("Source deleted");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Delete failed");
 			handleError(error, { domain: "Source" });
 		}
 	},
@@ -460,40 +458,39 @@ const syncCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		const sourceType = validateSourceType(flags.type);
 
-		spinner.start("Syncing source...");
-
 		try {
-			const sdk = await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Syncing source...",
+				task: async () => {
+					const sdk = await createSdk({ apiKey: global.apiKey });
 
-			// Fetch the existing source to get its URL/identifier
-			const source = await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(
-				args.id,
-				sourceType,
-			);
+					// Fetch the existing source to get its URL/identifier
+					const source =
+						await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(
+							args.id,
+							sourceType,
+						);
 
-			const url = source.identifier;
-			if (!url) {
-				spinner.stop("Sync failed");
-				fmt.error(
-					"Could not determine the source URL. The source may not have an identifier.",
-				);
-				process.exit(1);
-			}
+					const url = source.identifier;
+					if (!url) {
+						throw new Error(
+							"Could not determine the source URL. The source may not have an identifier.",
+						);
+					}
 
-			// Re-index by creating with the same URL
-			const result = await sdk.sources.create({
-				url,
-				display_name: source.display_name,
+					// Re-index by creating with the same URL
+					return await sdk.sources.create({
+						url,
+						display_name: source.display_name,
+					});
+				},
 			});
 
-			spinner.stop("Source synced (re-indexing started)");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Sync failed");
 			handleError(error, { domain: "Source" });
 		}
 	},
@@ -522,25 +519,24 @@ const renameCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Renaming source...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Renaming source...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiDataSourcesService.renameDataSourceV2V2DataSourcesRenamePatch(
-					{
-						identifier: args.identifier,
-						new_name: args["new-name"],
-					},
-				);
+					return await V2ApiDataSourcesService.renameDataSourceV2V2DataSourcesRenamePatch(
+						{
+							identifier: args.identifier,
+							new_name: args["new-name"],
+						},
+					);
+				},
+			});
 
-			spinner.stop("Source renamed");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Rename failed");
 			handleError(error, { domain: "Source" });
 		}
 	},
@@ -589,30 +585,29 @@ const readCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		validateSourceType(flags.type);
 
-		spinner.start("Reading file...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Reading file...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiDataSourcesService.readDocumentationFileV2V2DataSourcesSourceIdReadGet(
-					args.id,
-					args.path,
-					undefined, // page
-					undefined, // treeNodeId
-					flags["line-start"] ?? undefined,
-					flags["line-end"] ?? undefined,
-					flags["max-length"] ?? undefined,
-				);
+					return await V2ApiDataSourcesService.readDocumentationFileV2V2DataSourcesSourceIdReadGet(
+						args.id,
+						args.path,
+						undefined, // page
+						undefined, // treeNodeId
+						flags["line-start"] ?? undefined,
+						flags["line-end"] ?? undefined,
+						flags["max-length"] ?? undefined,
+					);
+				},
+			});
 
-			spinner.stop("File retrieved");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Read failed");
 			handleError(error, { domain: "Source" });
 		}
 	},
@@ -675,51 +670,50 @@ const grepCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		validateSourceType(flags.type);
 
-		spinner.start("Searching source files...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Searching source files...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const requestBody: GrepRequest = {
-				pattern: args.pattern,
-			};
+					const requestBody: GrepRequest = {
+						pattern: args.pattern,
+					};
 
-			if (flags.path) {
-				requestBody.path = flags.path;
-			}
-			if (flags["case-sensitive"] !== undefined) {
-				requestBody.case_sensitive = flags["case-sensitive"];
-			}
-			if (flags["whole-word"] !== undefined) {
-				requestBody.whole_word = flags["whole-word"];
-			}
-			if (flags["lines-before"] !== undefined) {
-				requestBody.B = flags["lines-before"];
-			}
-			if (flags["lines-after"] !== undefined) {
-				requestBody.A = flags["lines-after"];
-			}
-			if (flags["max-per-file"] !== undefined) {
-				requestBody.max_matches_per_file = flags["max-per-file"];
-			}
-			if (flags["max-total"] !== undefined) {
-				requestBody.max_total_matches = flags["max-total"];
-			}
+					if (flags.path) {
+						requestBody.path = flags.path;
+					}
+					if (flags["case-sensitive"] !== undefined) {
+						requestBody.case_sensitive = flags["case-sensitive"];
+					}
+					if (flags["whole-word"] !== undefined) {
+						requestBody.whole_word = flags["whole-word"];
+					}
+					if (flags["lines-before"] !== undefined) {
+						requestBody.B = flags["lines-before"];
+					}
+					if (flags["lines-after"] !== undefined) {
+						requestBody.A = flags["lines-after"];
+					}
+					if (flags["max-per-file"] !== undefined) {
+						requestBody.max_matches_per_file = flags["max-per-file"];
+					}
+					if (flags["max-total"] !== undefined) {
+						requestBody.max_total_matches = flags["max-total"];
+					}
 
-			const result =
-				await V2ApiDataSourcesService.grepDocumentationV2V2DataSourcesSourceIdGrepPost(
-					args.id,
-					requestBody,
-				);
+					return await V2ApiDataSourcesService.grepDocumentationV2V2DataSourcesSourceIdGrepPost(
+						args.id,
+						requestBody,
+					);
+				},
+			});
 
-			spinner.stop("Search complete");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Grep failed");
 			handleError(error, { domain: "Source" });
 		}
 	},
@@ -748,21 +742,20 @@ const treeCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		validateSourceType(flags.type);
 
-		spinner.start("Fetching tree...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching tree...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiDataSourcesService.getDocumentationTreeV2V2DataSourcesSourceIdTreeGet(
-					args.id,
-				);
-
-			spinner.stop("Tree retrieved");
+					return await V2ApiDataSourcesService.getDocumentationTreeV2V2DataSourcesSourceIdTreeGet(
+						args.id,
+					);
+				},
+			});
 
 			// If there's a tree_string, show it directly in text mode for readability
 			if (global.output !== "json" && result.tree_string) {
@@ -771,7 +764,6 @@ const treeCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Tree failed");
 			handleError(error, { domain: "Source" });
 		}
 	},
@@ -799,23 +791,22 @@ const lsCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Listing directory...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Listing directory...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiDataSourcesService.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet(
-					args.id,
-					flags.path,
-				);
+					return await V2ApiDataSourcesService.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet(
+						args.id,
+						flags.path,
+					);
+				},
+			});
 
-			spinner.stop("Directory listed");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Listing failed");
 			handleError(error, { domain: "Source" });
 		}
 	},

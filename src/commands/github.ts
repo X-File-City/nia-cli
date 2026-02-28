@@ -1,4 +1,5 @@
 import { defineCommand } from "@crustjs/core";
+import { spinner } from "@crustjs/prompts";
 import type {
 	GitHubGlobRequest,
 	GitHubReadRequest,
@@ -9,7 +10,6 @@ import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
-import { createSpinner } from "../utils/spinner.ts";
 
 /**
  * Parse a "owner/repo" string into separate owner and repo parts.
@@ -56,26 +56,25 @@ const globCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Searching for matching files...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Searching for matching files...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const payload: GitHubGlobRequest = {
-				repository: args.repo,
-				pattern: args.pattern,
-			};
+					const payload: GitHubGlobRequest = {
+						repository: args.repo,
+						pattern: args.pattern,
+					};
 
-			if (flags.ref) {
-				payload.ref = flags.ref;
-			}
+					if (flags.ref) {
+						payload.ref = flags.ref;
+					}
 
-			const result =
-				await GithubSearchService.githubGlobV2GithubGlobPost(payload);
-
-			spinner.stop("Files found");
+					return await GithubSearchService.githubGlobV2GithubGlobPost(payload);
+				},
+			});
 
 			// In text mode, display as a file list
 			if (global.output !== "json") {
@@ -101,7 +100,6 @@ const globCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Search failed");
 			handleError(error, { domain: "GitHub" });
 		}
 	},
@@ -144,32 +142,31 @@ const readCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Reading file...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Reading file...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const payload: GitHubReadRequest = {
-				repository: args.repo,
-				path: args.path,
-			};
+					const payload: GitHubReadRequest = {
+						repository: args.repo,
+						path: args.path,
+					};
 
-			if (flags.ref) {
-				payload.ref = flags.ref;
-			}
-			if (flags.start !== undefined) {
-				payload.start_line = flags.start;
-			}
-			if (flags.end !== undefined) {
-				payload.end_line = flags.end;
-			}
+					if (flags.ref) {
+						payload.ref = flags.ref;
+					}
+					if (flags.start !== undefined) {
+						payload.start_line = flags.start;
+					}
+					if (flags.end !== undefined) {
+						payload.end_line = flags.end;
+					}
 
-			const result =
-				await GithubSearchService.githubReadV2GithubReadPost(payload);
-
-			spinner.stop("File content retrieved");
+					return await GithubSearchService.githubReadV2GithubReadPost(payload);
+				},
+			});
 
 			// In text mode, display file content with line numbers
 			if (global.output !== "json") {
@@ -189,7 +186,6 @@ const readCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to read file");
 			handleError(error, { domain: "GitHub" });
 		}
 	},
@@ -228,29 +224,30 @@ const searchCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Searching code...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Searching code...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const payload: GitHubSearchRequest = {
-				query: args.query,
-				repository: args.repo,
-			};
+					const payload: GitHubSearchRequest = {
+						query: args.query,
+						repository: args.repo,
+					};
 
-			if (flags["per-page"] !== undefined) {
-				payload.per_page = flags["per-page"];
-			}
-			if (flags.page !== undefined) {
-				payload.page = flags.page;
-			}
+					if (flags["per-page"] !== undefined) {
+						payload.per_page = flags["per-page"];
+					}
+					if (flags.page !== undefined) {
+						payload.page = flags.page;
+					}
 
-			const result =
-				await GithubSearchService.githubCodeSearchV2GithubSearchPost(payload);
-
-			spinner.stop("Search complete");
+					return await GithubSearchService.githubCodeSearchV2GithubSearchPost(
+						payload,
+					);
+				},
+			});
 
 			// In text mode, display search results with file paths and matched lines
 			if (global.output !== "json") {
@@ -283,7 +280,6 @@ const searchCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Search failed");
 			handleError(error, { domain: "GitHub" });
 		}
 	},
@@ -315,24 +311,23 @@ const treeCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		const { owner, repo } = parseOwnerRepo(args.repo);
 
-		spinner.start("Fetching repository tree...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching repository tree...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await GithubSearchService.githubTreeV2GithubTreeOwnerRepoGet(
-					owner,
-					repo,
-					flags.ref ?? undefined,
-					flags.path ?? undefined,
-				);
-
-			spinner.stop("Tree retrieved");
+					return await GithubSearchService.githubTreeV2GithubTreeOwnerRepoGet(
+						owner,
+						repo,
+						flags.ref ?? undefined,
+						flags.path ?? undefined,
+					);
+				},
+			});
 
 			// In text mode, show tree_text directly if available
 			if (global.output !== "json") {
@@ -364,7 +359,6 @@ const treeCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to fetch tree");
 			handleError(error, { domain: "GitHub" });
 		}
 	},

@@ -1,4 +1,5 @@
 import { defineCommand } from "@crustjs/core";
+import { spinner } from "@crustjs/prompts";
 import type { TracerRequest } from "nia-ai-ts";
 import { GithubSearchService, OpenAPI } from "nia-ai-ts";
 import { resolveBaseUrl } from "../services/config.ts";
@@ -6,7 +7,6 @@ import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
-import { createSpinner } from "../utils/spinner.ts";
 import { renderStreamEvent } from "../utils/streaming.ts";
 
 // --- Subcommands ---
@@ -42,31 +42,33 @@ const runCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Creating Tracer search job...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Creating Tracer search job...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const payload: TracerRequest = {
-				query: args.query,
-			};
+					const payload: TracerRequest = {
+						query: args.query,
+					};
 
-			if (flags.repos) {
-				payload.repositories = flags.repos.split(",").map((s) => s.trim());
-			}
-			if (flags.context) {
-				payload.context = flags.context;
-			}
-			if (flags.model) {
-				payload.model = flags.model;
-			}
+					if (flags.repos) {
+						payload.repositories = flags.repos.split(",").map((s) => s.trim());
+					}
+					if (flags.context) {
+						payload.context = flags.context;
+					}
+					if (flags.model) {
+						payload.model = flags.model;
+					}
 
-			const result =
-				await GithubSearchService.createTracerJobV2GithubTracerPost(payload);
+					return await GithubSearchService.createTracerJobV2GithubTracerPost(
+						payload,
+					);
+				},
+			});
 
-			spinner.stop("Tracer job created");
 			fmt.output(result);
 
 			// Print hint for streaming in text/table mode
@@ -77,7 +79,6 @@ const runCommand = defineCommand({
 				}
 			}
 		} catch (error) {
-			spinner.stop("Failed to create Tracer job");
 			handleError(error, { domain: "Tracer" });
 		}
 	},
@@ -100,19 +101,18 @@ const statusCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Fetching Tracer job status...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching Tracer job status...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await GithubSearchService.getTracerJobV2GithubTracerJobIdGet(
-					args["job-id"],
-				);
-
-			spinner.stop("Job status retrieved");
+					return await GithubSearchService.getTracerJobV2GithubTracerJobIdGet(
+						args["job-id"],
+					);
+				},
+			});
 
 			// In text mode, show a formatted summary
 			if (global.output !== "json") {
@@ -142,7 +142,6 @@ const statusCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to fetch Tracer job status");
 			handleError(error, { domain: "Tracer" });
 		}
 	},
@@ -164,42 +163,44 @@ const streamCommand = defineCommand({
 	flags: {},
 	async run({ args }) {
 		const global = parseGlobalFlags();
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Connecting to Tracer job stream...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const response = await spinner({
+				message: "Connecting to Tracer job stream...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			// GithubSearchService.streamTracerJobV2GithubTracerJobIdStreamGet()
-			// returns CancelablePromise<any>, not an AsyncGenerator.
-			// Use manual SSE fetch + reader pattern (same as oracle chat).
-			const baseUrl = await resolveBaseUrl();
-			const token = OpenAPI.TOKEN;
+					// GithubSearchService.streamTracerJobV2GithubTracerJobIdStreamGet()
+					// returns CancelablePromise<any>, not an AsyncGenerator.
+					// Use manual SSE fetch + reader pattern (same as oracle chat).
+					const baseUrl = await resolveBaseUrl();
+					const token = OpenAPI.TOKEN;
 
-			const response = await fetch(
-				`${baseUrl}/github/tracer/${encodeURIComponent(args["job-id"])}/stream`,
-				{
-					method: "GET",
-					headers: {
-						Authorization: `Bearer ${token}`,
-						Accept: "text/event-stream",
-					},
+					const res = await fetch(
+						`${baseUrl}/github/tracer/${encodeURIComponent(args["job-id"])}/stream`,
+						{
+							method: "GET",
+							headers: {
+								Authorization: `Bearer ${token}`,
+								Accept: "text/event-stream",
+							},
+						},
+					);
+
+					if (!res.ok || !res.body) {
+						const err = new Error(
+							`Stream request failed with status ${res.status}`,
+						);
+						(err as Error & { status: number }).status = res.status;
+						throw err;
+					}
+
+					return res;
 				},
-			);
-
-			if (!response.ok || !response.body) {
-				const err = new Error(
-					`Stream request failed with status ${response.status}`,
-				);
-				(err as Error & { status: number }).status = response.status;
-				throw err;
-			}
-
-			spinner.stop("Streaming Tracer job events");
+			});
 
 			// Parse SSE stream manually
-			const reader = response.body.getReader();
+			const reader = response.body!.getReader();
 			const decoder = new TextDecoder();
 			let buffer = "";
 
@@ -228,7 +229,6 @@ const streamCommand = defineCommand({
 				console.log();
 			}
 		} catch (error) {
-			spinner.stop("Failed to stream Tracer job");
 			handleError(error, { domain: "Tracer" });
 		}
 	},
@@ -258,7 +258,6 @@ const listCommand = defineCommand({
 	async run({ flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		// Validate status if provided
 		const validStatuses = [
@@ -275,18 +274,19 @@ const listCommand = defineCommand({
 			process.exit(1);
 		}
 
-		spinner.start("Fetching Tracer jobs...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching Tracer jobs...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result = await GithubSearchService.listTracerJobsV2GithubTracerGet(
-				flags.status ?? undefined,
-				flags.limit ?? undefined,
-				flags.skip ?? undefined,
-			);
-
-			spinner.stop("Jobs retrieved");
+					return await GithubSearchService.listTracerJobsV2GithubTracerGet(
+						flags.status ?? undefined,
+						flags.limit ?? undefined,
+						flags.skip ?? undefined,
+					);
+				},
+			});
 
 			// In text/table mode, format as a table
 			if (global.output !== "json" && Array.isArray(result)) {
@@ -308,7 +308,6 @@ const listCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to fetch Tracer jobs");
 			handleError(error, { domain: "Tracer" });
 		}
 	},
@@ -331,19 +330,18 @@ const deleteCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Deleting Tracer job...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Deleting Tracer job...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete(
-					args["job-id"],
-				);
-
-			spinner.stop("Tracer job deleted");
+					return await GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete(
+						args["job-id"],
+					);
+				},
+			});
 
 			if (global.output === "json") {
 				fmt.output(result);
@@ -351,7 +349,6 @@ const deleteCommand = defineCommand({
 				console.log(`Tracer job ${args["job-id"]} has been deleted.`);
 			}
 		} catch (error) {
-			spinner.stop("Failed to delete Tracer job");
 			handleError(error, { domain: "Tracer" });
 		}
 	},

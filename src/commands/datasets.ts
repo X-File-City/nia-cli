@@ -1,11 +1,11 @@
 import { defineCommand } from "@crustjs/core";
+import { spinner } from "@crustjs/prompts";
 import type { HuggingFaceDatasetRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
-import { createSpinner } from "../utils/spinner.ts";
 
 // --- Subcommands ---
 
@@ -37,31 +37,30 @@ const indexCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Indexing HuggingFace dataset...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Indexing HuggingFace dataset...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const payload: HuggingFaceDatasetRequest = {
-				url: args.dataset,
-			};
+					const payload: HuggingFaceDatasetRequest = {
+						url: args.dataset,
+					};
 
-			if (flags.config) {
-				payload.config = flags.config;
-			}
+					if (flags.config) {
+						payload.config = flags.config;
+					}
 
-			if (flags.global === false) {
-				payload.add_as_global_source = false;
-			}
+					if (flags.global === false) {
+						payload.add_as_global_source = false;
+					}
 
-			const result =
-				await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
-					payload,
-				);
-
-			spinner.stop("Dataset indexed");
+					return await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
+						payload,
+					);
+				},
+			});
 
 			// In text mode, show summary
 			if (global.output !== "json") {
@@ -83,7 +82,6 @@ const indexCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Indexing failed");
 			handleError(error, { domain: "Dataset" });
 		}
 	},
@@ -112,21 +110,20 @@ const listCommand = defineCommand({
 	async run({ flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Loading HuggingFace datasets...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Loading HuggingFace datasets...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiDataSourcesService.listHuggingfaceDatasetsV2V2HuggingfaceDatasetsGet(
-					flags.status ?? undefined,
-					flags.limit ?? undefined,
-					flags.offset ?? undefined,
-				);
-
-			spinner.stop("Datasets loaded");
+					return await V2ApiDataSourcesService.listHuggingfaceDatasetsV2V2HuggingfaceDatasetsGet(
+						flags.status ?? undefined,
+						flags.limit ?? undefined,
+						flags.offset ?? undefined,
+					);
+				},
+			});
 
 			// In text mode, show as table
 			if (global.output !== "json") {
@@ -156,7 +153,6 @@ const listCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to load datasets");
 			handleError(error, { domain: "Dataset" });
 		}
 	},

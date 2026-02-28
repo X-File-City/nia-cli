@@ -24,7 +24,7 @@ import { usageCommand } from "./commands/usage";
 const main = defineCommand({
 	meta: {
 		name: "nia",
-		description: "CLI for the Nia platform",
+		description: pkg.description,
 	},
 	flags: {
 		"api-key": {

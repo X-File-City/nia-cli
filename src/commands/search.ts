@@ -1,9 +1,9 @@
 import { defineCommand } from "@crustjs/core";
+import { spinner } from "@crustjs/prompts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
-import { createSpinner } from "../utils/spinner.ts";
 
 const universalCommand = defineCommand({
 	meta: {
@@ -35,33 +35,33 @@ const universalCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Searching...");
 
 		try {
-			const sdk = await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Searching...",
+				task: async () => {
+					const sdk = await createSdk({ apiKey: global.apiKey });
 
-			const params: Record<string, unknown> = {
-				query: args.query,
-			};
+					const params: Record<string, unknown> = {
+						query: args.query,
+					};
 
-			if (flags["top-k"] !== undefined) {
-				params.top_k = flags["top-k"];
-			}
-			if (flags["include-repos"] !== undefined) {
-				params.include_repos = flags["include-repos"];
-			}
-			if (flags["include-docs"] !== undefined) {
-				params.include_docs = flags["include-docs"];
-			}
+					if (flags["top-k"] !== undefined) {
+						params.top_k = flags["top-k"];
+					}
+					if (flags["include-repos"] !== undefined) {
+						params.include_repos = flags["include-repos"];
+					}
+					if (flags["include-docs"] !== undefined) {
+						params.include_docs = flags["include-docs"];
+					}
 
-			const result = await sdk.search.universal(params);
+					return await sdk.search.universal(params);
+				},
+			});
 
-			spinner.stop("Search complete");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Search failed");
 			handleError(error, { domain: "Search" });
 		}
 	},
@@ -117,48 +117,48 @@ const queryCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Querying...");
 
 		try {
-			const sdk = await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Querying...",
+				task: async () => {
+					const sdk = await createSdk({ apiKey: global.apiKey });
 
-			const params: Record<string, unknown> = {
-				messages: [{ role: "user", content: args.query }],
-			};
+					const params: Record<string, unknown> = {
+						messages: [{ role: "user", content: args.query }],
+					};
 
-			if (flags.repos) {
-				params.repositories = flags.repos.split(",").map((s) => s.trim());
-			}
-			if (flags.docs) {
-				params.data_sources = flags.docs.split(",").map((s) => s.trim());
-			}
-			if (flags["search-mode"]) {
-				params.search_mode = flags["search-mode"];
-			}
-			if (flags["max-tokens"] !== undefined) {
-				params.max_tokens = flags["max-tokens"];
-			}
-			if (flags.fast !== undefined) {
-				params.fast_mode = flags.fast;
-			}
-			if (flags["skip-llm"] !== undefined) {
-				params.skip_llm = flags["skip-llm"];
-			}
-			if (flags.strategy) {
-				params.reasoning_strategy = flags.strategy;
-			}
-			if (flags.model) {
-				params.model = flags.model;
-			}
+					if (flags.repos) {
+						params.repositories = flags.repos.split(",").map((s) => s.trim());
+					}
+					if (flags.docs) {
+						params.data_sources = flags.docs.split(",").map((s) => s.trim());
+					}
+					if (flags["search-mode"]) {
+						params.search_mode = flags["search-mode"];
+					}
+					if (flags["max-tokens"] !== undefined) {
+						params.max_tokens = flags["max-tokens"];
+					}
+					if (flags.fast !== undefined) {
+						params.fast_mode = flags.fast;
+					}
+					if (flags["skip-llm"] !== undefined) {
+						params.skip_llm = flags["skip-llm"];
+					}
+					if (flags.strategy) {
+						params.reasoning_strategy = flags.strategy;
+					}
+					if (flags.model) {
+						params.model = flags.model;
+					}
 
-			const result = await sdk.search.query(params);
+					return await sdk.search.query(params);
+				},
+			});
 
-			spinner.stop("Query complete");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Query failed");
 			handleError(error, { domain: "Search" });
 		}
 	},
@@ -205,7 +205,6 @@ const webCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		// Validate category if provided
 		if (
@@ -220,31 +219,32 @@ const webCommand = defineCommand({
 			process.exit(1);
 		}
 
-		spinner.start("Searching the web...");
-
 		try {
-			const sdk = await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Searching the web...",
+				task: async () => {
+					const sdk = await createSdk({ apiKey: global.apiKey });
 
-			const params: Record<string, unknown> = {
-				query: args.query,
-			};
+					const params: Record<string, unknown> = {
+						query: args.query,
+					};
 
-			if (flags["num-results"] !== undefined) {
-				params.num_results = flags["num-results"];
-			}
-			if (flags.category) {
-				params.category = flags.category;
-			}
-			if (flags["days-back"] !== undefined) {
-				params.days_back = flags["days-back"];
-			}
+					if (flags["num-results"] !== undefined) {
+						params.num_results = flags["num-results"];
+					}
+					if (flags.category) {
+						params.category = flags.category;
+					}
+					if (flags["days-back"] !== undefined) {
+						params.days_back = flags["days-back"];
+					}
 
-			const result = await sdk.search.web(params);
+					return await sdk.search.web(params);
+				},
+			});
 
-			spinner.stop("Web search complete");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Web search failed");
 			handleError(error, { domain: "Search" });
 		}
 	},
@@ -276,33 +276,33 @@ const deepCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Running deep research...");
 
 		try {
-			const sdk = await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Running deep research...",
+				task: async () => {
+					const sdk = await createSdk({ apiKey: global.apiKey });
 
-			const params: Record<string, unknown> = {
-				query: args.query,
-			};
+					const params: Record<string, unknown> = {
+						query: args.query,
+					};
 
-			if (flags["output-format"]) {
-				params.output_format = flags["output-format"];
-			}
-			if (flags.model) {
-				params.model = flags.model;
-			}
-			if (global.verbose) {
-				params.verbose = true;
-			}
+					if (flags["output-format"]) {
+						params.output_format = flags["output-format"];
+					}
+					if (flags.model) {
+						params.model = flags.model;
+					}
+					if (global.verbose) {
+						params.verbose = true;
+					}
 
-			const result = await sdk.search.deep(params);
+					return await sdk.search.deep(params);
+				},
+			});
 
-			spinner.stop("Research complete");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Research failed");
 			handleError(error, { domain: "Search" });
 		}
 	},

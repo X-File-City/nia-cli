@@ -1,11 +1,11 @@
 import { defineCommand } from "@crustjs/core";
+import { spinner } from "@crustjs/prompts";
 import type { routes__v2__data_sources__ResearchPaperRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
-import { createSpinner } from "../utils/spinner.ts";
 
 // --- Subcommands ---
 
@@ -37,27 +37,26 @@ const indexCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Indexing research paper...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Indexing research paper...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const payload: routes__v2__data_sources__ResearchPaperRequest = {
-				url: args.paper,
-			};
+					const payload: routes__v2__data_sources__ResearchPaperRequest = {
+						url: args.paper,
+					};
 
-			if (flags.global === false) {
-				payload.add_as_global_source = false;
-			}
+					if (flags.global === false) {
+						payload.add_as_global_source = false;
+					}
 
-			const result =
-				await V2ApiDataSourcesService.indexResearchPaperV2V2ResearchPapersPost(
-					payload,
-				);
-
-			spinner.stop("Paper indexed");
+					return await V2ApiDataSourcesService.indexResearchPaperV2V2ResearchPapersPost(
+						payload,
+					);
+				},
+			});
 
 			// In text mode, show summary
 			if (global.output !== "json") {
@@ -79,7 +78,6 @@ const indexCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Indexing failed");
 			handleError(error, { domain: "Paper" });
 		}
 	},
@@ -108,21 +106,20 @@ const listCommand = defineCommand({
 	async run({ flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Loading research papers...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Loading research papers...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet(
-					flags.status ?? undefined,
-					flags.limit ?? undefined,
-					flags.offset ?? undefined,
-				);
-
-			spinner.stop("Papers loaded");
+					return await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet(
+						flags.status ?? undefined,
+						flags.limit ?? undefined,
+						flags.offset ?? undefined,
+					);
+				},
+			});
 
 			// In text mode, show as table
 			if (global.output !== "json") {
@@ -152,7 +149,6 @@ const listCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to load papers");
 			handleError(error, { domain: "Paper" });
 		}
 	},

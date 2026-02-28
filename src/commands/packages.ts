@@ -1,4 +1,5 @@
 import { defineCommand } from "@crustjs/core";
+import { spinner } from "@crustjs/prompts";
 import type {
 	PackageSearchGrepRequest,
 	PackageSearchHybridRequest,
@@ -9,7 +10,6 @@ import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
-import { createSpinner } from "../utils/spinner.ts";
 
 /**
  * Valid package registries supported by the API.
@@ -95,52 +95,51 @@ const grepCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		validateRegistry(args.registry);
 
-		spinner.start("Searching package source code...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Searching package source code...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const payload: PackageSearchGrepRequest = {
-				registry: args.registry,
-				package_name: args.package,
-				pattern: args.pattern,
-			};
+					const payload: PackageSearchGrepRequest = {
+						registry: args.registry,
+						package_name: args.package,
+						pattern: args.pattern,
+					};
 
-			if (flags.version) {
-				payload.version = flags.version;
-			}
-			if (flags.language) {
-				payload.language = flags.language;
-			}
-			if (flags["file-sha256"]) {
-				payload.filename_sha256 = flags["file-sha256"];
-			}
-			if (flags["context-before"] !== undefined) {
-				payload.b = flags["context-before"];
-			}
-			if (flags["context-after"] !== undefined) {
-				payload.a = flags["context-after"];
-			}
-			if (flags["head-limit"] !== undefined) {
-				payload.head_limit = flags["head-limit"];
-			}
-			if (flags["output-mode"]) {
-				payload.output_mode = flags["output-mode"];
-			}
+					if (flags.version) {
+						payload.version = flags.version;
+					}
+					if (flags.language) {
+						payload.language = flags.language;
+					}
+					if (flags["file-sha256"]) {
+						payload.filename_sha256 = flags["file-sha256"];
+					}
+					if (flags["context-before"] !== undefined) {
+						payload.b = flags["context-before"];
+					}
+					if (flags["context-after"] !== undefined) {
+						payload.a = flags["context-after"];
+					}
+					if (flags["head-limit"] !== undefined) {
+						payload.head_limit = flags["head-limit"];
+					}
+					if (flags["output-mode"]) {
+						payload.output_mode = flags["output-mode"];
+					}
 
-			const result =
-				await V2ApiPackageSearchService.packageSearchGrepV2V2PackageSearchGrepPost(
-					payload,
-				);
+					return await V2ApiPackageSearchService.packageSearchGrepV2V2PackageSearchGrepPost(
+						payload,
+					);
+				},
+			});
 
-			spinner.stop("Search complete");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Search failed");
 			handleError(error, { domain: "Package search" });
 		}
 	},
@@ -193,46 +192,45 @@ const hybridCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		validateRegistry(args.registry);
 
-		spinner.start("Running semantic package search...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Running semantic package search...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			// Split comma-separated queries into an array (1-5 queries)
-			const semanticQueries = args.query.split(",").map((s) => s.trim());
+					// Split comma-separated queries into an array (1-5 queries)
+					const semanticQueries = args.query.split(",").map((s) => s.trim());
 
-			const payload: PackageSearchHybridRequest = {
-				registry: args.registry,
-				package_name: args.package,
-				semantic_queries: semanticQueries,
-			};
+					const payload: PackageSearchHybridRequest = {
+						registry: args.registry,
+						package_name: args.package,
+						semantic_queries: semanticQueries,
+					};
 
-			if (flags.version) {
-				payload.version = flags.version;
-			}
-			if (flags.pattern) {
-				payload.pattern = flags.pattern;
-			}
-			if (flags.language) {
-				payload.language = flags.language;
-			}
-			if (flags["file-sha256"]) {
-				payload.filename_sha256 = flags["file-sha256"];
-			}
+					if (flags.version) {
+						payload.version = flags.version;
+					}
+					if (flags.pattern) {
+						payload.pattern = flags.pattern;
+					}
+					if (flags.language) {
+						payload.language = flags.language;
+					}
+					if (flags["file-sha256"]) {
+						payload.filename_sha256 = flags["file-sha256"];
+					}
 
-			const result =
-				await V2ApiPackageSearchService.packageSearchHybridV2V2PackageSearchHybridPost(
-					payload,
-				);
+					return await V2ApiPackageSearchService.packageSearchHybridV2V2PackageSearchHybridPost(
+						payload,
+					);
+				},
+			});
 
-			spinner.stop("Search complete");
 			fmt.output(result);
 		} catch (error) {
-			spinner.stop("Search failed");
 			handleError(error, { domain: "Package search" });
 		}
 	},
@@ -286,7 +284,6 @@ const readCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		validateRegistry(args.registry);
 
@@ -296,29 +293,29 @@ const readCommand = defineCommand({
 			process.exit(1);
 		}
 
-		spinner.start("Reading package file...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Reading package file...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const payload: PackageSearchReadFileRequest = {
-				registry: args.registry,
-				package_name: args.package,
-				filename_sha256: args.sha256,
-				start_line: args.start,
-				end_line: args.end,
-			};
+					const payload: PackageSearchReadFileRequest = {
+						registry: args.registry,
+						package_name: args.package,
+						filename_sha256: args.sha256,
+						start_line: args.start,
+						end_line: args.end,
+					};
 
-			if (flags.version) {
-				payload.version = flags.version;
-			}
+					if (flags.version) {
+						payload.version = flags.version;
+					}
 
-			const result =
-				await V2ApiPackageSearchService.packageSearchReadFileV2V2PackageSearchReadFilePost(
-					payload,
-				);
-
-			spinner.stop("File content retrieved");
+					return await V2ApiPackageSearchService.packageSearchReadFileV2V2PackageSearchReadFilePost(
+						payload,
+					);
+				},
+			});
 
 			// In text mode, display file content with line numbers if available
 			if (global.output !== "json") {
@@ -338,7 +335,6 @@ const readCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to read file");
 			handleError(error, { domain: "Package search" });
 		}
 	},

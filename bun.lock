@@ -5,18 +5,18 @@
     "": {
       "name": "nia-cli",
       "dependencies": {
-        "@crustjs/core": "0.0.9",
-        "@crustjs/plugins": "0.0.10",
-        "@crustjs/prompts": "^0.0.6",
-        "@crustjs/store": "^0.0.2",
-        "@crustjs/style": "^0.0.4",
-        "nia-ai-ts": "^0.1.0",
+        "@crustjs/core": "latest",
+        "@crustjs/plugins": "latest",
+        "@crustjs/prompts": "latest",
+        "@crustjs/store": "latest",
+        "@crustjs/style": "latest",
+        "nia-ai-ts": "latest",
       },
       "devDependencies": {
-        "@biomejs/biome": "^2.4.4",
-        "@crustjs/crust": "0.0.13",
+        "@biomejs/biome": "latest",
+        "@crustjs/crust": "latest",
         "@types/bun": "latest",
-        "typescript": "^5",
+        "typescript": "latest",
       },
     },
   },
@@ -45,9 +45,9 @@
 
     "@crustjs/plugins": ["@crustjs/plugins@0.0.10", "", { "peerDependencies": { "@crustjs/core": "0.0.9", "typescript": "^5" } }, "sha512-7XQ5ekZl+BBU4l01RJ0je58XmQKjxrJNeVnP0Idh1No2ixlZuoqv7Ydxpg99ov+ZWAmCyDDEfXDZmUGSD2j7Nw=="],
 
-    "@crustjs/prompts": ["@crustjs/prompts@0.0.6", "", { "dependencies": { "@crustjs/style": "0.0.4" }, "peerDependencies": { "typescript": "^5" } }, "sha512-JKIvgPhN1jYt5kOW7QfGjTN5SZvUjxWvosooXFCH+iOW97YOfWvgz4Uolstg7laZznVdLSITaBaz+IRCxG88Ig=="],
+    "@crustjs/prompts": ["@crustjs/prompts@0.0.7", "", { "dependencies": { "@crustjs/style": "0.0.4" }, "peerDependencies": { "typescript": "^5" } }, "sha512-/RQHMm8pwuAs0LrJHOTUWHJVb8Q5tJ1WnD5/hvmCXXUTi1+gjgHrb/SiH2W/D5ivatTa/Qgb5vnNCIB+A6ctuA=="],
 
-    "@crustjs/store": ["@crustjs/store@0.0.2", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-TxGYciCOjPnkd5F4xts24XB9zfA7aYUO/NOImFAguJe3lgN/qAlmj8ixcuBZhp69eKq9gst/GTCQCRHpNSibdg=="],
+    "@crustjs/store": ["@crustjs/store@0.0.4", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-pfYuykVBH08HKBpycPcBZrk4CSQMVhccENDANbJoGXX86YjZk5urjzaJGeGXR1S4DVCt6hGC15aiRf6SEbpyag=="],
 
     "@crustjs/style": ["@crustjs/style@0.0.4", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-yCpXARz8+i8FBceu6dCAxf1ebc53E0bSyWXLeop2GD1RtbVpS2i6p8QmQOdTGB1zdadYpf6V+HRFoz//AlQ0ew=="],
 

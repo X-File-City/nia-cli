@@ -82,7 +82,7 @@ describe("auth commands", () => {
 	});
 
 	describe("login", () => {
-		test("validates and stores token when --token flag provided", async () => {
+		test("validates and stores API key when --api-key flag provided", async () => {
 			// Simulate what the login command does internally
 			const { configureOpenApi } = await import("../../src/services/sdk.ts");
 			const { V2ApiService } = await import("nia-ai-ts");
@@ -95,7 +95,7 @@ describe("auth commands", () => {
 			expect(usage.subscription_tier).toBe("Pro");
 			expect(mockGetUsage).toHaveBeenCalledTimes(1);
 
-			// Store the token
+			// Store the API key
 			await updateConfig((config) => ({
 				...config,
 				apiKey: token,
@@ -105,7 +105,7 @@ describe("auth commands", () => {
 			expect(config.apiKey).toBe(token);
 		});
 
-		test("does not store token when validation fails (401)", async () => {
+		test("does not store API key when validation fails (401)", async () => {
 			mockGetUsage.mockImplementationOnce(() => {
 				const error = new Error("Unauthorized") as Error & { status: number };
 				error.status = 401;
@@ -122,12 +122,12 @@ describe("auth commands", () => {
 				"Unauthorized",
 			);
 
-			// Config should NOT have the token
+			// Config should NOT have the API key
 			const config = await readConfig();
 			expect(config.apiKey).toBeUndefined();
 		});
 
-		test("does not store token when validation fails (403)", async () => {
+		test("does not store API key when validation fails (403)", async () => {
 			mockGetUsage.mockImplementationOnce(() => {
 				const error = new Error("Forbidden") as Error & { status: number };
 				error.status = 403;
@@ -254,9 +254,9 @@ describe("auth commands", () => {
 	});
 
 	describe("non-TTY behavior", () => {
-		test("login requires --token flag in non-TTY", () => {
-			// When stdout is not a TTY and no --token, the command should error
-			// This verifies the logic: !token && !process.stdout.isTTY → error
+		test("login requires --api-key flag in non-TTY", () => {
+			// When stdout is not a TTY and no --api-key, the command should error
+			// This verifies the logic: !apiKey && !process.stdout.isTTY → error
 			const isTTY = process.stdout.isTTY;
 			// In test environment, we validate the condition
 			if (!isTTY) {

@@ -1,4 +1,5 @@
 import { defineCommand } from "@crustjs/core";
+import { spinner } from "@crustjs/prompts";
 import type { OracleSessionChatRequest } from "nia-ai-ts";
 import { DefaultService, OpenAPI } from "nia-ai-ts";
 import { resolveBaseUrl } from "../services/config.ts";
@@ -7,7 +8,6 @@ import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
 import { checkFirstRun, promptOptional, requireArg } from "../utils/prompts.ts";
-import { createSpinner } from "../utils/spinner.ts";
 import { renderStream, renderStreamEvent } from "../utils/streaming.ts";
 
 // --- Subcommands ---
@@ -49,7 +49,6 @@ const jobCommand = defineCommand({
 		await checkFirstRun(global.apiKey);
 
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		// Interactive mode: prompt for missing required arg and optional fields
 		const query = await requireArg(args.query, {
@@ -73,31 +72,33 @@ const jobCommand = defineCommand({
 				})) ?? undefined;
 		}
 
-		spinner.start("Creating Oracle research job...");
-
 		try {
-			const sdk = await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Creating Oracle research job...",
+				task: async () => {
+					const sdk = await createSdk({ apiKey: global.apiKey });
 
-			const payload: Record<string, unknown> = {
-				query,
-			};
+					const payload: Record<string, unknown> = {
+						query,
+					};
 
-			if (repos) {
-				payload.repositories = repos.split(",").map((s) => s.trim());
-			}
-			if (flags.docs) {
-				payload.data_sources = flags.docs.split(",").map((s) => s.trim());
-			}
-			if (outputFormat) {
-				payload.output_format = outputFormat;
-			}
-			if (flags.model) {
-				payload.model = flags.model;
-			}
+					if (repos) {
+						payload.repositories = repos.split(",").map((s) => s.trim());
+					}
+					if (flags.docs) {
+						payload.data_sources = flags.docs.split(",").map((s) => s.trim());
+					}
+					if (outputFormat) {
+						payload.output_format = outputFormat;
+					}
+					if (flags.model) {
+						payload.model = flags.model;
+					}
 
-			const result = await sdk.oracle.createJob(payload);
+					return await sdk.oracle.createJob(payload);
+				},
+			});
 
-			spinner.stop("Oracle job created");
 			fmt.output(result);
 
 			// Print hint for streaming in text/table mode
@@ -108,7 +109,6 @@ const jobCommand = defineCommand({
 				}
 			}
 		} catch (error) {
-			spinner.stop("Failed to create Oracle job");
 			handleError(error, { domain: "Oracle" });
 		}
 	},
@@ -131,16 +131,16 @@ const statusCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Fetching job status...");
 
 		try {
-			const sdk = await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching job status...",
+				task: async () => {
+					const sdk = await createSdk({ apiKey: global.apiKey });
 
-			const result = await sdk.oracle.getJob(args["job-id"]);
-
-			spinner.stop("Job status retrieved");
+					return await sdk.oracle.getJob(args["job-id"]);
+				},
+			});
 
 			// In text mode, show a formatted summary
 			if (global.output !== "json") {
@@ -170,7 +170,6 @@ const statusCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to fetch job status");
 			handleError(error, { domain: "Oracle" });
 		}
 	},
@@ -193,19 +192,18 @@ const cancelCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Cancelling Oracle job...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Cancelling Oracle job...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await DefaultService.cancelOracleJobV2OracleJobsJobIdDelete(
-					args["job-id"],
-				);
-
-			spinner.stop("Oracle job cancelled");
+					return await DefaultService.cancelOracleJobV2OracleJobsJobIdDelete(
+						args["job-id"],
+					);
+				},
+			});
 
 			if (global.output === "json") {
 				fmt.output(result);
@@ -213,7 +211,6 @@ const cancelCommand = defineCommand({
 				console.log(`Job ${args["job-id"]} has been cancelled.`);
 			}
 		} catch (error) {
-			spinner.stop("Failed to cancel Oracle job");
 			handleError(error, { domain: "Oracle" });
 		}
 	},
@@ -243,7 +240,6 @@ const jobsCommand = defineCommand({
 	async run({ flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		// Validate status if provided
 		const validStatuses = [
@@ -260,18 +256,19 @@ const jobsCommand = defineCommand({
 			process.exit(1);
 		}
 
-		spinner.start("Fetching Oracle jobs...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching Oracle jobs...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result = await DefaultService.listOracleJobsV2OracleJobsGet(
-				flags.status ?? undefined,
-				flags.limit ?? undefined,
-				flags.skip ?? undefined,
-			);
-
-			spinner.stop("Jobs retrieved");
+					return await DefaultService.listOracleJobsV2OracleJobsGet(
+						flags.status ?? undefined,
+						flags.limit ?? undefined,
+						flags.skip ?? undefined,
+					);
+				},
+			});
 
 			// In text/table mode, format as a table
 			if (global.output !== "json" && Array.isArray(result)) {
@@ -293,7 +290,6 @@ const jobsCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to fetch Oracle jobs");
 			handleError(error, { domain: "Oracle" });
 		}
 	},
@@ -317,16 +313,16 @@ const streamCommand = defineCommand({
 	flags: {},
 	async run({ args }) {
 		const global = parseGlobalFlags();
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Connecting to Oracle job stream...");
 
 		try {
-			const sdk = await createSdk({ apiKey: global.apiKey });
+			const stream = await spinner({
+				message: "Connecting to Oracle job stream...",
+				task: async () => {
+					const sdk = await createSdk({ apiKey: global.apiKey });
 
-			const stream = sdk.oracle.streamJob(args["job-id"]);
-
-			spinner.stop("Streaming Oracle job events");
+					return sdk.oracle.streamJob(args["job-id"]);
+				},
+			});
 
 			await renderStream(stream, { color: global.color });
 
@@ -335,7 +331,6 @@ const streamCommand = defineCommand({
 				console.log();
 			}
 		} catch (error) {
-			spinner.stop("Failed to stream Oracle job");
 			handleError(error, { domain: "Oracle" });
 		}
 	},
@@ -360,19 +355,19 @@ const sessionsCommand = defineCommand({
 	async run({ flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Fetching Oracle sessions...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching Oracle sessions...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result = await DefaultService.listOracleSessionsV2OracleSessionsGet(
-				flags.limit ?? undefined,
-				flags.skip ?? undefined,
-			);
-
-			spinner.stop("Sessions retrieved");
+					return await DefaultService.listOracleSessionsV2OracleSessionsGet(
+						flags.limit ?? undefined,
+						flags.skip ?? undefined,
+					);
+				},
+			});
 
 			if (global.output !== "json" && Array.isArray(result)) {
 				if (result.length === 0) {
@@ -393,7 +388,6 @@ const sessionsCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to fetch Oracle sessions");
 			handleError(error, { domain: "Oracle" });
 		}
 	},
@@ -416,19 +410,18 @@ const sessionCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Fetching session details...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching session details...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet(
-					args["session-id"],
-				);
-
-			spinner.stop("Session details retrieved");
+					return await DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet(
+						args["session-id"],
+					);
+				},
+			});
 
 			if (global.output !== "json") {
 				const session = result as Record<string, unknown>;
@@ -459,7 +452,6 @@ const sessionCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to fetch session details");
 			handleError(error, { domain: "Oracle" });
 		}
 	},
@@ -487,20 +479,19 @@ const messagesCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Fetching session messages...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching session messages...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await DefaultService.getOracleSessionMessagesV2OracleSessionsSessionIdMessagesGet(
-					args["session-id"],
-					flags.limit ?? undefined,
-				);
-
-			spinner.stop("Messages retrieved");
+					return await DefaultService.getOracleSessionMessagesV2OracleSessionsSessionIdMessagesGet(
+						args["session-id"],
+						flags.limit ?? undefined,
+					);
+				},
+			});
 
 			if (global.output !== "json" && Array.isArray(result)) {
 				if (result.length === 0) {
@@ -523,7 +514,6 @@ const messagesCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to fetch session messages");
 			handleError(error, { domain: "Oracle" });
 		}
 	},
@@ -551,46 +541,49 @@ const chatCommand = defineCommand({
 	flags: {},
 	async run({ args }) {
 		const global = parseGlobalFlags();
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Connecting to session chat...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const { reader, decoder } = await spinner({
+				message: "Connecting to session chat...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			// The DefaultService chat endpoint returns a CancelablePromise,
-			// but the actual response is an SSE stream. Use manual fetch
-			// with SSE parsing similar to sdk.oracle.streamJob().
-			const baseUrl = await resolveBaseUrl();
-			const token = OpenAPI.TOKEN;
+					// The DefaultService chat endpoint returns a CancelablePromise,
+					// but the actual response is an SSE stream. Use manual fetch
+					// with SSE parsing similar to sdk.oracle.streamJob().
+					const baseUrl = await resolveBaseUrl();
+					const token = OpenAPI.TOKEN;
 
-			const response = await fetch(
-				`${baseUrl}/oracle/sessions/${encodeURIComponent(args["session-id"])}/chat/stream`,
-				{
-					method: "POST",
-					headers: {
-						Authorization: `Bearer ${token}`,
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						message: args.message,
-					} satisfies OracleSessionChatRequest),
+					const response = await fetch(
+						`${baseUrl}/oracle/sessions/${encodeURIComponent(args["session-id"])}/chat/stream`,
+						{
+							method: "POST",
+							headers: {
+								Authorization: `Bearer ${token}`,
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify({
+								message: args.message,
+							} satisfies OracleSessionChatRequest),
+						},
+					);
+
+					if (!response.ok || !response.body) {
+						const err = new Error(
+							`Chat request failed with status ${response.status}`,
+						);
+						(err as Error & { status: number }).status = response.status;
+						throw err;
+					}
+
+					return {
+						reader: response.body.getReader(),
+						decoder: new TextDecoder(),
+					};
 				},
-			);
-
-			if (!response.ok || !response.body) {
-				const err = new Error(
-					`Chat request failed with status ${response.status}`,
-				);
-				(err as Error & { status: number }).status = response.status;
-				throw err;
-			}
-
-			spinner.stop("Streaming chat response");
+			});
 
 			// Parse SSE stream manually
-			const reader = response.body.getReader();
-			const decoder = new TextDecoder();
 			let buffer = "";
 
 			while (true) {
@@ -618,7 +611,6 @@ const chatCommand = defineCommand({
 				console.log();
 			}
 		} catch (error) {
-			spinner.stop("Failed to stream chat response");
 			handleError(error, { domain: "Oracle" });
 		}
 	},
@@ -641,19 +633,18 @@ const deleteSessionCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Deleting Oracle session...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Deleting Oracle session...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete(
-					args["session-id"],
-				);
-
-			spinner.stop("Oracle session deleted");
+					return await DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete(
+						args["session-id"],
+					);
+				},
+			});
 
 			if (global.output === "json") {
 				fmt.output(result);
@@ -663,7 +654,6 @@ const deleteSessionCommand = defineCommand({
 				);
 			}
 		} catch (error) {
-			spinner.stop("Failed to delete Oracle session");
 			handleError(error, { domain: "Oracle" });
 		}
 	},
@@ -679,18 +669,18 @@ const oracleUsageCommand = defineCommand({
 	async run() {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Fetching Oracle usage...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching Oracle usage...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			// Use the general usage endpoint — it includes Oracle operation counts
-			const { V2ApiService } = await import("nia-ai-ts");
-			const result = await V2ApiService.getUsageSummaryV2V2UsageGet();
-
-			spinner.stop("Usage retrieved");
+					// Use the general usage endpoint — it includes Oracle operation counts
+					const { V2ApiService } = await import("nia-ai-ts");
+					return await V2ApiService.getUsageSummaryV2V2UsageGet();
+				},
+			});
 
 			if (global.output !== "json") {
 				const usage = result as Record<string, unknown>;
@@ -726,7 +716,6 @@ const oracleUsageCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to fetch Oracle usage");
 			handleError(error, { domain: "Oracle" });
 		}
 	},

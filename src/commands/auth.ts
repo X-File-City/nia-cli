@@ -16,44 +16,44 @@ const loginCommand = defineCommand({
 		description: "Authenticate with the Nia platform",
 	},
 	flags: {
-		token: {
+		"api-key": {
 			type: "string",
-			description: "API token (for non-interactive/CI use)",
+			description: "API key (for non-interactive/CI use)",
 		},
 	},
 	async run({ flags }) {
-		let token = flags.token;
+		let apiKey = flags["api-key"];
 
-		if (!token) {
+		if (!apiKey) {
 			if (!process.stdout.isTTY) {
-				console.error("Non-interactive mode requires --token <value>");
-				console.error("Example: nia auth login --token nia_your_api_token");
+				console.error("Non-interactive mode requires --api-key <value>");
+				console.error("Example: nia auth login --api-key nia_your_api_key");
 				process.exit(1);
 			}
 
-			token = await password({
-				message: "Enter your Nia API token:",
+			apiKey = await password({
+				message: "Enter your Nia API key:",
 			});
 
-			if (!token) {
-				console.error("No token provided. Aborting.");
+			if (!apiKey) {
+				console.error("No API key provided. Aborting.");
 				process.exit(1);
 			}
 		}
 
-		// Validate the token by calling the usage endpoint
-		configureOpenApi(token);
+		// Validate the API key by calling the usage endpoint
+		configureOpenApi(apiKey);
 
 		try {
 			const usage = await V2ApiService.getUsageSummaryV2V2UsageGet();
 
-			// Token is valid — store it in config
+			// API key is valid — store it in config
 			await updateConfig((config) => ({
 				...config,
-				apiKey: token,
+				apiKey: apiKey,
 			}));
 
-			console.log(`Authenticated successfully. Token: ${maskApiKey(token)}`);
+			console.log(`Authenticated successfully. API key: ${maskApiKey(apiKey)}`);
 
 			if (usage.subscription_tier) {
 				console.log(`Plan: ${usage.subscription_tier}`);
@@ -87,7 +87,7 @@ const logoutCommand = defineCommand({
 		}));
 
 		const configPath = `${getConfigDirPath()}/config.json`;
-		console.log(`Logged out. API token removed from ${configPath}`);
+		console.log(`Logged out. API key removed from ${configPath}`);
 
 		if (process.env.NIA_API_KEY) {
 			console.log("Note: NIA_API_KEY environment variable is still set.");
@@ -101,7 +101,7 @@ const statusCommand = defineCommand({
 		description: "Check authentication status",
 	},
 	async run() {
-		// Determine the token source and value
+		// Determine the API key source and value
 		const envKey = process.env.NIA_API_KEY;
 		const config = await readConfig();
 		const configKey = config.apiKey;
@@ -122,14 +122,14 @@ const statusCommand = defineCommand({
 
 		if (!activeKey) {
 			console.log("Authenticated: no");
-			console.log("Token source: none");
+			console.log("API key source: none");
 			console.log("Run `nia auth login` to authenticate.");
 			return;
 		}
 
 		console.log("Authenticated: yes");
-		console.log(`Token source: ${source}`);
-		console.log(`Token: ${maskApiKey(activeKey)}`);
+		console.log(`API key source: ${source}`);
+		console.log(`API key: ${maskApiKey(activeKey)}`);
 
 		// Try to fetch plan info
 		configureOpenApi(activeKey);
@@ -152,7 +152,7 @@ const statusCommand = defineCommand({
 				}
 			}
 		} catch {
-			console.log("Could not fetch plan info (token may be invalid).");
+			console.log("Could not fetch plan info (API key may be invalid).");
 		}
 	},
 });

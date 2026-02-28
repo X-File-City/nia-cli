@@ -1,4 +1,5 @@
 import { defineCommand } from "@crustjs/core";
+import { spinner } from "@crustjs/prompts";
 import type {
 	CategoryAssignRequest,
 	routes__v2__categories__CategoryCreate,
@@ -9,7 +10,6 @@ import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
-import { createSpinner } from "../utils/spinner.ts";
 
 // --- Subcommands ---
 
@@ -32,19 +32,19 @@ const listCommand = defineCommand({
 	async run({ flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Loading categories...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Loading categories...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiCategoriesService.listCategoriesV2CategoriesGet(
-				flags.limit ?? undefined,
-				flags.offset ?? undefined,
-			);
-
-			spinner.stop("Categories loaded");
+					return await V2ApiCategoriesService.listCategoriesV2CategoriesGet(
+						flags.limit ?? undefined,
+						flags.offset ?? undefined,
+					);
+				},
+			});
 
 			// In text mode, show as table
 			if (global.output !== "json") {
@@ -72,7 +72,6 @@ const listCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to load categories");
 			handleError(error, { domain: "Category" });
 		}
 	},
@@ -104,29 +103,30 @@ const createCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Creating category...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Creating category...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const payload: routes__v2__categories__CategoryCreate = {
-				name: args.name,
-			};
+					const payload: routes__v2__categories__CategoryCreate = {
+						name: args.name,
+					};
 
-			if (flags.color) {
-				payload.color = flags.color;
-			}
+					if (flags.color) {
+						payload.color = flags.color;
+					}
 
-			if (flags.order !== undefined) {
-				payload.order = flags.order;
-			}
+					if (flags.order !== undefined) {
+						payload.order = flags.order;
+					}
 
-			const result =
-				await V2ApiCategoriesService.createCategoryV2CategoriesPost(payload);
-
-			spinner.stop("Category created");
+					return await V2ApiCategoriesService.createCategoryV2CategoriesPost(
+						payload,
+					);
+				},
+			});
 
 			// In text mode, show summary
 			if (global.output !== "json") {
@@ -148,7 +148,6 @@ const createCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to create category");
 			handleError(error, { domain: "Category" });
 		}
 	},
@@ -184,7 +183,6 @@ const updateCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		// Require at least one update field
 		if (!flags.name && !flags.color && flags.order === undefined) {
@@ -194,32 +192,32 @@ const updateCommand = defineCommand({
 			process.exit(1);
 		}
 
-		spinner.start("Updating category...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Updating category...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const payload: routes__v2__categories__CategoryUpdate = {};
+					const payload: routes__v2__categories__CategoryUpdate = {};
 
-			if (flags.name) {
-				payload.name = flags.name;
-			}
+					if (flags.name) {
+						payload.name = flags.name;
+					}
 
-			if (flags.color) {
-				payload.color = flags.color;
-			}
+					if (flags.color) {
+						payload.color = flags.color;
+					}
 
-			if (flags.order !== undefined) {
-				payload.order = flags.order;
-			}
+					if (flags.order !== undefined) {
+						payload.order = flags.order;
+					}
 
-			const result =
-				await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch(
-					args.id,
-					payload,
-				);
-
-			spinner.stop("Category updated");
+					return await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch(
+						args.id,
+						payload,
+					);
+				},
+			});
 
 			// In text mode, show summary
 			if (global.output !== "json") {
@@ -241,7 +239,6 @@ const updateCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to update category");
 			handleError(error, { domain: "Category" });
 		}
 	},
@@ -264,19 +261,18 @@ const deleteCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Deleting category...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Deleting category...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiCategoriesService.deleteCategoryV2CategoriesCategoryIdDelete(
-					args.id,
-				);
-
-			spinner.stop("Category deleted");
+					return await V2ApiCategoriesService.deleteCategoryV2CategoriesCategoryIdDelete(
+						args.id,
+					);
+				},
+			});
 
 			// In text mode, confirm deletion
 			if (global.output !== "json") {
@@ -285,7 +281,6 @@ const deleteCommand = defineCommand({
 				fmt.output(result ?? { success: true, id: args.id });
 			}
 		} catch (error) {
-			spinner.stop("Failed to delete category");
 			handleError(error, { domain: "Category" });
 		}
 	},
@@ -314,30 +309,31 @@ const assignCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		const sourceId = args["source-id"];
 		const categoryId = args["category-id"];
 		const isUnassign = categoryId === "null";
 
-		spinner.start(
-			isUnassign ? "Removing category from source..." : "Assigning category...",
-		);
+		const message = isUnassign
+			? "Removing category from source..."
+			: "Assigning category...";
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message,
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const payload: CategoryAssignRequest = {
-				category_id: isUnassign ? null : categoryId,
-			};
+					const payload: CategoryAssignRequest = {
+						category_id: isUnassign ? null : categoryId,
+					};
 
-			const result =
-				await V2ApiDataSourcesService.assignDataSourceCategoryV2DataSourcesSourceIdCategoryPatch(
-					sourceId,
-					payload,
-				);
-
-			spinner.stop(isUnassign ? "Category removed" : "Category assigned");
+					return await V2ApiDataSourcesService.assignDataSourceCategoryV2DataSourcesSourceIdCategoryPatch(
+						sourceId,
+						payload,
+					);
+				},
+			});
 
 			// In text mode, confirm
 			if (global.output !== "json") {
@@ -356,7 +352,6 @@ const assignCommand = defineCommand({
 				);
 			}
 		} catch (error) {
-			spinner.stop("Failed to assign category");
 			handleError(error, { domain: "Category" });
 		}
 	},

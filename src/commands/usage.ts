@@ -1,10 +1,10 @@
 import { defineCommand } from "@crustjs/core";
+import { spinner } from "@crustjs/prompts";
 import { V2ApiService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
-import { createSpinner } from "../utils/spinner.ts";
 
 export const usageCommand = defineCommand({
 	meta: {
@@ -16,16 +16,15 @@ export const usageCommand = defineCommand({
 	async run() {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Fetching usage summary...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
-
-			const result = await V2ApiService.getUsageSummaryV2V2UsageGet();
-
-			spinner.stop("Usage retrieved");
+			const result = await spinner({
+				message: "Fetching usage summary...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
+					return await V2ApiService.getUsageSummaryV2V2UsageGet();
+				},
+			});
 
 			if (global.output === "json") {
 				fmt.output(result);
@@ -65,7 +64,6 @@ export const usageCommand = defineCommand({
 				console.log("\nNo usage data available.");
 			}
 		} catch (error) {
-			spinner.stop("Failed to fetch usage");
 			handleError(error, { domain: "Usage" });
 		}
 	},

@@ -1,11 +1,11 @@
 import { defineCommand } from "@crustjs/core";
+import { spinner } from "@crustjs/prompts";
 import type { ContextShareRequest, ContextShareUpdateRequest } from "nia-ai-ts";
 import { V2ApiContextsService } from "nia-ai-ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { parseGlobalFlags } from "../utils/global-flags.ts";
-import { createSpinner } from "../utils/spinner.ts";
 
 /**
  * Valid memory types for context sharing.
@@ -105,7 +105,6 @@ const saveCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		// Validate memory type if provided
 		if (flags["memory-type"]) {
@@ -122,34 +121,36 @@ const saveCommand = defineCommand({
 			}
 		}
 
-		spinner.start("Saving context...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Saving context...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const payload: ContextShareRequest = {
-				title: args.title,
-				summary: flags.summary,
-				content,
-				agent_source: flags.agent,
-			};
+					const payload: ContextShareRequest = {
+						title: args.title,
+						summary: flags.summary,
+						content,
+						agent_source: flags.agent,
+					};
 
-			if (flags.tags) {
-				payload.tags = flags.tags.split(",").map((s) => s.trim());
-			}
-			if (flags["memory-type"]) {
-				payload.memory_type = flags[
-					"memory-type"
-				] as ContextShareRequest["memory_type"];
-			}
-			if (flags.ttl !== undefined) {
-				payload.ttl_seconds = flags.ttl;
-			}
+					if (flags.tags) {
+						payload.tags = flags.tags.split(",").map((s) => s.trim());
+					}
+					if (flags["memory-type"]) {
+						payload.memory_type = flags[
+							"memory-type"
+						] as ContextShareRequest["memory_type"];
+					}
+					if (flags.ttl !== undefined) {
+						payload.ttl_seconds = flags.ttl;
+					}
 
-			const result =
-				await V2ApiContextsService.saveContextV2V2ContextsPost(payload);
-
-			spinner.stop("Context saved");
+					return await V2ApiContextsService.saveContextV2V2ContextsPost(
+						payload,
+					);
+				},
+			});
 
 			if (global.output !== "json") {
 				const ctx = result as Record<string, unknown>;
@@ -165,7 +166,6 @@ const saveCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to save context");
 			handleError(error, { domain: "Context" });
 		}
 	},
@@ -203,27 +203,27 @@ const listCommand = defineCommand({
 	async run({ flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		// Validate memory type if provided
 		if (flags["memory-type"]) {
 			validateMemoryType(flags["memory-type"]);
 		}
 
-		spinner.start("Fetching contexts...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching contexts...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result = await V2ApiContextsService.listContextsV2V2ContextsGet(
-				flags.limit ?? undefined,
-				flags.offset ?? undefined,
-				flags.tags ?? undefined,
-				flags.agent ?? undefined,
-				flags["memory-type"] ?? undefined,
-			);
-
-			spinner.stop("Contexts retrieved");
+					return await V2ApiContextsService.listContextsV2V2ContextsGet(
+						flags.limit ?? undefined,
+						flags.offset ?? undefined,
+						flags.tags ?? undefined,
+						flags.agent ?? undefined,
+						flags["memory-type"] ?? undefined,
+					);
+				},
+			});
 
 			// In text/table mode, format as a table
 			if (global.output !== "json") {
@@ -265,7 +265,6 @@ const listCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to fetch contexts");
 			handleError(error, { domain: "Context" });
 		}
 	},
@@ -301,22 +300,21 @@ const searchCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Searching contexts...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Searching contexts...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiContextsService.searchContextsV2V2ContextsSearchGet(
-					args.query,
-					flags.limit ?? undefined,
-					flags.tags ?? undefined,
-					flags.agent ?? undefined,
-				);
-
-			spinner.stop("Search complete");
+					return await V2ApiContextsService.searchContextsV2V2ContextsSearchGet(
+						args.query,
+						flags.limit ?? undefined,
+						flags.tags ?? undefined,
+						flags.agent ?? undefined,
+					);
+				},
+			});
 
 			if (global.output !== "json") {
 				const response = result as Record<string, unknown>;
@@ -346,7 +344,6 @@ const searchCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Search failed");
 			handleError(error, { domain: "Context" });
 		}
 	},
@@ -382,22 +379,21 @@ const semanticCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Running semantic search...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Running semantic search...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiContextsService.semanticSearchContextsV2V2ContextsSemanticSearchGet(
-					args.query,
-					flags.limit ?? undefined,
-					flags.highlights ?? undefined,
-					flags.workspace ?? undefined,
-				);
-
-			spinner.stop("Semantic search complete");
+					return await V2ApiContextsService.semanticSearchContextsV2V2ContextsSemanticSearchGet(
+						args.query,
+						flags.limit ?? undefined,
+						flags.highlights ?? undefined,
+						flags.workspace ?? undefined,
+					);
+				},
+			});
 
 			if (global.output !== "json") {
 				const response = result as Record<string, unknown>;
@@ -451,7 +447,6 @@ const semanticCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Semantic search failed");
 			handleError(error, { domain: "Context" });
 		}
 	},
@@ -474,17 +469,18 @@ const getCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Fetching context...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Fetching context...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiContextsService.getContextV2V2ContextsContextIdGet(args.id);
-
-			spinner.stop("Context retrieved");
+					return await V2ApiContextsService.getContextV2V2ContextsContextIdGet(
+						args.id,
+					);
+				},
+			});
 
 			if (global.output !== "json") {
 				const ctx = result as Record<string, unknown>;
@@ -515,7 +511,6 @@ const getCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to fetch context");
 			handleError(error, { domain: "Context" });
 		}
 	},
@@ -559,7 +554,6 @@ const updateCommand = defineCommand({
 	async run({ args, flags }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
 
 		// Validate memory type if provided
 		if (flags["memory-type"]) {
@@ -608,18 +602,18 @@ const updateCommand = defineCommand({
 			process.exit(1);
 		}
 
-		spinner.start("Updating context...");
-
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Updating context...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
-					args.id,
-					payload,
-				);
-
-			spinner.stop("Context updated");
+					return await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
+						args.id,
+						payload,
+					);
+				},
+			});
 
 			if (global.output !== "json") {
 				const ctx = result as Record<string, unknown>;
@@ -631,7 +625,6 @@ const updateCommand = defineCommand({
 				fmt.output(result);
 			}
 		} catch (error) {
-			spinner.stop("Failed to update context");
 			handleError(error, { domain: "Context" });
 		}
 	},
@@ -654,19 +647,18 @@ const deleteCommand = defineCommand({
 	async run({ args }) {
 		const global = parseGlobalFlags();
 		const fmt = createFormatter({ output: global.output, color: global.color });
-		const spinner = createSpinner({ color: global.color });
-
-		spinner.start("Deleting context...");
 
 		try {
-			await createSdk({ apiKey: global.apiKey });
+			const result = await spinner({
+				message: "Deleting context...",
+				task: async () => {
+					await createSdk({ apiKey: global.apiKey });
 
-			const result =
-				await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete(
-					args.id,
-				);
-
-			spinner.stop("Context deleted");
+					return await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete(
+						args.id,
+					);
+				},
+			});
 
 			if (global.output === "json") {
 				fmt.output(result);
@@ -674,7 +666,6 @@ const deleteCommand = defineCommand({
 				console.log(`Context ${args.id} has been deleted.`);
 			}
 		} catch (error) {
-			spinner.stop("Failed to delete context");
 			handleError(error, { domain: "Context" });
 		}
 	},
