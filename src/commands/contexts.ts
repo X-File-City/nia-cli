@@ -1,11 +1,10 @@
-import { defineCommand } from "@crustjs/core";
 import { spinner } from "@crustjs/prompts";
 import type { ContextShareRequest, ContextShareUpdateRequest } from "nia-ai-ts";
 import { V2ApiContextsService } from "nia-ai-ts";
+import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
-import { parseGlobalFlags } from "../utils/global-flags.ts";
 
 /**
  * Valid memory types for context sharing.
@@ -55,20 +54,18 @@ async function readStdin(): Promise<string> {
 
 // --- Subcommands ---
 
-const saveCommand = defineCommand({
-	meta: {
-		name: "save",
-		description: "Save a new cross-agent context",
-	},
-	args: [
+const saveCommand = app
+	.sub("save")
+	.meta({ description: "Save a new cross-agent context" })
+	.args([
 		{
 			name: "title",
 			type: "string",
 			description: "Title for the context",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		summary: {
 			type: "string",
 			description: "Brief summary of the context (required)",
@@ -101,10 +98,9 @@ const saveCommand = defineCommand({
 			type: "string",
 			description: "Workspace identifier",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		// Validate memory type if provided
 		if (flags["memory-type"]) {
@@ -125,7 +121,7 @@ const saveCommand = defineCommand({
 			const result = await spinner({
 				message: "Saving context...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					const payload: ContextShareRequest = {
 						title: args.title,
@@ -152,32 +148,24 @@ const saveCommand = defineCommand({
 				},
 			});
 
-			if (global.output !== "json") {
-				const ctx = result as Record<string, unknown>;
-				console.log(`Context ID: ${ctx.id ?? "unknown"}`);
-				console.log(`Title:      ${ctx.title ?? args.title}`);
-				if (ctx.memory_type) {
-					console.log(`Type:       ${ctx.memory_type}`);
-				}
-				if (ctx.expires_at) {
-					console.log(`Expires:    ${ctx.expires_at}`);
-				}
-			} else {
-				fmt.output(result);
+			const ctx = result as Record<string, unknown>;
+			console.log(`Context ID: ${ctx.id ?? "unknown"}`);
+			console.log(`Title:      ${ctx.title ?? args.title}`);
+			if (ctx.memory_type) {
+				console.log(`Type:       ${ctx.memory_type}`);
+			}
+			if (ctx.expires_at) {
+				console.log(`Expires:    ${ctx.expires_at}`);
 			}
 		} catch (error) {
 			handleError(error, { domain: "Context" });
 		}
-	},
-});
+	});
 
-const listCommand = defineCommand({
-	meta: {
-		name: "list",
-		description: "List contexts with pagination and filtering",
-	},
-	args: [],
-	flags: {
+const listCommand = app
+	.sub("list")
+	.meta({ description: "List contexts with pagination and filtering" })
+	.flags({
 		limit: {
 			type: "number",
 			description: "Maximum number of contexts to return",
@@ -199,10 +187,9 @@ const listCommand = defineCommand({
 			description:
 				"Filter by memory type: scratchpad, episodic, fact, procedural",
 		},
-	},
-	async run({ flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		// Validate memory type if provided
 		if (flags["memory-type"]) {
@@ -213,7 +200,7 @@ const listCommand = defineCommand({
 			const result = await spinner({
 				message: "Fetching contexts...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiContextsService.listContextsV2V2ContextsGet(
 						flags.limit ?? undefined,
@@ -225,65 +212,57 @@ const listCommand = defineCommand({
 				},
 			});
 
-			// In text/table mode, format as a table
-			if (global.output !== "json") {
-				const response = result as Record<string, unknown>;
-				const items = (response.items ?? response.contexts ?? []) as Array<
-					Record<string, unknown>
-				>;
+			const response = result as Record<string, unknown>;
+			const items = (response.items ?? response.contexts ?? []) as Array<
+				Record<string, unknown>
+			>;
 
-				if (items.length === 0) {
-					console.log("No contexts found.");
-				} else {
-					const rows = items.map((ctx) => ({
-						id: String(ctx.id ?? ""),
-						title:
-							String(ctx.title ?? "").length > 40
-								? `${String(ctx.title ?? "").slice(0, 37)}...`
-								: String(ctx.title ?? ""),
-						agent_source: String(ctx.agent_source ?? ""),
-						memory_type: String(ctx.memory_type ?? ""),
-						created_at: String(ctx.created_at ?? ""),
-					}));
-					fmt.output(rows);
-				}
-
-				// Show pagination info
-				const pagination = response.pagination as
-					| Record<string, unknown>
-					| undefined;
-				if (pagination) {
-					const total = pagination.total ?? response.total;
-					const hasMore = pagination.has_more;
-					if (total !== undefined) {
-						console.log(
-							`\nTotal: ${total}${hasMore ? " (more available)" : ""}`,
-						);
-					}
-				}
+			if (items.length === 0) {
+				console.log("No contexts found.");
 			} else {
-				fmt.output(result);
+				const rows = items.map((ctx) => ({
+					id: String(ctx.id ?? ""),
+					title:
+						String(ctx.title ?? "").length > 40
+							? `${String(ctx.title ?? "").slice(0, 37)}...`
+							: String(ctx.title ?? ""),
+					agent_source: String(ctx.agent_source ?? ""),
+					memory_type: String(ctx.memory_type ?? ""),
+					created_at: String(ctx.created_at ?? ""),
+				}));
+				fmt.output(rows);
+			}
+
+			// Show pagination info
+			const pagination = response.pagination as
+				| Record<string, unknown>
+				| undefined;
+			if (pagination) {
+				const total = pagination.total ?? response.total;
+				const hasMore = pagination.has_more;
+				if (total !== undefined) {
+					console.log(`\nTotal: ${total}${hasMore ? " (more available)" : ""}`);
+				}
 			}
 		} catch (error) {
 			handleError(error, { domain: "Context" });
 		}
-	},
-});
+	});
 
-const searchCommand = defineCommand({
-	meta: {
-		name: "search",
+const searchCommand = app
+	.sub("search")
+	.meta({
 		description: "Search contexts by text (title, summary, content, tags)",
-	},
-	args: [
+	})
+	.args([
 		{
 			name: "query",
 			type: "string",
 			description: "Search query",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		limit: {
 			type: "number",
 			description: "Maximum number of results to return",
@@ -296,16 +275,15 @@ const searchCommand = defineCommand({
 			type: "string",
 			description: "Filter by agent source",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Searching contexts...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiContextsService.searchContextsV2V2ContextsSearchGet(
 						args.query,
@@ -316,53 +294,48 @@ const searchCommand = defineCommand({
 				},
 			});
 
-			if (global.output !== "json") {
-				const response = result as Record<string, unknown>;
-				const contexts = (response.contexts ?? []) as Array<
-					Record<string, unknown>
-				>;
+			const response = result as Record<string, unknown>;
+			const contexts = (response.contexts ?? []) as Array<
+				Record<string, unknown>
+			>;
 
-				if (contexts.length === 0) {
-					console.log("No matching contexts found.");
-				} else {
-					const rows = contexts.map((ctx) => ({
-						id: String(ctx.id ?? ""),
-						title:
-							String(ctx.title ?? "").length > 40
-								? `${String(ctx.title ?? "").slice(0, 37)}...`
-								: String(ctx.title ?? ""),
-						agent_source: String(ctx.agent_source ?? ""),
-						memory_type: String(ctx.memory_type ?? ""),
-					}));
-					fmt.output(rows);
-
-					if (response.total_results !== undefined) {
-						console.log(`\nTotal results: ${response.total_results}`);
-					}
-				}
+			if (contexts.length === 0) {
+				console.log("No matching contexts found.");
 			} else {
-				fmt.output(result);
+				const rows = contexts.map((ctx) => ({
+					id: String(ctx.id ?? ""),
+					title:
+						String(ctx.title ?? "").length > 40
+							? `${String(ctx.title ?? "").slice(0, 37)}...`
+							: String(ctx.title ?? ""),
+					agent_source: String(ctx.agent_source ?? ""),
+					memory_type: String(ctx.memory_type ?? ""),
+				}));
+				fmt.output(rows);
+
+				if (response.total_results !== undefined) {
+					console.log(`\nTotal results: ${response.total_results}`);
+				}
 			}
 		} catch (error) {
 			handleError(error, { domain: "Context" });
 		}
-	},
-});
+	});
 
-const semanticCommand = defineCommand({
-	meta: {
-		name: "semantic",
+const semanticCommand = app
+	.sub("semantic")
+	.meta({
 		description: "Semantic (vector + BM25 hybrid) search over contexts",
-	},
-	args: [
+	})
+	.args([
 		{
 			name: "query",
 			type: "string",
 			description: "Semantic search query",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		limit: {
 			type: "number",
 			description: "Maximum number of results to return",
@@ -375,16 +348,15 @@ const semanticCommand = defineCommand({
 			type: "string",
 			description: "Filter by workspace",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Running semantic search...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiContextsService.semanticSearchContextsV2V2ContextsSemanticSearchGet(
 						args.query,
@@ -395,86 +367,75 @@ const semanticCommand = defineCommand({
 				},
 			});
 
-			if (global.output !== "json") {
-				const response = result as Record<string, unknown>;
-				const results = (response.results ?? []) as Array<
-					Record<string, unknown>
-				>;
+			const response = result as Record<string, unknown>;
+			const results = (response.results ?? []) as Array<
+				Record<string, unknown>
+			>;
 
-				if (results.length === 0) {
-					console.log("No matching contexts found.");
-				} else {
-					const rows = results.map((item) => ({
-						id: String(item.id ?? ""),
-						title:
-							String(item.title ?? "").length > 40
-								? `${String(item.title ?? "").slice(0, 37)}...`
-								: String(item.title ?? ""),
-						score: item.score !== undefined ? String(item.score) : "",
-						agent_source: String(item.agent_source ?? ""),
-					}));
-					fmt.output(rows);
-				}
-
-				// Show search metadata
-				const metadata = response.search_metadata as
-					| Record<string, unknown>
-					| undefined;
-				if (metadata) {
-					const parts: string[] = [];
-					if (metadata.total_results !== undefined) {
-						parts.push(`Total: ${metadata.total_results}`);
-					}
-					if (metadata.search_type) {
-						parts.push(`Type: ${metadata.search_type}`);
-					}
-					if (parts.length > 0) {
-						console.log(`\n${parts.join(" | ")}`);
-					}
-				}
-
-				// Show suggestions
-				const suggestions = response.suggestions as
-					| Record<string, unknown>
-					| undefined;
-				if (suggestions) {
-					const tips = suggestions.tips as string[] | undefined;
-					if (tips && tips.length > 0) {
-						console.log(`\nTips: ${tips.join("; ")}`);
-					}
-				}
+			if (results.length === 0) {
+				console.log("No matching contexts found.");
 			} else {
-				fmt.output(result);
+				const rows = results.map((item) => ({
+					id: String(item.id ?? ""),
+					title:
+						String(item.title ?? "").length > 40
+							? `${String(item.title ?? "").slice(0, 37)}...`
+							: String(item.title ?? ""),
+					score: item.score !== undefined ? String(item.score) : "",
+					agent_source: String(item.agent_source ?? ""),
+				}));
+				fmt.output(rows);
+			}
+
+			// Show search metadata
+			const metadata = response.search_metadata as
+				| Record<string, unknown>
+				| undefined;
+			if (metadata) {
+				const parts: string[] = [];
+				if (metadata.total_results !== undefined) {
+					parts.push(`Total: ${metadata.total_results}`);
+				}
+				if (metadata.search_type) {
+					parts.push(`Type: ${metadata.search_type}`);
+				}
+				if (parts.length > 0) {
+					console.log(`\n${parts.join(" | ")}`);
+				}
+			}
+
+			// Show suggestions
+			const suggestions = response.suggestions as
+				| Record<string, unknown>
+				| undefined;
+			if (suggestions) {
+				const tips = suggestions.tips as string[] | undefined;
+				if (tips && tips.length > 0) {
+					console.log(`\nTips: ${tips.join("; ")}`);
+				}
 			}
 		} catch (error) {
 			handleError(error, { domain: "Context" });
 		}
-	},
-});
+	});
 
-const getCommand = defineCommand({
-	meta: {
-		name: "get",
-		description: "Retrieve a specific context by ID",
-	},
-	args: [
+const getCommand = app
+	.sub("get")
+	.meta({ description: "Retrieve a specific context by ID" })
+	.args([
 		{
 			name: "id",
 			type: "string",
 			description: "Context ID",
 			required: true,
 		},
-	] as const,
-	flags: {},
-	async run({ args }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
-
+	] as const)
+	.run(async ({ args, flags }) => {
 		try {
 			const result = await spinner({
 				message: "Fetching context...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiContextsService.getContextV2V2ContextsContextIdGet(
 						args.id,
@@ -482,54 +443,47 @@ const getCommand = defineCommand({
 				},
 			});
 
-			if (global.output !== "json") {
-				const ctx = result as Record<string, unknown>;
-				console.log(`ID:           ${ctx.id ?? args.id}`);
-				console.log(`Title:        ${ctx.title ?? ""}`);
-				console.log(`Summary:      ${ctx.summary ?? ""}`);
-				console.log(`Agent:        ${ctx.agent_source ?? ""}`);
-				if (ctx.memory_type) {
-					console.log(`Memory Type:  ${ctx.memory_type}`);
-				}
-				if (ctx.tags && Array.isArray(ctx.tags) && ctx.tags.length > 0) {
-					console.log(`Tags:         ${ctx.tags.join(", ")}`);
-				}
-				if (ctx.created_at) {
-					console.log(`Created:      ${ctx.created_at}`);
-				}
-				if (ctx.updated_at) {
-					console.log(`Updated:      ${ctx.updated_at}`);
-				}
-				if (ctx.expires_at) {
-					console.log(`Expires:      ${ctx.expires_at}`);
-				}
-				if (ctx.content) {
-					console.log("\n--- Content ---");
-					console.log(String(ctx.content));
-				}
-			} else {
-				fmt.output(result);
+			const ctx = result as Record<string, unknown>;
+			console.log(`ID:           ${ctx.id ?? args.id}`);
+			console.log(`Title:        ${ctx.title ?? ""}`);
+			console.log(`Summary:      ${ctx.summary ?? ""}`);
+			console.log(`Agent:        ${ctx.agent_source ?? ""}`);
+			if (ctx.memory_type) {
+				console.log(`Memory Type:  ${ctx.memory_type}`);
+			}
+			if (ctx.tags && Array.isArray(ctx.tags) && ctx.tags.length > 0) {
+				console.log(`Tags:         ${ctx.tags.join(", ")}`);
+			}
+			if (ctx.created_at) {
+				console.log(`Created:      ${ctx.created_at}`);
+			}
+			if (ctx.updated_at) {
+				console.log(`Updated:      ${ctx.updated_at}`);
+			}
+			if (ctx.expires_at) {
+				console.log(`Expires:      ${ctx.expires_at}`);
+			}
+			if (ctx.content) {
+				console.log("\n--- Content ---");
+				console.log(String(ctx.content));
 			}
 		} catch (error) {
 			handleError(error, { domain: "Context" });
 		}
-	},
-});
+	});
 
-const updateCommand = defineCommand({
-	meta: {
-		name: "update",
-		description: "Update an existing context",
-	},
-	args: [
+const updateCommand = app
+	.sub("update")
+	.meta({ description: "Update an existing context" })
+	.args([
 		{
 			name: "id",
 			type: "string",
 			description: "Context ID to update",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		title: {
 			type: "string",
 			description: "New title",
@@ -550,10 +504,9 @@ const updateCommand = defineCommand({
 			type: "string",
 			description: "New memory type: scratchpad, episodic, fact, procedural",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		// Validate memory type if provided
 		if (flags["memory-type"]) {
@@ -606,7 +559,7 @@ const updateCommand = defineCommand({
 			const result = await spinner({
 				message: "Updating context...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
 						args.id,
@@ -615,44 +568,33 @@ const updateCommand = defineCommand({
 				},
 			});
 
-			if (global.output !== "json") {
-				const ctx = result as Record<string, unknown>;
-				console.log(`Context ${ctx.id ?? args.id} updated successfully.`);
-				if (ctx.title) {
-					console.log(`Title: ${ctx.title}`);
-				}
-			} else {
-				fmt.output(result);
+			const ctx = result as Record<string, unknown>;
+			console.log(`Context ${ctx.id ?? args.id} updated successfully.`);
+			if (ctx.title) {
+				console.log(`Title: ${ctx.title}`);
 			}
 		} catch (error) {
 			handleError(error, { domain: "Context" });
 		}
-	},
-});
+	});
 
-const deleteCommand = defineCommand({
-	meta: {
-		name: "delete",
-		description: "Delete a context (soft delete)",
-	},
-	args: [
+const deleteCommand = app
+	.sub("delete")
+	.meta({ description: "Delete a context (soft delete)" })
+	.args([
 		{
 			name: "id",
 			type: "string",
 			description: "Context ID to delete",
 			required: true,
 		},
-	] as const,
-	flags: {},
-	async run({ args }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
-
+	] as const)
+	.run(async ({ args, flags }) => {
 		try {
-			const result = await spinner({
+			await spinner({
 				message: "Deleting context...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete(
 						args.id,
@@ -660,29 +602,19 @@ const deleteCommand = defineCommand({
 				},
 			});
 
-			if (global.output === "json") {
-				fmt.output(result);
-			} else {
-				console.log(`Context ${args.id} has been deleted.`);
-			}
+			console.log(`Context ${args.id} has been deleted.`);
 		} catch (error) {
 			handleError(error, { domain: "Context" });
 		}
-	},
-});
+	});
 
-export const contextsCommand = defineCommand({
-	meta: {
-		name: "contexts",
-		description: "Save and search cross-agent contexts",
-	},
-	subCommands: {
-		save: saveCommand,
-		list: listCommand,
-		search: searchCommand,
-		semantic: semanticCommand,
-		get: getCommand,
-		update: updateCommand,
-		delete: deleteCommand,
-	},
-});
+export const contextsCommand = app
+	.sub("contexts")
+	.meta({ description: "Save and search cross-agent contexts" })
+	.command(saveCommand)
+	.command(listCommand)
+	.command(searchCommand)
+	.command(semanticCommand)
+	.command(getCommand)
+	.command(updateCommand)
+	.command(deleteCommand);

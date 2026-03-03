@@ -1,11 +1,14 @@
-import { defineCommand, runMain } from "@crustjs/core";
 import {
 	autoCompletePlugin,
 	helpPlugin,
+	type UpdateNotifierCacheAdapter,
+	updateNotifierPlugin,
 	versionPlugin,
 } from "@crustjs/plugins";
 import { skillPlugin } from "@crustjs/skills";
+import { createStore, stateDir } from "@crustjs/store";
 import pkg from "../package.json";
+import { app } from "./app.ts";
 import { authCommand } from "./commands/auth";
 import { categoriesCommand } from "./commands/categories";
 import { contextsCommand } from "./commands/contexts";
@@ -19,57 +22,52 @@ import { searchCommand } from "./commands/search";
 import { sourcesCommand } from "./commands/sources";
 import { tracerCommand } from "./commands/tracer";
 import { usageCommand } from "./commands/usage";
-import { CONFIG_APP_NAME } from "./services/config";
 
-const main = defineCommand({
-	meta: {
-		name: CONFIG_APP_NAME,
-		description: pkg.description,
-	},
-	flags: {
-		"api-key": {
-			type: "string",
-			description: "Nia API key (overrides env and config)",
-		},
-		output: {
-			type: "string",
-			description: "Output format: json, table, text",
-			alias: "o",
-		},
-		verbose: {
-			type: "boolean",
-			description: "Enable verbose output",
-		},
-		color: {
-			type: "boolean",
-			description: "Colored output (use --no-color to disable)",
-			default: true,
-		},
-	},
-	subCommands: {
-		auth: authCommand,
-		search: searchCommand,
-		repos: reposCommand,
-		sources: sourcesCommand,
-		oracle: oracleCommand,
-		tracer: tracerCommand,
-		contexts: contextsCommand,
-		packages: packagesCommand,
-		github: githubCommand,
-		papers: papersCommand,
-		datasets: datasetsCommand,
-		categories: categoriesCommand,
-		usage: usageCommand,
+const updateStore = createStore({
+	dirPath: stateDir(pkg.name),
+	name: "update-notifier",
+	fields: {
+		lastCheckedAt: { type: "number", default: 0 },
+		latestVersion: { type: "string" },
+		lastNotifiedVersion: { type: "string" },
 	},
 });
 
-runMain(main, {
-	plugins: [
-		versionPlugin(pkg.version),
-		helpPlugin(),
-		autoCompletePlugin({ mode: "help" }),
+// TODO: update this when I fixed this upsteam to make the syntax a little nicer
+const cache = {
+	read: async () => updateStore.read(),
+	write: async (_, state) => {
+		const { lastCheckedAt, latestVersion, lastNotifiedVersion } = state;
+		await updateStore.write({
+			lastCheckedAt,
+			latestVersion: latestVersion ?? "",
+			lastNotifiedVersion: lastNotifiedVersion ?? "",
+		});
+	},
+} satisfies UpdateNotifierCacheAdapter;
+
+const main = app
+	.command(authCommand)
+	.command(searchCommand)
+	.command(reposCommand)
+	.command(sourcesCommand)
+	.command(oracleCommand)
+	.command(tracerCommand)
+	.command(contextsCommand)
+	.command(packagesCommand)
+	.command(githubCommand)
+	.command(papersCommand)
+	.command(datasetsCommand)
+	.command(categoriesCommand)
+	.command(usageCommand)
+	.use(updateNotifierPlugin({ currentVersion: pkg.version, cache }))
+	.use(versionPlugin(pkg.version))
+	.use(helpPlugin())
+	.use(autoCompletePlugin({ mode: "help" }))
+	.use(
 		skillPlugin({
 			version: pkg.version,
 		}),
-	],
-});
+	);
+
+await main.execute();

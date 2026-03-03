@@ -1,35 +1,21 @@
-import { defineCommand } from "@crustjs/core";
 import { spinner } from "@crustjs/prompts";
 import { V2ApiService } from "nia-ai-ts";
+import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
-import { createFormatter } from "../utils/formatter.ts";
-import { parseGlobalFlags } from "../utils/global-flags.ts";
 
-export const usageCommand = defineCommand({
-	meta: {
-		name: "usage",
-		description: "View API usage summary",
-	},
-	args: [],
-	flags: {},
-	async run() {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
-
+export const usageCommand = app
+	.sub("usage")
+	.meta({ description: "View API usage summary" })
+	.run(async ({ flags }) => {
 		try {
 			const result = await spinner({
 				message: "Fetching usage summary...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 					return await V2ApiService.getUsageSummaryV2V2UsageGet();
 				},
 			});
-
-			if (global.output === "json") {
-				fmt.output(result);
-				return;
-			}
 
 			// Text/table mode — structured human-readable output
 			const usage = result as Record<string, unknown>;
@@ -66,5 +52,4 @@ export const usageCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Usage" });
 		}
-	},
-});
+	});

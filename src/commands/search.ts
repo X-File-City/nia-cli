@@ -1,24 +1,21 @@
-import { defineCommand } from "@crustjs/core";
 import { spinner } from "@crustjs/prompts";
+import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
-import { parseGlobalFlags } from "../utils/global-flags.ts";
 
-const universalCommand = defineCommand({
-	meta: {
-		name: "universal",
-		description: "Semantic search across all indexed sources",
-	},
-	args: [
+const universalCommand = app
+	.sub("universal")
+	.meta({ description: "Semantic search across all indexed sources" })
+	.args([
 		{
 			name: "query",
 			type: "string",
 			description: "Search query",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		"top-k": {
 			type: "number",
 			description: "Number of results to return",
@@ -31,16 +28,15 @@ const universalCommand = defineCommand({
 			type: "boolean",
 			description: "Include documentation sources",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Searching...",
 				task: async () => {
-					const sdk = await createSdk({ apiKey: global.apiKey });
+					const sdk = await createSdk({ apiKey: flags["api-key"] });
 
 					const params: Record<string, unknown> = {
 						query: args.query,
@@ -64,23 +60,20 @@ const universalCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Search" });
 		}
-	},
-});
+	});
 
-const queryCommand = defineCommand({
-	meta: {
-		name: "query",
-		description: "Query indexed repositories and documentation",
-	},
-	args: [
+const queryCommand = app
+	.sub("query")
+	.meta({ description: "Query indexed repositories and documentation" })
+	.args([
 		{
 			name: "query",
 			type: "string",
 			description: "Search query",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		repos: {
 			type: "string",
 			description: "Repository names to search (comma-separated)",
@@ -113,16 +106,15 @@ const queryCommand = defineCommand({
 			type: "string",
 			description: "LLM model to use for processing",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Querying...",
 				task: async () => {
-					const sdk = await createSdk({ apiKey: global.apiKey });
+					const sdk = await createSdk({ apiKey: flags["api-key"] });
 
 					const params: Record<string, unknown> = {
 						messages: [{ role: "user", content: args.query }],
@@ -161,8 +153,7 @@ const queryCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Search" });
 		}
-	},
-});
+	});
 
 const WEB_SEARCH_CATEGORIES = [
 	"github",
@@ -174,20 +165,18 @@ const WEB_SEARCH_CATEGORIES = [
 	"blog",
 ] as const;
 
-const webCommand = defineCommand({
-	meta: {
-		name: "web",
-		description: "Search the web for code, documentation, and research",
-	},
-	args: [
+const webCommand = app
+	.sub("web")
+	.meta({ description: "Search the web for code, documentation, and research" })
+	.args([
 		{
 			name: "query",
 			type: "string",
 			description: "Search query",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		"num-results": {
 			type: "number",
 			description: "Number of results to return",
@@ -201,10 +190,9 @@ const webCommand = defineCommand({
 			type: "number",
 			description: "Only results from the last N days",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		// Validate category if provided
 		if (
@@ -223,7 +211,7 @@ const webCommand = defineCommand({
 			const result = await spinner({
 				message: "Searching the web...",
 				task: async () => {
-					const sdk = await createSdk({ apiKey: global.apiKey });
+					const sdk = await createSdk({ apiKey: flags["api-key"] });
 
 					const params: Record<string, unknown> = {
 						query: args.query,
@@ -247,23 +235,20 @@ const webCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Search" });
 		}
-	},
-});
+	});
 
-const deepCommand = defineCommand({
-	meta: {
-		name: "deep",
-		description: "Deep multi-step research (Pro plan required)",
-	},
-	args: [
+const deepCommand = app
+	.sub("deep")
+	.meta({ description: "Deep multi-step research (Pro plan required)" })
+	.args([
 		{
 			name: "query",
 			type: "string",
 			description: "Research question",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		"output-format": {
 			type: "string",
 			description: "Optional structure hint for the output",
@@ -272,16 +257,15 @@ const deepCommand = defineCommand({
 			type: "string",
 			description: "LLM model to use for research",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Running deep research...",
 				task: async () => {
-					const sdk = await createSdk({ apiKey: global.apiKey });
+					const sdk = await createSdk({ apiKey: flags["api-key"] });
 
 					const params: Record<string, unknown> = {
 						query: args.query,
@@ -293,7 +277,7 @@ const deepCommand = defineCommand({
 					if (flags.model) {
 						params.model = flags.model;
 					}
-					if (global.verbose) {
+					if (flags.verbose) {
 						params.verbose = true;
 					}
 
@@ -305,18 +289,12 @@ const deepCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Search" });
 		}
-	},
-});
+	});
 
-export const searchCommand = defineCommand({
-	meta: {
-		name: "search",
-		description: "Search code, docs, and the web",
-	},
-	subCommands: {
-		universal: universalCommand,
-		query: queryCommand,
-		web: webCommand,
-		deep: deepCommand,
-	},
-});
+export const searchCommand = app
+	.sub("search")
+	.meta({ description: "Search code, docs, and the web" })
+	.command(universalCommand)
+	.command(queryCommand)
+	.command(webCommand)
+	.command(deepCommand);

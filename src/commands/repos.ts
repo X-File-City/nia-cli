@@ -1,31 +1,28 @@
-import { defineCommand } from "@crustjs/core";
 import { spinner } from "@crustjs/prompts";
 import type { CodeGrepRequest, RepositoryRequest } from "nia-ai-ts";
 import { V2ApiRepositoriesService } from "nia-ai-ts";
+import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
-import { parseGlobalFlags } from "../utils/global-flags.ts";
 
 // --- Subcommands ---
 
-const indexCommand = defineCommand({
-	meta: {
-		name: "index",
-		description: "Index a GitHub repository",
-	},
-	args: [
+const indexCommand = app
+	.sub("index")
+	.meta({ description: "Index a GitHub repository" })
+	.args([
 		{
 			name: "repo",
 			type: "string",
 			description: "Repository in owner/repo format (e.g., vercel/ai)",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		branch: {
 			type: "string",
-			alias: "b",
+			short: "b",
 			description:
 				"Branch to index (defaults to the repository's default branch)",
 		},
@@ -42,16 +39,15 @@ const indexCommand = defineCommand({
 			type: "boolean",
 			description: "Index privately (don't add to global pool)",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Indexing repository...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					const requestBody: RepositoryRequest = {
 						repository: args.repo,
@@ -77,15 +73,12 @@ const indexCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Repository" });
 		}
-	},
-});
+	});
 
-const listCommand = defineCommand({
-	meta: {
-		name: "list",
-		description: "List indexed repositories",
-	},
-	flags: {
+const listCommand = app
+	.sub("list")
+	.meta({ description: "List indexed repositories" })
+	.flags({
 		query: {
 			type: "string",
 			description: "Filter by repository name (substring match)",
@@ -102,16 +95,15 @@ const listCommand = defineCommand({
 			type: "number",
 			description: "Offset for pagination",
 		},
-	},
-	async run({ flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Listing repositories...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiRepositoriesService.listRepositoriesV2V2RepositoriesGet(
 						flags.query,
@@ -126,32 +118,27 @@ const listCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Repository" });
 		}
-	},
-});
+	});
 
-const statusCommand = defineCommand({
-	meta: {
-		name: "status",
-		description: "Check the indexing status of a repository",
-	},
-	args: [
+const statusCommand = app
+	.sub("status")
+	.meta({ description: "Check the indexing status of a repository" })
+	.args([
 		{
 			name: "id",
 			type: "string",
 			description: "Repository ID",
 			required: true,
 		},
-	] as const,
-	flags: {},
-	async run({ args }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	] as const)
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Checking repository status...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiRepositoriesService.getRepositoryStatusV2V2RepositoriesRepositoryIdGet(
 						args.id,
@@ -159,8 +146,8 @@ const statusCommand = defineCommand({
 				},
 			});
 
-			// In text mode, show progress info if available
-			if (global.output !== "json" && result.progress) {
+			// Show progress info if available
+			if (result.progress) {
 				const progress = result.progress as Record<string, unknown>;
 				const percentage = progress.percentage;
 				const stage = progress.stage;
@@ -187,32 +174,27 @@ const statusCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Repository" });
 		}
-	},
-});
+	});
 
-const deleteCommand = defineCommand({
-	meta: {
-		name: "delete",
-		description: "Delete an indexed repository",
-	},
-	args: [
+const deleteCommand = app
+	.sub("delete")
+	.meta({ description: "Delete an indexed repository" })
+	.args([
 		{
 			name: "id",
 			type: "string",
 			description: "Repository ID",
 			required: true,
 		},
-	] as const,
-	flags: {},
-	async run({ args }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	] as const)
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Deleting repository...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiRepositoriesService.deleteRepositoryV2V2RepositoriesRepositoryIdDelete(
 						args.id,
@@ -224,15 +206,12 @@ const deleteCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Repository" });
 		}
-	},
-});
+	});
 
-const renameCommand = defineCommand({
-	meta: {
-		name: "rename",
-		description: "Rename an indexed repository",
-	},
-	args: [
+const renameCommand = app
+	.sub("rename")
+	.meta({ description: "Rename an indexed repository" })
+	.args([
 		{
 			name: "id",
 			type: "string",
@@ -245,17 +224,15 @@ const renameCommand = defineCommand({
 			description: "New display name",
 			required: true,
 		},
-	] as const,
-	flags: {},
-	async run({ args }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	] as const)
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Renaming repository...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiRepositoriesService.renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch(
 						args.id,
@@ -268,17 +245,14 @@ const renameCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Repository" });
 		}
-	},
-});
+	});
 
 // --- Content subcommands ---
 
-const readCommand = defineCommand({
-	meta: {
-		name: "read",
-		description: "Read file content from an indexed repository",
-	},
-	args: [
+const readCommand = app
+	.sub("read")
+	.meta({ description: "Read file content from an indexed repository" })
+	.args([
 		{
 			name: "repo-id",
 			type: "string",
@@ -291,11 +265,11 @@ const readCommand = defineCommand({
 			description: "File path within the repository",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		branch: {
 			type: "string",
-			alias: "b",
+			short: "b",
 			description: "Branch name (defaults to the repository's default branch)",
 		},
 		ref: {
@@ -303,16 +277,15 @@ const readCommand = defineCommand({
 			description:
 				"Git ref (branch, tag, or commit SHA). Takes precedence over --branch",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Reading file...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiRepositoriesService.getRepositoryContentV2V2RepositoriesRepositoryIdContentGet(
 						args["repo-id"],
@@ -323,8 +296,8 @@ const readCommand = defineCommand({
 				},
 			});
 
-			// In text mode, show file content with line numbers for readability
-			if (global.output !== "json" && result.success && result.content) {
+			// Show file content with line numbers for readability
+			if (result.success && result.content) {
 				const lines = result.content.split("\n");
 				const padding = String(lines.length).length;
 				for (let i = 0; i < lines.length; i++) {
@@ -337,15 +310,12 @@ const readCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Repository" });
 		}
-	},
-});
+	});
 
-const grepCommand = defineCommand({
-	meta: {
-		name: "grep",
-		description: "Search for a pattern in repository files",
-	},
-	args: [
+const grepCommand = app
+	.sub("grep")
+	.meta({ description: "Search for a pattern in repository files" })
+	.args([
 		{
 			name: "repo-id",
 			type: "string",
@@ -358,8 +328,8 @@ const grepCommand = defineCommand({
 			description: "Search pattern (regex or fixed string)",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		path: {
 			type: "string",
 			description: "Filter by file path prefix",
@@ -400,16 +370,15 @@ const grepCommand = defineCommand({
 			type: "string",
 			description: "Git ref (branch, tag, or commit SHA)",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Searching repository files...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					const requestBody: CodeGrepRequest = {
 						pattern: args.pattern,
@@ -457,26 +426,23 @@ const grepCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Repository" });
 		}
-	},
-});
+	});
 
-const treeCommand = defineCommand({
-	meta: {
-		name: "tree",
-		description: "View the file tree of an indexed repository",
-	},
-	args: [
+const treeCommand = app
+	.sub("tree")
+	.meta({ description: "View the file tree of an indexed repository" })
+	.args([
 		{
 			name: "repo-id",
 			type: "string",
 			description: "Repository ID",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		branch: {
 			type: "string",
-			alias: "b",
+			short: "b",
 			description: "Branch name",
 		},
 		"include-paths": {
@@ -499,16 +465,15 @@ const treeCommand = defineCommand({
 			type: "boolean",
 			description: "Show full file paths instead of tree structure",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Fetching tree...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiRepositoriesService.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet(
 						args["repo-id"],
@@ -522,8 +487,8 @@ const treeCommand = defineCommand({
 				},
 			});
 
-			// If there's a tree_text, show it directly in text mode for readability
-			if (global.output !== "json" && result.tree_text) {
+			// If there's a tree_text, show it directly for readability
+			if (result.tree_text) {
 				console.log(result.tree_text);
 
 				// Show stats summary if available
@@ -546,24 +511,18 @@ const treeCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Repository" });
 		}
-	},
-});
+	});
 
 // --- Parent command ---
 
-export const reposCommand = defineCommand({
-	meta: {
-		name: "repos",
-		description: "Manage indexed repositories",
-	},
-	subCommands: {
-		index: indexCommand,
-		list: listCommand,
-		status: statusCommand,
-		delete: deleteCommand,
-		rename: renameCommand,
-		read: readCommand,
-		grep: grepCommand,
-		tree: treeCommand,
-	},
-});
+export const reposCommand = app
+	.sub("repos")
+	.meta({ description: "Manage indexed repositories" })
+	.command(indexCommand)
+	.command(listCommand)
+	.command(statusCommand)
+	.command(deleteCommand)
+	.command(renameCommand)
+	.command(readCommand)
+	.command(grepCommand)
+	.command(treeCommand);

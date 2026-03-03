@@ -1,17 +1,10 @@
-import { defineCommand } from "@crustjs/core";
-import { spinner } from "@crustjs/prompts";
+import { input, select, spinner } from "@crustjs/prompts";
 import type { GrepRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService, V2ApiSourcesService } from "nia-ai-ts";
+import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
-import { parseGlobalFlags } from "../utils/global-flags.ts";
-import {
-	checkFirstRun,
-	promptOptional,
-	promptSelect,
-	requireArg,
-} from "../utils/prompts.ts";
 
 /**
  * Valid source type values accepted by the API.
@@ -43,19 +36,17 @@ function validateSourceType(type: string | undefined): SourceType | undefined {
 
 // --- Subcommands ---
 
-const indexCommand = defineCommand({
-	meta: {
-		name: "index",
-		description: "Index a documentation URL or website as a source",
-	},
-	args: [
+const indexCommand = app
+	.sub("index")
+	.meta({ description: "Index a documentation URL or website as a source" })
+	.args([
 		{
 			name: "url",
 			type: "string",
 			description: "URL to index (prompted interactively if omitted in a TTY)",
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		name: {
 			type: "string",
 			description: "Display name for the source",
@@ -84,18 +75,15 @@ const indexCommand = defineCommand({
 			type: "boolean",
 			description: "Extract only main content, skip navigation/footer",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		await checkFirstRun(global.apiKey);
-
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		// Interactive mode: prompt for missing required arg and optional fields
-		const url = await requireArg(args.url, {
-			name: "url",
+		const url = await input({
 			message: "URL to index:",
-			validate: (v) => {
+			initial: args.url,
+			validate: (v: string) => {
 				try {
 					new URL(v);
 					return true;
@@ -105,14 +93,12 @@ const indexCommand = defineCommand({
 			},
 		});
 
-		let displayName = flags.name;
-		if (!displayName) {
-			displayName =
-				(await promptOptional({ message: "Display name (optional):" })) ??
-				undefined;
-		}
+		const displayName =
+			flags.name ||
+			(await input({ message: "Display name (optional):" })) ||
+			undefined;
 
-		const sourceType = await promptSelect({
+		const sourceType = await select({
 			message: "Source type:",
 			choices: [
 				{ label: "Documentation", value: "documentation" as const },
@@ -126,7 +112,7 @@ const indexCommand = defineCommand({
 			const result = await spinner({
 				message: "Indexing source...",
 				task: async () => {
-					const sdk = await createSdk({ apiKey: global.apiKey });
+					const sdk = await createSdk({ apiKey: flags["api-key"] });
 
 					const params: Record<string, unknown> = {
 						url,
@@ -165,15 +151,12 @@ const indexCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Source" });
 		}
-	},
-});
+	});
 
-const listCommand = defineCommand({
-	meta: {
-		name: "list",
-		description: "List indexed sources",
-	},
-	flags: {
+const listCommand = app
+	.sub("list")
+	.meta({ description: "List indexed sources" })
+	.flags({
 		type: {
 			type: "string",
 			description:
@@ -199,10 +182,9 @@ const listCommand = defineCommand({
 			type: "number",
 			description: "Offset for pagination",
 		},
-	},
-	async run({ flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		const sourceType = validateSourceType(flags.type);
 
@@ -210,7 +192,7 @@ const listCommand = defineCommand({
 			const result = await spinner({
 				message: "Listing sources...",
 				task: async () => {
-					const sdk = await createSdk({ apiKey: global.apiKey });
+					const sdk = await createSdk({ apiKey: flags["api-key"] });
 
 					return await sdk.sources.list({
 						type: sourceType,
@@ -227,32 +209,28 @@ const listCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Source" });
 		}
-	},
-});
+	});
 
-const getCommand = defineCommand({
-	meta: {
-		name: "get",
-		description: "Get details of a specific source",
-	},
-	args: [
+const getCommand = app
+	.sub("get")
+	.meta({ description: "Get details of a specific source" })
+	.args([
 		{
 			name: "id",
 			type: "string",
 			description: "Source ID",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		type: {
 			type: "string",
 			description:
 				"Source type hint: repository, documentation, research_paper, huggingface_dataset",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		const sourceType = validateSourceType(flags.type);
 
@@ -260,7 +238,7 @@ const getCommand = defineCommand({
 			const result = await spinner({
 				message: "Fetching source...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(
 						args.id,
@@ -273,32 +251,28 @@ const getCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Source" });
 		}
-	},
-});
+	});
 
-const resolveCommand = defineCommand({
-	meta: {
-		name: "resolve",
-		description: "Resolve a source by name, URL, or slug",
-	},
-	args: [
+const resolveCommand = app
+	.sub("resolve")
+	.meta({ description: "Resolve a source by name, URL, or slug" })
+	.args([
 		{
 			name: "identifier",
 			type: "string",
 			description: "Source identifier (name, URL, or slug)",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		type: {
 			type: "string",
 			description:
 				"Source type hint: repository, documentation, research_paper, huggingface_dataset",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		const sourceType = validateSourceType(flags.type);
 
@@ -306,7 +280,7 @@ const resolveCommand = defineCommand({
 			const result = await spinner({
 				message: "Resolving source...",
 				task: async () => {
-					const sdk = await createSdk({ apiKey: global.apiKey });
+					const sdk = await createSdk({ apiKey: flags["api-key"] });
 
 					return await sdk.sources.resolve(args.identifier, sourceType);
 				},
@@ -316,23 +290,20 @@ const resolveCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Source" });
 		}
-	},
-});
+	});
 
-const updateCommand = defineCommand({
-	meta: {
-		name: "update",
-		description: "Update a source's display name or category",
-	},
-	args: [
+const updateCommand = app
+	.sub("update")
+	.meta({ description: "Update a source's display name or category" })
+	.args([
 		{
 			name: "id",
 			type: "string",
 			description: "Source ID",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		name: {
 			type: "string",
 			description: "New display name",
@@ -346,10 +317,9 @@ const updateCommand = defineCommand({
 			description:
 				"Source type hint: repository, documentation, research_paper, huggingface_dataset",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		const sourceType = validateSourceType(flags.type);
 
@@ -362,7 +332,7 @@ const updateCommand = defineCommand({
 			const result = await spinner({
 				message: "Updating source...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					const requestBody: Record<string, unknown> = {};
 					if (flags.name) {
@@ -386,32 +356,28 @@ const updateCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Source" });
 		}
-	},
-});
+	});
 
-const deleteCommand = defineCommand({
-	meta: {
-		name: "delete",
-		description: "Delete an indexed source",
-	},
-	args: [
+const deleteCommand = app
+	.sub("delete")
+	.meta({ description: "Delete an indexed source" })
+	.args([
 		{
 			name: "id",
 			type: "string",
 			description: "Source ID",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		type: {
 			type: "string",
 			description:
 				"Source type hint: repository, documentation, research_paper, huggingface_dataset",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		const sourceType = validateSourceType(flags.type);
 
@@ -419,7 +385,7 @@ const deleteCommand = defineCommand({
 			const result = await spinner({
 				message: "Deleting source...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiSourcesService.deleteSourceV2SourcesSourceIdDelete(
 						args.id,
@@ -432,32 +398,30 @@ const deleteCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Source" });
 		}
-	},
-});
+	});
 
-const syncCommand = defineCommand({
-	meta: {
-		name: "sync",
+const syncCommand = app
+	.sub("sync")
+	.meta({
 		description: "Re-index a source by resolving its URL and re-creating it",
-	},
-	args: [
+	})
+	.args([
 		{
 			name: "id",
 			type: "string",
 			description: "Source ID",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		type: {
 			type: "string",
 			description:
 				"Source type hint: repository, documentation, research_paper, huggingface_dataset",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		const sourceType = validateSourceType(flags.type);
 
@@ -465,7 +429,7 @@ const syncCommand = defineCommand({
 			const result = await spinner({
 				message: "Syncing source...",
 				task: async () => {
-					const sdk = await createSdk({ apiKey: global.apiKey });
+					const sdk = await createSdk({ apiKey: flags["api-key"] });
 
 					// Fetch the existing source to get its URL/identifier
 					const source =
@@ -493,15 +457,12 @@ const syncCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Source" });
 		}
-	},
-});
+	});
 
-const renameCommand = defineCommand({
-	meta: {
-		name: "rename",
-		description: "Rename a source by identifier (name, URL, or UUID)",
-	},
-	args: [
+const renameCommand = app
+	.sub("rename")
+	.meta({ description: "Rename a source by identifier (name, URL, or UUID)" })
+	.args([
 		{
 			name: "identifier",
 			type: "string",
@@ -514,17 +475,15 @@ const renameCommand = defineCommand({
 			description: "New display name",
 			required: true,
 		},
-	] as const,
-	flags: {},
-	async run({ args }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	] as const)
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Renaming source...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiDataSourcesService.renameDataSourceV2V2DataSourcesRenamePatch(
 						{
@@ -539,17 +498,14 @@ const renameCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Source" });
 		}
-	},
-});
+	});
 
 // --- Content subcommands ---
 
-const readCommand = defineCommand({
-	meta: {
-		name: "read",
-		description: "Read a file from an indexed source",
-	},
-	args: [
+const readCommand = app
+	.sub("read")
+	.meta({ description: "Read a file from an indexed source" })
+	.args([
 		{
 			name: "id",
 			type: "string",
@@ -562,8 +518,8 @@ const readCommand = defineCommand({
 			description: "File path within the source",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		"line-start": {
 			type: "number",
 			description: "Starting line number",
@@ -581,10 +537,9 @@ const readCommand = defineCommand({
 			description:
 				"Source type hint: repository, documentation, research_paper, huggingface_dataset",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		validateSourceType(flags.type);
 
@@ -592,7 +547,7 @@ const readCommand = defineCommand({
 			const result = await spinner({
 				message: "Reading file...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiDataSourcesService.readDocumentationFileV2V2DataSourcesSourceIdReadGet(
 						args.id,
@@ -610,15 +565,12 @@ const readCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Source" });
 		}
-	},
-});
+	});
 
-const grepCommand = defineCommand({
-	meta: {
-		name: "grep",
-		description: "Search for a pattern in source files",
-	},
-	args: [
+const grepCommand = app
+	.sub("grep")
+	.meta({ description: "Search for a pattern in source files" })
+	.args([
 		{
 			name: "id",
 			type: "string",
@@ -631,8 +583,8 @@ const grepCommand = defineCommand({
 			description: "Search pattern (regex)",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		path: {
 			type: "string",
 			description: "Filter by file path prefix",
@@ -666,10 +618,9 @@ const grepCommand = defineCommand({
 			description:
 				"Source type hint: repository, documentation, research_paper, huggingface_dataset",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		validateSourceType(flags.type);
 
@@ -677,7 +628,7 @@ const grepCommand = defineCommand({
 			const result = await spinner({
 				message: "Searching source files...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					const requestBody: GrepRequest = {
 						pattern: args.pattern,
@@ -716,32 +667,28 @@ const grepCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Source" });
 		}
-	},
-});
+	});
 
-const treeCommand = defineCommand({
-	meta: {
-		name: "tree",
-		description: "View the file tree of an indexed source",
-	},
-	args: [
+const treeCommand = app
+	.sub("tree")
+	.meta({ description: "View the file tree of an indexed source" })
+	.args([
 		{
 			name: "id",
 			type: "string",
 			description: "Source ID",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		type: {
 			type: "string",
 			description:
 				"Source type hint: repository, documentation, research_paper, huggingface_dataset",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		validateSourceType(flags.type);
 
@@ -749,7 +696,7 @@ const treeCommand = defineCommand({
 			const result = await spinner({
 				message: "Fetching tree...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiDataSourcesService.getDocumentationTreeV2V2DataSourcesSourceIdTreeGet(
 						args.id,
@@ -758,7 +705,7 @@ const treeCommand = defineCommand({
 			});
 
 			// If there's a tree_string, show it directly in text mode for readability
-			if (global.output !== "json" && result.tree_string) {
+			if (result.tree_string) {
 				console.log(result.tree_string);
 			} else {
 				fmt.output(result);
@@ -766,37 +713,33 @@ const treeCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Source" });
 		}
-	},
-});
+	});
 
-const lsCommand = defineCommand({
-	meta: {
-		name: "ls",
-		description: "List files and directories in a source path",
-	},
-	args: [
+const lsCommand = app
+	.sub("ls")
+	.meta({ description: "List files and directories in a source path" })
+	.args([
 		{
 			name: "id",
 			type: "string",
 			description: "Source ID",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		path: {
 			type: "string",
 			description: "Directory path within the source (default: root)",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Listing directory...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiDataSourcesService.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet(
 						args.id,
@@ -809,28 +752,22 @@ const lsCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Source" });
 		}
-	},
-});
+	});
 
 // --- Parent command ---
 
-export const sourcesCommand = defineCommand({
-	meta: {
-		name: "sources",
-		description: "Manage indexed documentation and data sources",
-	},
-	subCommands: {
-		index: indexCommand,
-		list: listCommand,
-		get: getCommand,
-		resolve: resolveCommand,
-		update: updateCommand,
-		delete: deleteCommand,
-		sync: syncCommand,
-		rename: renameCommand,
-		read: readCommand,
-		grep: grepCommand,
-		tree: treeCommand,
-		ls: lsCommand,
-	},
-});
+export const sourcesCommand = app
+	.sub("sources")
+	.meta({ description: "Manage indexed documentation and data sources" })
+	.command(indexCommand)
+	.command(listCommand)
+	.command(getCommand)
+	.command(resolveCommand)
+	.command(updateCommand)
+	.command(deleteCommand)
+	.command(syncCommand)
+	.command(renameCommand)
+	.command(readCommand)
+	.command(grepCommand)
+	.command(treeCommand)
+	.command(lsCommand);

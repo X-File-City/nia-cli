@@ -1,6 +1,6 @@
-import { defineCommand } from "@crustjs/core";
 import { password } from "@crustjs/prompts";
 import { V2ApiService } from "nia-ai-ts";
+import { app } from "../app.ts";
 import {
 	configStore,
 	getConfigDirPath,
@@ -9,18 +9,16 @@ import {
 import { configureOpenApi } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 
-const loginCommand = defineCommand({
-	meta: {
-		name: "login",
-		description: "Authenticate with the Nia platform",
-	},
-	flags: {
+const loginCommand = app
+	.sub("login")
+	.meta({ description: "Authenticate with the Nia platform" })
+	.flags({
 		"api-key": {
 			type: "string",
 			description: "API key (for non-interactive/CI use)",
 		},
-	},
-	async run({ flags }) {
+	})
+	.run(async ({ flags }) => {
 		let apiKey = flags["api-key"];
 
 		if (!apiKey) {
@@ -71,15 +69,12 @@ const loginCommand = defineCommand({
 		} catch (error: unknown) {
 			handleError(error, { domain: "Authentication" });
 		}
-	},
-});
+	});
 
-const logoutCommand = defineCommand({
-	meta: {
-		name: "logout",
-		description: "Remove stored API credentials",
-	},
-	async run() {
+const logoutCommand = app
+	.sub("logout")
+	.meta({ description: "Remove stored API credentials" })
+	.run(async () => {
 		await configStore.update((config) => ({
 			...config,
 			apiKey: undefined,
@@ -91,15 +86,12 @@ const logoutCommand = defineCommand({
 		if (process.env.NIA_API_KEY) {
 			console.log("Note: NIA_API_KEY environment variable is still set.");
 		}
-	},
-});
+	});
 
-const statusCommand = defineCommand({
-	meta: {
-		name: "status",
-		description: "Check authentication status",
-	},
-	async run() {
+const statusCommand = app
+	.sub("status")
+	.meta({ description: "Check authentication status" })
+	.run(async () => {
 		// Determine the API key source and value
 		const envKey = process.env.NIA_API_KEY;
 		const config = await configStore.read();
@@ -153,8 +145,7 @@ const statusCommand = defineCommand({
 		} catch {
 			console.log("Could not fetch plan info (API key may be invalid).");
 		}
-	},
-});
+	});
 
 /**
  * Resolve the source of the currently active API key.
@@ -169,14 +160,9 @@ export function resolveApiKeySource(
 	return "none";
 }
 
-export const authCommand = defineCommand({
-	meta: {
-		name: "auth",
-		description: "Authenticate with the Nia platform",
-	},
-	subCommands: {
-		login: loginCommand,
-		logout: logoutCommand,
-		status: statusCommand,
-	},
-});
+export const authCommand = app
+	.sub("auth")
+	.meta({ description: "Authenticate with the Nia platform" })
+	.command(loginCommand)
+	.command(logoutCommand)
+	.command(statusCommand);

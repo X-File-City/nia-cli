@@ -1,4 +1,3 @@
-import { defineCommand } from "@crustjs/core";
 import { spinner } from "@crustjs/prompts";
 import type {
 	GitHubGlobRequest,
@@ -6,10 +5,10 @@ import type {
 	GitHubSearchRequest,
 } from "nia-ai-ts";
 import { GithubSearchService } from "nia-ai-ts";
+import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
-import { parseGlobalFlags } from "../utils/global-flags.ts";
 
 /**
  * Parse a "owner/repo" string into separate owner and repo parts.
@@ -28,12 +27,12 @@ function parseOwnerRepo(input: string): { owner: string; repo: string } {
 
 // --- Subcommands ---
 
-const globCommand = defineCommand({
-	meta: {
-		name: "glob",
+const globCommand = app
+	.sub("glob")
+	.meta({
 		description: "Find files matching a glob pattern in a GitHub repository",
-	},
-	args: [
+	})
+	.args([
 		{
 			name: "repo",
 			type: "string",
@@ -46,22 +45,21 @@ const globCommand = defineCommand({
 			description: "Glob pattern (e.g., '*.py', 'src/**/*.ts')",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		ref: {
 			type: "string",
 			description: "Branch, tag, or commit SHA",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Searching for matching files...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					const payload: GitHubGlobRequest = {
 						repository: args.repo,
@@ -77,24 +75,20 @@ const globCommand = defineCommand({
 			});
 
 			// In text mode, display as a file list
-			if (global.output !== "json") {
-				const data = result as Record<string, unknown>;
-				const files = data.files ?? data.matches ?? data.results;
-				if (Array.isArray(files)) {
-					if (files.length === 0) {
-						console.log("No files matching the pattern.");
-					} else {
-						for (const file of files) {
-							console.log(
-								typeof file === "string"
-									? file
-									: String((file as Record<string, unknown>).path ?? file),
-							);
-						}
-						console.log(`\n${files.length} file(s) found`);
-					}
+			const data = result as Record<string, unknown>;
+			const files = data.files ?? data.matches ?? data.results;
+			if (Array.isArray(files)) {
+				if (files.length === 0) {
+					console.log("No files matching the pattern.");
 				} else {
-					fmt.output(result);
+					for (const file of files) {
+						console.log(
+							typeof file === "string"
+								? file
+								: String((file as Record<string, unknown>).path ?? file),
+						);
+					}
+					console.log(`\n${files.length} file(s) found`);
 				}
 			} else {
 				fmt.output(result);
@@ -102,16 +96,15 @@ const globCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "GitHub" });
 		}
-	},
-});
+	});
 
-const readCommand = defineCommand({
-	meta: {
-		name: "read",
+const readCommand = app
+	.sub("read")
+	.meta({
 		description:
 			"Read a file from a GitHub repository with optional line range",
-	},
-	args: [
+	})
+	.args([
 		{
 			name: "repo",
 			type: "string",
@@ -124,8 +117,8 @@ const readCommand = defineCommand({
 			description: "File path within the repository",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		ref: {
 			type: "string",
 			description: "Branch, tag, or commit SHA",
@@ -138,16 +131,15 @@ const readCommand = defineCommand({
 			type: "number",
 			description: "End line number (1-based, inclusive)",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Reading file...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					const payload: GitHubReadRequest = {
 						repository: args.repo,
@@ -169,18 +161,14 @@ const readCommand = defineCommand({
 			});
 
 			// In text mode, display file content with line numbers
-			if (global.output !== "json") {
-				const data = result as Record<string, unknown>;
-				if (typeof data.content === "string") {
-					const lines = data.content.split("\n");
-					const startLine = flags.start ?? 1;
-					const padWidth = String(startLine + lines.length - 1).length;
-					for (let i = 0; i < lines.length; i++) {
-						const lineNum = String(startLine + i).padStart(padWidth, " ");
-						console.log(`${lineNum} | ${lines[i]}`);
-					}
-				} else {
-					fmt.output(result);
+			const data = result as Record<string, unknown>;
+			if (typeof data.content === "string") {
+				const lines = data.content.split("\n");
+				const startLine = flags.start ?? 1;
+				const padWidth = String(startLine + lines.length - 1).length;
+				for (let i = 0; i < lines.length; i++) {
+					const lineNum = String(startLine + i).padStart(padWidth, " ");
+					console.log(`${lineNum} | ${lines[i]}`);
 				}
 			} else {
 				fmt.output(result);
@@ -188,16 +176,15 @@ const readCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "GitHub" });
 		}
-	},
-});
+	});
 
-const searchCommand = defineCommand({
-	meta: {
-		name: "search",
+const searchCommand = app
+	.sub("search")
+	.meta({
 		description:
 			"Search code in a GitHub repository (rate limited to 10 requests/minute by GitHub)",
-	},
-	args: [
+	})
+	.args([
 		{
 			name: "repo",
 			type: "string",
@@ -210,8 +197,8 @@ const searchCommand = defineCommand({
 			description: "Code search query",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		"per-page": {
 			type: "number",
 			description: "Results per page",
@@ -220,16 +207,15 @@ const searchCommand = defineCommand({
 			type: "number",
 			description: "Page number",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Searching code...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					const payload: GitHubSearchRequest = {
 						query: args.query,
@@ -250,31 +236,27 @@ const searchCommand = defineCommand({
 			});
 
 			// In text mode, display search results with file paths and matched lines
-			if (global.output !== "json") {
-				const data = result as Record<string, unknown>;
-				const items = data.items ?? data.results ?? data.matches;
-				if (Array.isArray(items)) {
-					if (items.length === 0) {
-						console.log("No matching code found.");
-					} else {
-						for (const item of items) {
-							const entry = item as Record<string, unknown>;
-							const path = entry.path ?? entry.file ?? entry.name ?? "";
-							console.log(`${path}`);
-							if (entry.text_matches && Array.isArray(entry.text_matches)) {
-								for (const match of entry.text_matches as Array<
-									Record<string, unknown>
-								>) {
-									if (match.fragment) {
-										console.log(`  ${match.fragment}`);
-									}
+			const data = result as Record<string, unknown>;
+			const items = data.items ?? data.results ?? data.matches;
+			if (Array.isArray(items)) {
+				if (items.length === 0) {
+					console.log("No matching code found.");
+				} else {
+					for (const item of items) {
+						const entry = item as Record<string, unknown>;
+						const path = entry.path ?? entry.file ?? entry.name ?? "";
+						console.log(`${path}`);
+						if (entry.text_matches && Array.isArray(entry.text_matches)) {
+							for (const match of entry.text_matches as Array<
+								Record<string, unknown>
+							>) {
+								if (match.fragment) {
+									console.log(`  ${match.fragment}`);
 								}
 							}
 						}
-						console.log(`\n${items.length} result(s) found`);
 					}
-				} else {
-					fmt.output(result);
+					console.log(`\n${items.length} result(s) found`);
 				}
 			} else {
 				fmt.output(result);
@@ -282,23 +264,22 @@ const searchCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "GitHub" });
 		}
-	},
-});
+	});
 
-const treeCommand = defineCommand({
-	meta: {
-		name: "tree",
+const treeCommand = app
+	.sub("tree")
+	.meta({
 		description: "Get the file tree of a GitHub repository or subdirectory",
-	},
-	args: [
+	})
+	.args([
 		{
 			name: "repo",
 			type: "string",
 			description: "Repository in owner/repo format (e.g., vercel/next.js)",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		ref: {
 			type: "string",
 			description: "Branch, tag, or commit SHA",
@@ -307,10 +288,9 @@ const treeCommand = defineCommand({
 			type: "string",
 			description: "Subdirectory path",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		const { owner, repo } = parseOwnerRepo(args.repo);
 
@@ -318,7 +298,7 @@ const treeCommand = defineCommand({
 			const result = await spinner({
 				message: "Fetching repository tree...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await GithubSearchService.githubTreeV2GithubTreeOwnerRepoGet(
 						owner,
@@ -330,49 +310,41 @@ const treeCommand = defineCommand({
 			});
 
 			// In text mode, show tree_text directly if available
-			if (global.output !== "json") {
-				const data = result as Record<string, unknown>;
-				if (typeof data.tree_text === "string") {
-					console.log(data.tree_text);
-					// Show stats if available
-					const stats = data.stats as Record<string, unknown> | undefined;
-					if (stats) {
-						const parts: string[] = [];
-						if (stats.total_files !== undefined) {
-							parts.push(`${stats.total_files} file(s)`);
-						}
-						if (stats.total_directories !== undefined) {
-							parts.push(
-								`${stats.total_directories} director${stats.total_directories === 1 ? "y" : "ies"}`,
-							);
-						}
-						if (parts.length > 0) {
-							console.log(`\n${parts.join(", ")}`);
-						}
+			const data = result as Record<string, unknown>;
+			if (typeof data.tree_text === "string") {
+				console.log(data.tree_text);
+				// Show stats if available
+				const stats = data.stats as Record<string, unknown> | undefined;
+				if (stats) {
+					const parts: string[] = [];
+					if (stats.total_files !== undefined) {
+						parts.push(`${stats.total_files} file(s)`);
 					}
-				} else if (typeof data.tree === "string") {
-					console.log(data.tree);
-				} else {
-					fmt.output(result);
+					if (stats.total_directories !== undefined) {
+						parts.push(
+							`${stats.total_directories} director${stats.total_directories === 1 ? "y" : "ies"}`,
+						);
+					}
+					if (parts.length > 0) {
+						console.log(`\n${parts.join(", ")}`);
+					}
 				}
+			} else if (typeof data.tree === "string") {
+				console.log(data.tree);
 			} else {
 				fmt.output(result);
 			}
 		} catch (error) {
 			handleError(error, { domain: "GitHub" });
 		}
-	},
-});
+	});
 
-export const githubCommand = defineCommand({
-	meta: {
-		name: "github",
+export const githubCommand = app
+	.sub("github")
+	.meta({
 		description: "Live search and browse any GitHub repo without indexing",
-	},
-	subCommands: {
-		glob: globCommand,
-		read: readCommand,
-		search: searchCommand,
-		tree: treeCommand,
-	},
-});
+	})
+	.command(globCommand)
+	.command(readCommand)
+	.command(searchCommand)
+	.command(treeCommand);

@@ -55,8 +55,6 @@ mock.module("nia-ai-ts", () => ({
 
 // --- Import after mocking ---
 
-import { parseGlobalFlags } from "../../src/utils/global-flags.ts";
-
 describe("search commands", () => {
 	beforeEach(async () => {
 		try {
@@ -85,74 +83,6 @@ describe("search commands", () => {
 		} catch {
 			// Ignore
 		}
-	});
-
-	describe("parseGlobalFlags", () => {
-		test("parses --api-key with value", () => {
-			const flags = parseGlobalFlags(["node", "cli", "--api-key", "nia_test"]);
-			expect(flags.apiKey).toBe("nia_test");
-		});
-
-		test("parses --api-key=value", () => {
-			const flags = parseGlobalFlags(["node", "cli", "--api-key=nia_test"]);
-			expect(flags.apiKey).toBe("nia_test");
-		});
-
-		test("parses --output with value", () => {
-			const flags = parseGlobalFlags(["node", "cli", "--output", "json"]);
-			expect(flags.output).toBe("json");
-		});
-
-		test("parses --output=value", () => {
-			const flags = parseGlobalFlags(["node", "cli", "--output=table"]);
-			expect(flags.output).toBe("table");
-		});
-
-		test("parses -o shorthand", () => {
-			const flags = parseGlobalFlags(["node", "cli", "-o", "json"]);
-			expect(flags.output).toBe("json");
-		});
-
-		test("parses --verbose", () => {
-			const flags = parseGlobalFlags(["node", "cli", "--verbose"]);
-			expect(flags.verbose).toBe(true);
-		});
-
-		test("parses --no-color", () => {
-			const flags = parseGlobalFlags(["node", "cli", "--no-color"]);
-			expect(flags.color).toBe(false);
-		});
-
-		test("returns empty object when no global flags", () => {
-			const flags = parseGlobalFlags([
-				"node",
-				"cli",
-				"search",
-				"universal",
-				"test",
-			]);
-			expect(flags.apiKey).toBeUndefined();
-			expect(flags.output).toBeUndefined();
-			expect(flags.verbose).toBeUndefined();
-			expect(flags.color).toBeUndefined();
-		});
-
-		test("handles multiple global flags together", () => {
-			const flags = parseGlobalFlags([
-				"node",
-				"cli",
-				"--api-key",
-				"nia_key",
-				"--output",
-				"json",
-				"--verbose",
-				"--no-color",
-			]);
-			expect(flags.apiKey).toBe("nia_key");
-			expect(flags.output).toBe("json");
-			expect(flags.verbose).toBe(true);
-			expect(flags.color).toBe(false);
-		});
 	});
 
 	describe("universal search", () => {

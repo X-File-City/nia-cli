@@ -567,10 +567,9 @@ describe("withErrorHandling", () => {
 		);
 	});
 
-	test("uses verbose from --verbose flag", async () => {
-		process.argv = ["bun", "nia", "--verbose", "search", "universal", "test"];
+	test("uses verbose when passed in options", async () => {
 		try {
-			await withErrorHandling({ domain: "Search" }, async () => {
+			await withErrorHandling({ domain: "Search", verbose: true }, async () => {
 				throw new Error("API call failed");
 			});
 		} catch {}
@@ -579,8 +578,7 @@ describe("withErrorHandling", () => {
 		);
 	});
 
-	test("does not show stack trace without --verbose", async () => {
-		process.argv = ["bun", "nia", "search", "universal", "test"];
+	test("does not show stack trace without verbose", async () => {
 		try {
 			await withErrorHandling({ domain: "Search" }, async () => {
 				throw new Error("API call failed");

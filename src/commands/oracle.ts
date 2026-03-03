@@ -1,31 +1,27 @@
-import { defineCommand } from "@crustjs/core";
-import { spinner } from "@crustjs/prompts";
+import { input, spinner } from "@crustjs/prompts";
 import type { OracleSessionChatRequest } from "nia-ai-ts";
 import { DefaultService, OpenAPI } from "nia-ai-ts";
+import { app } from "../app.ts";
 import { resolveBaseUrl } from "../services/config.ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
-import { parseGlobalFlags } from "../utils/global-flags.ts";
-import { checkFirstRun, promptOptional, requireArg } from "../utils/prompts.ts";
 import { renderStream, renderStreamEvent } from "../utils/streaming.ts";
 
 // --- Subcommands ---
 
-const jobCommand = defineCommand({
-	meta: {
-		name: "job",
-		description: "Create a new Oracle research job",
-	},
-	args: [
+const jobCommand = app
+	.sub("job")
+	.meta({ description: "Create a new Oracle research job" })
+	.args([
 		{
 			name: "query",
 			type: "string",
 			description:
 				"Research question (prompted interactively if omitted in a TTY)",
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		repos: {
 			type: "string",
 			description: "Repository names to search (comma-separated)",
@@ -43,40 +39,36 @@ const jobCommand = defineCommand({
 			description:
 				"Model to use (e.g., claude-opus-4-6, claude-sonnet-4-5-20250929)",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		await checkFirstRun(global.apiKey);
-
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		// Interactive mode: prompt for missing required arg and optional fields
-		const query = await requireArg(args.query, {
-			name: "query",
+		const query = await input({
 			message: "Research question to investigate:",
+			initial: args.query,
+			validate: (v) => v.trim().length > 0 || "Query is required",
 		});
 
-		let repos = flags.repos;
-		if (!repos) {
-			repos =
-				(await promptOptional({
-					message: "Repositories to search (comma-separated, optional):",
-				})) ?? undefined;
-		}
+		const repos =
+			flags.repos ||
+			(await input({
+				message: "Repositories to search (comma-separated, optional):",
+			})) ||
+			undefined;
 
-		let outputFormat = flags["output-format"];
-		if (!outputFormat) {
-			outputFormat =
-				(await promptOptional({
-					message: "Output format hint (optional):",
-				})) ?? undefined;
-		}
+		const outputFormat =
+			flags["output-format"] ||
+			(await input({
+				message: "Output format hint (optional):",
+			})) ||
+			undefined;
 
 		try {
 			const result = await spinner({
 				message: "Creating Oracle research job...",
 				task: async () => {
-					const sdk = await createSdk({ apiKey: global.apiKey });
+					const sdk = await createSdk({ apiKey: flags["api-key"] });
 
 					const payload: Record<string, unknown> = {
 						query,
@@ -102,102 +94,84 @@ const jobCommand = defineCommand({
 			fmt.output(result);
 
 			// Print hint for streaming in text/table mode
-			if (global.output !== "json") {
-				const jobId = (result as Record<string, unknown>)?.job_id;
-				if (jobId) {
-					console.log(`\nUse \`nia oracle stream ${jobId}\` to watch progress`);
-				}
+			const jobId = (result as Record<string, unknown>)?.job_id;
+			if (jobId) {
+				console.log(`\nUse \`nia oracle stream ${jobId}\` to watch progress`);
 			}
 		} catch (error) {
 			handleError(error, { domain: "Oracle" });
 		}
-	},
-});
+	});
 
-const statusCommand = defineCommand({
-	meta: {
-		name: "status",
-		description: "Get the status and details of an Oracle research job",
-	},
-	args: [
+const statusCommand = app
+	.sub("status")
+	.meta({ description: "Get the status and details of an Oracle research job" })
+	.args([
 		{
 			name: "job-id",
 			type: "string",
 			description: "Oracle job ID",
 			required: true,
 		},
-	] as const,
-	flags: {},
-	async run({ args }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	] as const)
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Fetching job status...",
 				task: async () => {
-					const sdk = await createSdk({ apiKey: global.apiKey });
+					const sdk = await createSdk({ apiKey: flags["api-key"] });
 
 					return await sdk.oracle.getJob(args["job-id"]);
 				},
 			});
 
 			// In text mode, show a formatted summary
-			if (global.output !== "json") {
-				const job = result as Record<string, unknown>;
-				console.log(`Job ID:     ${job.job_id ?? args["job-id"]}`);
-				console.log(`Status:     ${job.status ?? "unknown"}`);
-				if (job.query) {
-					console.log(`Query:      ${job.query}`);
-				}
-				if (job.session_id) {
-					console.log(`Session ID: ${job.session_id}`);
-				}
-				if (job.created_at) {
-					console.log(`Created:    ${job.created_at}`);
-				}
-				if (job.completed_at) {
-					console.log(`Completed:  ${job.completed_at}`);
-				}
-				if (job.result) {
-					console.log("\n--- Result ---");
-					fmt.output(job.result);
-				}
-				if (job.error) {
-					console.log(`\nError: ${job.error}`);
-				}
-			} else {
-				fmt.output(result);
+			const job = result as Record<string, unknown>;
+			console.log(`Job ID:     ${job.job_id ?? args["job-id"]}`);
+			console.log(`Status:     ${job.status ?? "unknown"}`);
+			if (job.query) {
+				console.log(`Query:      ${job.query}`);
+			}
+			if (job.session_id) {
+				console.log(`Session ID: ${job.session_id}`);
+			}
+			if (job.created_at) {
+				console.log(`Created:    ${job.created_at}`);
+			}
+			if (job.completed_at) {
+				console.log(`Completed:  ${job.completed_at}`);
+			}
+			if (job.result) {
+				console.log("\n--- Result ---");
+				fmt.output(job.result);
+			}
+			if (job.error) {
+				console.log(`\nError: ${job.error}`);
 			}
 		} catch (error) {
 			handleError(error, { domain: "Oracle" });
 		}
-	},
-});
+	});
 
-const cancelCommand = defineCommand({
-	meta: {
-		name: "cancel",
-		description: "Cancel a running or queued Oracle research job",
-	},
-	args: [
+const cancelCommand = app
+	.sub("cancel")
+	.meta({ description: "Cancel a running or queued Oracle research job" })
+	.args([
 		{
 			name: "job-id",
 			type: "string",
 			description: "Oracle job ID to cancel",
 			required: true,
 		},
-	] as const,
-	flags: {},
-	async run({ args }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
-
+	] as const)
+	.run(async ({ args, flags }) => {
 		try {
-			const result = await spinner({
+			await spinner({
 				message: "Cancelling Oracle job...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await DefaultService.cancelOracleJobV2OracleJobsJobIdDelete(
 						args["job-id"],
@@ -205,24 +179,16 @@ const cancelCommand = defineCommand({
 				},
 			});
 
-			if (global.output === "json") {
-				fmt.output(result);
-			} else {
-				console.log(`Job ${args["job-id"]} has been cancelled.`);
-			}
+			console.log(`Job ${args["job-id"]} has been cancelled.`);
 		} catch (error) {
 			handleError(error, { domain: "Oracle" });
 		}
-	},
-});
+	});
 
-const jobsCommand = defineCommand({
-	meta: {
-		name: "jobs",
-		description: "List Oracle research jobs",
-	},
-	args: [],
-	flags: {
+const jobsCommand = app
+	.sub("jobs")
+	.meta({ description: "List Oracle research jobs" })
+	.flags({
 		status: {
 			type: "string",
 			description:
@@ -236,10 +202,9 @@ const jobsCommand = defineCommand({
 			type: "number",
 			description: "Number of jobs to skip (for pagination)",
 		},
-	},
-	async run({ flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		// Validate status if provided
 		const validStatuses = [
@@ -260,7 +225,7 @@ const jobsCommand = defineCommand({
 			const result = await spinner({
 				message: "Fetching Oracle jobs...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await DefaultService.listOracleJobsV2OracleJobsGet(
 						flags.status ?? undefined,
@@ -271,7 +236,7 @@ const jobsCommand = defineCommand({
 			});
 
 			// In text/table mode, format as a table
-			if (global.output !== "json" && Array.isArray(result)) {
+			if (Array.isArray(result)) {
 				if (result.length === 0) {
 					console.log("No Oracle jobs found.");
 				} else {
@@ -292,39 +257,33 @@ const jobsCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Oracle" });
 		}
-	},
-});
+	});
 
 // --- Streaming & Session Subcommands ---
 
-const streamCommand = defineCommand({
-	meta: {
-		name: "stream",
-		description: "Stream real-time updates from an Oracle research job",
-	},
-	args: [
+const streamCommand = app
+	.sub("stream")
+	.meta({ description: "Stream real-time updates from an Oracle research job" })
+	.args([
 		{
 			name: "job-id",
 			type: "string",
 			description: "Oracle job ID to stream",
 			required: true,
 		},
-	] as const,
-	flags: {},
-	async run({ args }) {
-		const global = parseGlobalFlags();
-
+	] as const)
+	.run(async ({ args, flags }) => {
 		try {
 			const stream = await spinner({
 				message: "Connecting to Oracle job stream...",
 				task: async () => {
-					const sdk = await createSdk({ apiKey: global.apiKey });
+					const sdk = await createSdk({ apiKey: flags["api-key"] });
 
 					return sdk.oracle.streamJob(args["job-id"]);
 				},
 			});
 
-			await renderStream(stream, { color: global.color });
+			await renderStream(stream, { color: flags.color });
 
 			// Print newline after stream completes for clean terminal state
 			if (process.stdout.isTTY) {
@@ -333,16 +292,12 @@ const streamCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Oracle" });
 		}
-	},
-});
+	});
 
-const sessionsCommand = defineCommand({
-	meta: {
-		name: "sessions",
-		description: "List Oracle research sessions",
-	},
-	args: [],
-	flags: {
+const sessionsCommand = app
+	.sub("sessions")
+	.meta({ description: "List Oracle research sessions" })
+	.flags({
 		limit: {
 			type: "number",
 			description: "Maximum number of sessions to return",
@@ -351,16 +306,15 @@ const sessionsCommand = defineCommand({
 			type: "number",
 			description: "Number of sessions to skip (for pagination)",
 		},
-	},
-	async run({ flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Fetching Oracle sessions...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await DefaultService.listOracleSessionsV2OracleSessionsGet(
 						flags.limit ?? undefined,
@@ -369,7 +323,7 @@ const sessionsCommand = defineCommand({
 				},
 			});
 
-			if (global.output !== "json" && Array.isArray(result)) {
+			if (Array.isArray(result)) {
 				if (result.length === 0) {
 					console.log("No Oracle sessions found.");
 				} else {
@@ -390,32 +344,27 @@ const sessionsCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Oracle" });
 		}
-	},
-});
+	});
 
-const sessionCommand = defineCommand({
-	meta: {
-		name: "session",
-		description: "Get full details of an Oracle research session",
-	},
-	args: [
+const sessionCommand = app
+	.sub("session")
+	.meta({ description: "Get full details of an Oracle research session" })
+	.args([
 		{
 			name: "session-id",
 			type: "string",
 			description: "Oracle session ID",
 			required: true,
 		},
-	] as const,
-	flags: {},
-	async run({ args }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	] as const)
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Fetching session details...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet(
 						args["session-id"],
@@ -423,68 +372,60 @@ const sessionCommand = defineCommand({
 				},
 			});
 
-			if (global.output !== "json") {
-				const session = result as Record<string, unknown>;
-				console.log(`Session ID: ${session.session_id ?? args["session-id"]}`);
-				if (session.query) {
-					console.log(`Query:      ${session.query}`);
-				}
-				if (session.status) {
-					console.log(`Status:     ${session.status}`);
-				}
-				if (session.model) {
-					console.log(`Model:      ${session.model}`);
-				}
-				if (session.created_at) {
-					console.log(`Created:    ${session.created_at}`);
-				}
-				if (session.completed_at) {
-					console.log(`Completed:  ${session.completed_at}`);
-				}
-				if (session.result) {
-					console.log("\n--- Result ---");
-					fmt.output(session.result);
-				}
-				if (session.job_id) {
-					console.log(`\nJob ID: ${session.job_id}`);
-				}
-			} else {
-				fmt.output(result);
+			const session = result as Record<string, unknown>;
+			console.log(`Session ID: ${session.session_id ?? args["session-id"]}`);
+			if (session.query) {
+				console.log(`Query:      ${session.query}`);
+			}
+			if (session.status) {
+				console.log(`Status:     ${session.status}`);
+			}
+			if (session.model) {
+				console.log(`Model:      ${session.model}`);
+			}
+			if (session.created_at) {
+				console.log(`Created:    ${session.created_at}`);
+			}
+			if (session.completed_at) {
+				console.log(`Completed:  ${session.completed_at}`);
+			}
+			if (session.result) {
+				console.log("\n--- Result ---");
+				fmt.output(session.result);
+			}
+			if (session.job_id) {
+				console.log(`\nJob ID: ${session.job_id}`);
 			}
 		} catch (error) {
 			handleError(error, { domain: "Oracle" });
 		}
-	},
-});
+	});
 
-const messagesCommand = defineCommand({
-	meta: {
-		name: "messages",
-		description: "Get chat messages for an Oracle research session",
-	},
-	args: [
+const messagesCommand = app
+	.sub("messages")
+	.meta({ description: "Get chat messages for an Oracle research session" })
+	.args([
 		{
 			name: "session-id",
 			type: "string",
 			description: "Oracle session ID",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		limit: {
 			type: "number",
 			description: "Maximum number of messages to return",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Fetching session messages...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await DefaultService.getOracleSessionMessagesV2OracleSessionsSessionIdMessagesGet(
 						args["session-id"],
@@ -493,7 +434,7 @@ const messagesCommand = defineCommand({
 				},
 			});
 
-			if (global.output !== "json" && Array.isArray(result)) {
+			if (Array.isArray(result)) {
 				if (result.length === 0) {
 					console.log("No messages found for this session.");
 				} else {
@@ -516,15 +457,14 @@ const messagesCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Oracle" });
 		}
-	},
-});
+	});
 
-const chatCommand = defineCommand({
-	meta: {
-		name: "chat",
+const chatCommand = app
+	.sub("chat")
+	.meta({
 		description: "Send a follow-up message to an Oracle research session",
-	},
-	args: [
+	})
+	.args([
 		{
 			name: "session-id",
 			type: "string",
@@ -537,16 +477,13 @@ const chatCommand = defineCommand({
 			description: "Follow-up question or message",
 			required: true,
 		},
-	] as const,
-	flags: {},
-	async run({ args }) {
-		const global = parseGlobalFlags();
-
+	] as const)
+	.run(async ({ args, flags }) => {
 		try {
 			const { reader, decoder } = await spinner({
 				message: "Connecting to session chat...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					// The DefaultService chat endpoint returns a CancelablePromise,
 					// but the actual response is an SSE stream. Use manual fetch
@@ -601,7 +538,7 @@ const chatCommand = defineCommand({
 
 					try {
 						const event = JSON.parse(payload) as Record<string, unknown>;
-						renderStreamEvent(event, { color: global.color });
+						renderStreamEvent(event, { color: flags.color });
 					} catch {}
 				}
 			}
@@ -613,32 +550,27 @@ const chatCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Oracle" });
 		}
-	},
-});
+	});
 
-const deleteSessionCommand = defineCommand({
-	meta: {
-		name: "delete-session",
+const deleteSessionCommand = app
+	.sub("delete-session")
+	.meta({
 		description: "Delete an Oracle research session and its chat history",
-	},
-	args: [
+	})
+	.args([
 		{
 			name: "session-id",
 			type: "string",
 			description: "Oracle session ID to delete",
 			required: true,
 		},
-	] as const,
-	flags: {},
-	async run({ args }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
-
+	] as const)
+	.run(async ({ args, flags }) => {
 		try {
-			const result = await spinner({
+			await spinner({
 				message: "Deleting Oracle session...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete(
 						args["session-id"],
@@ -646,35 +578,25 @@ const deleteSessionCommand = defineCommand({
 				},
 			});
 
-			if (global.output === "json") {
-				fmt.output(result);
-			} else {
-				console.log(
-					`Session ${args["session-id"]} and its chat history have been deleted.`,
-				);
-			}
+			console.log(
+				`Session ${args["session-id"]} and its chat history have been deleted.`,
+			);
 		} catch (error) {
 			handleError(error, { domain: "Oracle" });
 		}
-	},
-});
+	});
 
-const oracleUsageCommand = defineCommand({
-	meta: {
-		name: "1m-usage",
+const oracleUsageCommand = app
+	.sub("1m-usage")
+	.meta({
 		description: "Show Oracle usage summary including 1M context operations",
-	},
-	args: [],
-	flags: {},
-	async run() {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
-
+	})
+	.run(async ({ flags }) => {
 		try {
 			const result = await spinner({
 				message: "Fetching Oracle usage...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					// Use the general usage endpoint — it includes Oracle operation counts
 					const { V2ApiService } = await import("nia-ai-ts");
@@ -682,61 +604,48 @@ const oracleUsageCommand = defineCommand({
 				},
 			});
 
-			if (global.output !== "json") {
-				const usage = result as Record<string, unknown>;
-				if (usage.subscription_tier) {
-					console.log(`Plan: ${usage.subscription_tier}`);
-				}
-				if (usage.billing_period_start && usage.billing_period_end) {
-					console.log(
-						`Period: ${usage.billing_period_start} — ${usage.billing_period_end}`,
-					);
-				}
+			const usage = result as Record<string, unknown>;
+			if (usage.subscription_tier) {
+				console.log(`Plan: ${usage.subscription_tier}`);
+			}
+			if (usage.billing_period_start && usage.billing_period_end) {
+				console.log(
+					`Period: ${usage.billing_period_start} — ${usage.billing_period_end}`,
+				);
+			}
 
-				const ops = usage.usage as
-					| Record<
-							string,
-							{ used?: number; limit?: number; unlimited?: boolean }
-					  >
-					| undefined;
-				if (ops) {
-					console.log("\nUsage breakdown:");
-					for (const [key, entry] of Object.entries(ops)) {
-						if (entry.unlimited) {
-							console.log(`  ${key}: ${entry.used ?? 0} (unlimited)`);
-						} else {
-							const used = entry.used ?? 0;
-							const limit = entry.limit ?? 0;
-							const pct = limit > 0 ? Math.round((used / limit) * 100) : 0;
-							console.log(`  ${key}: ${used}/${limit} (${pct}%)`);
-						}
+			const ops = usage.usage as
+				| Record<string, { used?: number; limit?: number; unlimited?: boolean }>
+				| undefined;
+			if (ops) {
+				console.log("\nUsage breakdown:");
+				for (const [key, entry] of Object.entries(ops)) {
+					if (entry.unlimited) {
+						console.log(`  ${key}: ${entry.used ?? 0} (unlimited)`);
+					} else {
+						const used = entry.used ?? 0;
+						const limit = entry.limit ?? 0;
+						const pct = limit > 0 ? Math.round((used / limit) * 100) : 0;
+						console.log(`  ${key}: ${used}/${limit} (${pct}%)`);
 					}
 				}
-			} else {
-				fmt.output(result);
 			}
 		} catch (error) {
 			handleError(error, { domain: "Oracle" });
 		}
-	},
-});
+	});
 
-export const oracleCommand = defineCommand({
-	meta: {
-		name: "oracle",
-		description: "Run autonomous AI research jobs",
-	},
-	subCommands: {
-		job: jobCommand,
-		status: statusCommand,
-		cancel: cancelCommand,
-		jobs: jobsCommand,
-		stream: streamCommand,
-		sessions: sessionsCommand,
-		session: sessionCommand,
-		messages: messagesCommand,
-		chat: chatCommand,
-		"delete-session": deleteSessionCommand,
-		"1m-usage": oracleUsageCommand,
-	},
-});
+export const oracleCommand = app
+	.sub("oracle")
+	.meta({ description: "Run autonomous AI research jobs" })
+	.command(jobCommand)
+	.command(statusCommand)
+	.command(cancelCommand)
+	.command(jobsCommand)
+	.command(streamCommand)
+	.command(sessionsCommand)
+	.command(sessionCommand)
+	.command(messagesCommand)
+	.command(chatCommand)
+	.command(deleteSessionCommand)
+	.command(oracleUsageCommand);

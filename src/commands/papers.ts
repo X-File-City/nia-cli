@@ -1,20 +1,17 @@
-import { defineCommand } from "@crustjs/core";
 import { spinner } from "@crustjs/prompts";
 import type { routes__v2__data_sources__ResearchPaperRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService } from "nia-ai-ts";
+import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
-import { parseGlobalFlags } from "../utils/global-flags.ts";
 
 // --- Subcommands ---
 
-const indexCommand = defineCommand({
-	meta: {
-		name: "index",
-		description: "Index an arXiv research paper",
-	},
-	args: [
+const indexCommand = app
+	.sub("index")
+	.meta({ description: "Index an arXiv research paper" })
+	.args([
 		{
 			name: "paper",
 			type: "string",
@@ -22,8 +19,8 @@ const indexCommand = defineCommand({
 				"arXiv ID or URL (e.g., 2312.00752, https://arxiv.org/abs/2312.00752, hep-th/9901001)",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		name: {
 			type: "string",
 			description: "Display name for the paper",
@@ -33,16 +30,13 @@ const indexCommand = defineCommand({
 			description: "Add to global shared pool (default: true)",
 			default: true,
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
-
+	})
+	.run(async ({ args, flags }) => {
 		try {
 			const result = await spinner({
 				message: "Indexing research paper...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					const payload: routes__v2__data_sources__ResearchPaperRequest = {
 						url: args.paper,
@@ -58,38 +52,29 @@ const indexCommand = defineCommand({
 				},
 			});
 
-			// In text mode, show summary
-			if (global.output !== "json") {
-				const data = result as Record<string, unknown>;
-				console.log(`Paper indexed successfully.`);
-				if (data.source_id) {
-					console.log(`  Source ID: ${data.source_id}`);
-				}
-				if (data.title) {
-					console.log(`  Title: ${data.title}`);
-				}
-				if (data.status) {
-					console.log(`  Status: ${data.status}`);
-				}
-				if (data.message) {
-					console.log(`  ${data.message}`);
-				}
-			} else {
-				fmt.output(result);
+			const data = result as Record<string, unknown>;
+			console.log(`Paper indexed successfully.`);
+			if (data.source_id) {
+				console.log(`  Source ID: ${data.source_id}`);
+			}
+			if (data.title) {
+				console.log(`  Title: ${data.title}`);
+			}
+			if (data.status) {
+				console.log(`  Status: ${data.status}`);
+			}
+			if (data.message) {
+				console.log(`  ${data.message}`);
 			}
 		} catch (error) {
 			handleError(error, { domain: "Paper" });
 		}
-	},
-});
+	});
 
-const listCommand = defineCommand({
-	meta: {
-		name: "list",
-		description: "List indexed research papers",
-	},
-	args: [] as const,
-	flags: {
+const listCommand = app
+	.sub("list")
+	.meta({ description: "List indexed research papers" })
+	.flags({
 		status: {
 			type: "string",
 			description: "Filter by status: processing, completed, failed",
@@ -102,16 +87,15 @@ const listCommand = defineCommand({
 			type: "number",
 			description: "Pagination offset",
 		},
-	},
-	async run({ flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		try {
 			const result = await spinner({
 				message: "Loading research papers...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					return await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet(
 						flags.status ?? undefined,
@@ -121,46 +105,35 @@ const listCommand = defineCommand({
 				},
 			});
 
-			// In text mode, show as table
-			if (global.output !== "json") {
-				const data = result as Record<string, unknown>;
-				const papers = (data.papers ?? data.items ?? []) as Array<
-					Record<string, unknown>
-				>;
+			const data = result as Record<string, unknown>;
+			const papers = (data.papers ?? data.items ?? []) as Array<
+				Record<string, unknown>
+			>;
 
-				if (papers.length === 0) {
-					console.log("No research papers found.");
-				} else {
-					const rows = papers.map((p) => ({
-						title: p.title ?? p.name ?? "Untitled",
-						id: p.source_id ?? p.id ?? "",
-						status: p.status ?? "",
-						created: p.created_at ?? "",
-					}));
-					console.log(
-						fmt.formatTable(rows, ["title", "id", "status", "created"]),
-					);
-
-					if (data.total !== undefined) {
-						console.log(`\nTotal: ${data.total} papers`);
-					}
-				}
+			if (papers.length === 0) {
+				console.log("No research papers found.");
 			} else {
-				fmt.output(result);
+				const rows = papers.map((p) => ({
+					title: p.title ?? p.name ?? "Untitled",
+					id: p.source_id ?? p.id ?? "",
+					status: p.status ?? "",
+					created: p.created_at ?? "",
+				}));
+				console.log(
+					fmt.formatTable(rows, ["title", "id", "status", "created"]),
+				);
+
+				if (data.total !== undefined) {
+					console.log(`\nTotal: ${data.total} papers`);
+				}
 			}
 		} catch (error) {
 			handleError(error, { domain: "Paper" });
 		}
-	},
-});
+	});
 
-export const papersCommand = defineCommand({
-	meta: {
-		name: "papers",
-		description: "Index and list arXiv research papers",
-	},
-	subCommands: {
-		index: indexCommand,
-		list: listCommand,
-	},
-});
+export const papersCommand = app
+	.sub("papers")
+	.meta({ description: "Index and list arXiv research papers" })
+	.command(indexCommand)
+	.command(listCommand);

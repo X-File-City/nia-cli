@@ -17,11 +17,9 @@ export interface FormatterOptions {
 }
 
 /**
- * Resolve the output format from explicit option or TTY auto-detection.
+ * Resolve the output format.
  *
- * - If an explicit format is provided, validate and use it.
- * - If no format is specified, default to "text" when stdout is a TTY,
- *   "json" when piped.
+ * For now, CLI output is always text.
  */
 export function resolveOutputFormat(output?: string): OutputFormat {
 	if (output) {
@@ -33,10 +31,10 @@ export function resolveOutputFormat(output?: string): OutputFormat {
 		) {
 			return normalized;
 		}
-		// Invalid format — fall through to auto-detection
+		// Invalid format — fall through to default
 	}
 
-	return process.stdout.isTTY ? "text" : "json";
+	return "text";
 }
 
 /**

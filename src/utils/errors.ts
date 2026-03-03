@@ -8,7 +8,6 @@
 
 import { CrustError } from "@crustjs/core";
 import { ApiError, NiaSDKError, NiaTimeoutError } from "nia-ai-ts";
-import { parseGlobalFlags } from "./global-flags.ts";
 
 /**
  * Options for error handling behavior.
@@ -338,16 +337,15 @@ function levenshteinDistance(a: string, b: string): number {
  * }
  * ```
  *
- * Automatically reads the --verbose flag from process.argv.
+ * Callers should pass `verbose` via the options if needed.
  */
 export async function withErrorHandling(
-	options: Omit<ErrorHandlerOptions, "verbose">,
+	options: ErrorHandlerOptions,
 	fn: () => Promise<void>,
 ): Promise<void> {
-	const global = parseGlobalFlags();
 	try {
 		await fn();
 	} catch (error) {
-		handleError(error, { ...options, verbose: global.verbose });
+		handleError(error, options);
 	}
 }

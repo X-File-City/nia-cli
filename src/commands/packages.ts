@@ -1,4 +1,3 @@
-import { defineCommand } from "@crustjs/core";
 import { spinner } from "@crustjs/prompts";
 import type {
 	PackageSearchGrepRequest,
@@ -6,10 +5,10 @@ import type {
 	PackageSearchReadFileRequest,
 } from "nia-ai-ts";
 import { V2ApiPackageSearchService } from "nia-ai-ts";
+import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { handleError } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
-import { parseGlobalFlags } from "../utils/global-flags.ts";
 
 /**
  * Valid package registries supported by the API.
@@ -36,12 +35,10 @@ function validateRegistry(registry: string): void {
 
 // --- Subcommands ---
 
-const grepCommand = defineCommand({
-	meta: {
-		name: "grep",
-		description: "Regex search over public package source code",
-	},
-	args: [
+const grepCommand = app
+	.sub("grep")
+	.meta({ description: "Regex search over public package source code" })
+	.args([
 		{
 			name: "registry",
 			type: "string",
@@ -61,8 +58,8 @@ const grepCommand = defineCommand({
 			description: "Regex pattern to search",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		version: {
 			type: "string",
 			description: "Package version to search",
@@ -91,10 +88,9 @@ const grepCommand = defineCommand({
 			type: "string",
 			description: "File SHA256 filter to search a specific file",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		validateRegistry(args.registry);
 
@@ -102,7 +98,7 @@ const grepCommand = defineCommand({
 			const result = await spinner({
 				message: "Searching package source code...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					const payload: PackageSearchGrepRequest = {
 						registry: args.registry,
@@ -142,15 +138,12 @@ const grepCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Package search" });
 		}
-	},
-});
+	});
 
-const hybridCommand = defineCommand({
-	meta: {
-		name: "hybrid",
-		description: "Hybrid semantic + keyword search over package source",
-	},
-	args: [
+const hybridCommand = app
+	.sub("hybrid")
+	.meta({ description: "Hybrid semantic + keyword search over package source" })
+	.args([
 		{
 			name: "registry",
 			type: "string",
@@ -170,8 +163,8 @@ const hybridCommand = defineCommand({
 			description: "Semantic search query (1-5 queries, comma-separated)",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		version: {
 			type: "string",
 			description: "Package version to search",
@@ -188,10 +181,9 @@ const hybridCommand = defineCommand({
 			type: "string",
 			description: "File SHA256 filter to search a specific file",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		validateRegistry(args.registry);
 
@@ -199,7 +191,7 @@ const hybridCommand = defineCommand({
 			const result = await spinner({
 				message: "Running semantic package search...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					// Split comma-separated queries into an array (1-5 queries)
 					const semanticQueries = args.query.split(",").map((s) => s.trim());
@@ -233,16 +225,15 @@ const hybridCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Package search" });
 		}
-	},
-});
+	});
 
-const readCommand = defineCommand({
-	meta: {
-		name: "read",
+const readCommand = app
+	.sub("read")
+	.meta({
 		description:
 			"Read specific lines from a package source file (max 200 lines)",
-	},
-	args: [
+	})
+	.args([
 		{
 			name: "registry",
 			type: "string",
@@ -274,16 +265,15 @@ const readCommand = defineCommand({
 			description: "End line number (1-based, max 200 lines from start)",
 			required: true,
 		},
-	] as const,
-	flags: {
+	] as const)
+	.flags({
 		version: {
 			type: "string",
 			description: "Package version",
 		},
-	},
-	async run({ args, flags }) {
-		const global = parseGlobalFlags();
-		const fmt = createFormatter({ output: global.output, color: global.color });
+	})
+	.run(async ({ args, flags }) => {
+		const fmt = createFormatter({ color: flags.color });
 
 		validateRegistry(args.registry);
 
@@ -297,7 +287,7 @@ const readCommand = defineCommand({
 			const result = await spinner({
 				message: "Reading package file...",
 				task: async () => {
-					await createSdk({ apiKey: global.apiKey });
+					await createSdk({ apiKey: flags["api-key"] });
 
 					const payload: PackageSearchReadFileRequest = {
 						registry: args.registry,
@@ -317,19 +307,15 @@ const readCommand = defineCommand({
 				},
 			});
 
-			// In text mode, display file content with line numbers if available
-			if (global.output !== "json") {
-				const data = result as Record<string, unknown>;
-				if (typeof data.content === "string") {
-					const lines = data.content.split("\n");
-					const startLine = args.start;
-					const padWidth = String(startLine + lines.length - 1).length;
-					for (let i = 0; i < lines.length; i++) {
-						const lineNum = String(startLine + i).padStart(padWidth, " ");
-						console.log(`${lineNum} | ${lines[i]}`);
-					}
-				} else {
-					fmt.output(result);
+			// Display file content with line numbers if available
+			const data = result as Record<string, unknown>;
+			if (typeof data.content === "string") {
+				const lines = data.content.split("\n");
+				const startLine = args.start;
+				const padWidth = String(startLine + lines.length - 1).length;
+				for (let i = 0; i < lines.length; i++) {
+					const lineNum = String(startLine + i).padStart(padWidth, " ");
+					console.log(`${lineNum} | ${lines[i]}`);
 				}
 			} else {
 				fmt.output(result);
@@ -337,17 +323,11 @@ const readCommand = defineCommand({
 		} catch (error) {
 			handleError(error, { domain: "Package search" });
 		}
-	},
-});
+	});
 
-export const packagesCommand = defineCommand({
-	meta: {
-		name: "packages",
-		description: "Search npm, PyPI, crates.io, and Go packages",
-	},
-	subCommands: {
-		grep: grepCommand,
-		hybrid: hybridCommand,
-		read: readCommand,
-	},
-});
+export const packagesCommand = app
+	.sub("packages")
+	.meta({ description: "Search npm, PyPI, crates.io, and Go packages" })
+	.command(grepCommand)
+	.command(hybridCommand)
+	.command(readCommand);

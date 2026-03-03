@@ -26,14 +26,14 @@ describe("resolveOutputFormat", () => {
 		expect(resolveOutputFormat("TEXT")).toBe("text");
 	});
 
-	test("defaults to 'json' when no format specified and not TTY", () => {
+	test("defaults to 'text' when no format specified and not TTY", () => {
 		const origIsTTY = process.stdout.isTTY;
 		Object.defineProperty(process.stdout, "isTTY", {
 			value: false,
 			configurable: true,
 		});
 		try {
-			expect(resolveOutputFormat()).toBe("json");
+			expect(resolveOutputFormat()).toBe("text");
 		} finally {
 			Object.defineProperty(process.stdout, "isTTY", {
 				value: origIsTTY,
@@ -58,14 +58,14 @@ describe("resolveOutputFormat", () => {
 		}
 	});
 
-	test("falls through to auto-detection for invalid format", () => {
+	test("falls through to text for invalid format", () => {
 		const origIsTTY = process.stdout.isTTY;
 		Object.defineProperty(process.stdout, "isTTY", {
 			value: false,
 			configurable: true,
 		});
 		try {
-			expect(resolveOutputFormat("invalid")).toBe("json");
+			expect(resolveOutputFormat("invalid")).toBe("text");
 		} finally {
 			Object.defineProperty(process.stdout, "isTTY", {
 				value: origIsTTY,
