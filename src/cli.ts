@@ -33,18 +33,15 @@ const updateStore = createStore({
 	},
 });
 
-// TODO: update this when I fixed this upsteam to make the syntax a little nicer
-const cache = {
+const cache: UpdateNotifierCacheAdapter = {
 	read: async () => updateStore.read(),
-	write: async (_, state) => {
-		const { lastCheckedAt, latestVersion, lastNotifiedVersion } = state;
-		await updateStore.write({
-			lastCheckedAt,
-			latestVersion: latestVersion ?? "",
-			lastNotifiedVersion: lastNotifiedVersion ?? "",
-		});
-	},
-} satisfies UpdateNotifierCacheAdapter;
+	write: async (state) =>
+		updateStore.write({
+			lastCheckedAt: state.lastCheckedAt,
+			lastNotifiedVersion: state.lastNotifiedVersion,
+			latestVersion: state.latestVersion,
+		}),
+};
 
 const main = app
 	.command(authCommand)

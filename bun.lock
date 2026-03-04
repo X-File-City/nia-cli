@@ -5,10 +5,10 @@
     "": {
       "name": "nia-cli",
       "dependencies": {
-        "@crustjs/core": "0.0.10",
-        "@crustjs/plugins": "0.0.13",
+        "@crustjs/core": "0.0.11",
+        "@crustjs/plugins": "0.0.14",
         "@crustjs/prompts": "^0.0.8",
-        "@crustjs/skills": "^0.0.10",
+        "@crustjs/skills": "^0.0.11",
         "@crustjs/store": "^0.0.4",
         "@crustjs/style": "^0.0.4",
         "nia-ai-ts": "^0.1.0",
@@ -16,7 +16,7 @@
       "devDependencies": {
         "@biomejs/biome": "^2.4.4",
         "@changesets/cli": "^2.30.0",
-        "@crustjs/crust": "0.0.16",
+        "@crustjs/crust": "0.0.17",
         "@types/bun": "^1.3.10",
         "typescript": "^5.9.3",
       },
@@ -77,15 +77,15 @@
 
     "@changesets/write": ["@changesets/write@0.4.0", "", { "dependencies": { "@changesets/types": "^6.1.0", "fs-extra": "^7.0.1", "human-id": "^4.1.1", "prettier": "^2.7.1" } }, "sha512-CdTLvIOPiCNuH71pyDu3rA+Q0n65cmAbXnwWH84rKGiFumFzkmHNT8KHTMEchcxN+Kl8I54xGUhJ7l3E7X396Q=="],
 
-    "@crustjs/core": ["@crustjs/core@0.0.10", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-Z9WlVFXYOap6AugHs2BDrdJrW3TR753qTSQSlaq0MvxP+3iOkuQm8jrgg6ScArK44NyqCHqW2QHkc72RfVtADA=="],
+    "@crustjs/core": ["@crustjs/core@0.0.11", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-CHq4ASiurj7Cacj5y+kEe/th6eH8S3f7pqVj9FcmPkuTt8507SO8xCbHfyKqBwLD4E+5pwmHUbtZ9LXLY8e9Bw=="],
 
-    "@crustjs/crust": ["@crustjs/crust@0.0.16", "", { "dependencies": { "@crustjs/core": "0.0.10", "@crustjs/plugins": "0.0.13", "@crustjs/style": "0.0.4" }, "peerDependencies": { "typescript": "^5" }, "bin": { "crust": "dist/cli" } }, "sha512-o57QCE9CVQgP4P5QGmWYACmgPlE41L7w/qYeqcNG09hZSpDxjkE3++9+U1JBttXpJXEhzOxwSZYT3RSKKyxx6g=="],
+    "@crustjs/crust": ["@crustjs/crust@0.0.17", "", { "dependencies": { "@crustjs/core": "0.0.11", "@crustjs/plugins": "0.0.14", "@crustjs/style": "0.0.4" }, "peerDependencies": { "typescript": "^5" }, "bin": { "crust": "dist/cli" } }, "sha512-y59RsIXfqV7aBfsO9YGJNheYkPxm3Vi7PdpLnkvZWwU+S9QuOqYvDS1xghwN1KulcZAh8MX20ID/68keaNIzaw=="],
 
-    "@crustjs/plugins": ["@crustjs/plugins@0.0.13", "", { "dependencies": { "@crustjs/style": "0.0.4" }, "peerDependencies": { "@crustjs/core": "0.0.10", "typescript": "^5" } }, "sha512-SUeR0Zq9CVwjI/8D2YRykOB+x2X9oiCPQtERI9QqYIhQ5QJ1m2vFBMrtahNcy11WRMw4L79dMNXPJPYsVxtvYg=="],
+    "@crustjs/plugins": ["@crustjs/plugins@0.0.14", "", { "dependencies": { "@crustjs/style": "0.0.4" }, "peerDependencies": { "@crustjs/core": "0.0.11", "typescript": "^5" } }, "sha512-ami1TVueAq0yO4dNe9/2bYV/BNIlaNQ67l+5hHDdrzDheQxqvs7MsZ93Yu/ZEkbnWaHzQ9zAZrbfiE7V8tJkkg=="],
 
     "@crustjs/prompts": ["@crustjs/prompts@0.0.8", "", { "dependencies": { "@crustjs/style": "0.0.4" }, "peerDependencies": { "typescript": "^5" } }, "sha512-QzvFrr+JJNWPlIMHapwW+uQg4hp4xa/jhY7ervpdH6ffpJprLOdHN37PTuIXlb1tZrIab1OgIM4X1TGwX7WjAw=="],
 
-    "@crustjs/skills": ["@crustjs/skills@0.0.10", "", { "dependencies": { "@crustjs/prompts": "0.0.8", "@crustjs/style": "0.0.4" }, "peerDependencies": { "@crustjs/core": "0.0.10", "typescript": "^5" } }, "sha512-YBwhKR3B6+dktTpwRGDu9PyGruat+JCldO9nm+zftP3O8Bsdv1AaCUzulzbsmEWVXW6yEOoly3EwcTVTbc/mGg=="],
+    "@crustjs/skills": ["@crustjs/skills@0.0.11", "", { "dependencies": { "@crustjs/prompts": "0.0.8", "@crustjs/style": "0.0.4" }, "peerDependencies": { "@crustjs/core": "0.0.11", "typescript": "^5" } }, "sha512-uMc2SQn9rS3gUqrOB8bgSIkEHQr0yPYsMEPkVHFE9dxit7FJYAANZWzpU0DI5kNC2qQkqJS8XajNgclDNTRRHg=="],
 
     "@crustjs/store": ["@crustjs/store@0.0.4", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-pfYuykVBH08HKBpycPcBZrk4CSQMVhccENDANbJoGXX86YjZk5urjzaJGeGXR1S4DVCt6hGC15aiRf6SEbpyag=="],
 
