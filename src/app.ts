@@ -1,6 +1,6 @@
 import { Crust } from "@crustjs/core";
 import pkg from "../package.json";
-import { CONFIG_APP_NAME } from "./services/config.ts";
+import { APP_NAME } from "./services/config.ts";
 
 /**
  * Root CLI builder with inheritable global flags.
@@ -9,7 +9,7 @@ import { CONFIG_APP_NAME } from "./services/config.ts";
  * can call `root.sub("name")` to create sub-builders that inherit the global
  * flag types without introducing circular imports.
  */
-export const app = new Crust(CONFIG_APP_NAME)
+export const app = new Crust(APP_NAME)
 	.meta({
 		description: pkg.description,
 	})

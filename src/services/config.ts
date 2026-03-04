@@ -1,10 +1,10 @@
 import { configDir, createStore } from "@crustjs/store";
 
-export const CONFIG_APP_NAME = "nia";
+export const APP_NAME = "nia";
 export const DEFAULT_BASE_URL = "https://apigcp.trynia.ai/v2";
 
 export const configStore = createStore({
-	dirPath: configDir(CONFIG_APP_NAME),
+	dirPath: configDir(APP_NAME),
 	name: "config",
 	fields: {
 		apiKey: {
@@ -25,7 +25,7 @@ export type NiaConfig = Awaited<ReturnType<typeof configStore.read>>;
  * The active config directory path.
  */
 export function getConfigDirPath(): string {
-	return configDir(CONFIG_APP_NAME);
+	return configDir(APP_NAME);
 }
 
 /**
