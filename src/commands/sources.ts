@@ -1,4 +1,4 @@
-import { input, select, spinner } from "@crustjs/prompts";
+import { input, select } from "@crustjs/prompts";
 import type { GrepRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService, V2ApiSourcesService } from "nia-ai-ts";
 import { app } from "../app.ts";
@@ -109,43 +109,38 @@ const indexCommand = app
 		});
 
 		await withErrorHandling({ domain: "Source" }, async () => {
-			const result = await spinner({
-				message: "Indexing source...",
-				task: async () => {
-					const sdk = await createSdk({ apiKey: flags["api-key"] });
+			const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-					const params: Record<string, unknown> = {
-						url,
-					};
+			const params: Record<string, unknown> = {
+				url,
+			};
 
-					if (displayName) {
-						params.display_name = displayName;
-					}
-					if (sourceType) {
-						params.type = sourceType;
-					}
-					if (flags.branch) {
-						params.branch = flags.branch;
-					}
-					if (flags.focus) {
-						params.focus_instructions = flags.focus;
-					}
-					if (flags["extract-branding"] !== undefined) {
-						params.extract_branding = flags["extract-branding"];
-					}
-					if (flags["max-depth"] !== undefined) {
-						params.max_depth = flags["max-depth"];
-					}
-					if (flags["check-llms-txt"] !== undefined) {
-						params.check_llms_txt = flags["check-llms-txt"];
-					}
-					if (flags["only-main-content"] !== undefined) {
-						params.only_main_content = flags["only-main-content"];
-					}
+			if (displayName) {
+				params.display_name = displayName;
+			}
+			if (sourceType) {
+				params.type = sourceType;
+			}
+			if (flags.branch) {
+				params.branch = flags.branch;
+			}
+			if (flags.focus) {
+				params.focus_instructions = flags.focus;
+			}
+			if (flags["extract-branding"] !== undefined) {
+				params.extract_branding = flags["extract-branding"];
+			}
+			if (flags["max-depth"] !== undefined) {
+				params.max_depth = flags["max-depth"];
+			}
+			if (flags["check-llms-txt"] !== undefined) {
+				params.check_llms_txt = flags["check-llms-txt"];
+			}
+			if (flags["only-main-content"] !== undefined) {
+				params.only_main_content = flags["only-main-content"];
+			}
 
-					return await sdk.sources.create(params);
-				},
-			});
+			const result = await sdk.sources.create(params);
 
 			fmt.output(result);
 		});
@@ -187,20 +182,15 @@ const listCommand = app
 		const sourceType = validateSourceType(flags.type);
 
 		await withErrorHandling({ domain: "Source" }, async () => {
-			const result = await spinner({
-				message: "Listing sources...",
-				task: async () => {
-					const sdk = await createSdk({ apiKey: flags["api-key"] });
+			const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-					return await sdk.sources.list({
-						type: sourceType,
-						query: flags.query,
-						status: flags.status,
-						categoryId: flags.category,
-						limit: flags.limit,
-						offset: flags.offset,
-					});
-				},
+			const result = await sdk.sources.list({
+				type: sourceType,
+				query: flags.query,
+				status: flags.status,
+				categoryId: flags.category,
+				limit: flags.limit,
+				offset: flags.offset,
 			});
 
 			fmt.output(result);
@@ -231,17 +221,12 @@ const getCommand = app
 		const sourceType = validateSourceType(flags.type);
 
 		await withErrorHandling({ domain: "Source" }, async () => {
-			const result = await spinner({
-				message: "Fetching source...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(
-						args.id,
-						sourceType,
-					);
-				},
-			});
+			const result = await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(
+				args.id,
+				sourceType,
+			);
 
 			fmt.output(result);
 		});
@@ -271,14 +256,9 @@ const resolveCommand = app
 		const sourceType = validateSourceType(flags.type);
 
 		await withErrorHandling({ domain: "Source" }, async () => {
-			const result = await spinner({
-				message: "Resolving source...",
-				task: async () => {
-					const sdk = await createSdk({ apiKey: flags["api-key"] });
+			const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-					return await sdk.sources.resolve(args.identifier, sourceType);
-				},
-			});
+			const result = await sdk.sources.resolve(args.identifier, sourceType);
 
 			fmt.output(result);
 		});
@@ -321,28 +301,24 @@ const updateCommand = app
 		}
 
 		await withErrorHandling({ domain: "Source" }, async () => {
-			const result = await spinner({
-				message: "Updating source...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const requestBody: Record<string, unknown> = {};
-					if (flags.name) {
-						requestBody.display_name = flags.name;
-					}
-					if (flags.category) {
-						requestBody.category_id = flags.category;
-					}
+			const requestBody: Record<string, unknown> = {};
+			if (flags.name) {
+				requestBody.display_name = flags.name;
+			}
+			if (flags.category) {
+				requestBody.category_id = flags.category;
+			}
 
-					return await V2ApiSourcesService.updateSourceV2SourcesSourceIdPatch(
-						args.id,
-						requestBody as Parameters<
-							typeof V2ApiSourcesService.updateSourceV2SourcesSourceIdPatch
-						>[1],
-						sourceType,
-					);
-				},
-			});
+			const result =
+				await V2ApiSourcesService.updateSourceV2SourcesSourceIdPatch(
+					args.id,
+					requestBody as Parameters<
+						typeof V2ApiSourcesService.updateSourceV2SourcesSourceIdPatch
+					>[1],
+					sourceType,
+				);
 
 			fmt.output(result);
 		});
@@ -372,17 +348,13 @@ const deleteCommand = app
 		const sourceType = validateSourceType(flags.type);
 
 		await withErrorHandling({ domain: "Source" }, async () => {
-			const result = await spinner({
-				message: "Deleting source...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiSourcesService.deleteSourceV2SourcesSourceIdDelete(
-						args.id,
-						sourceType,
-					);
-				},
-			});
+			const result =
+				await V2ApiSourcesService.deleteSourceV2SourcesSourceIdDelete(
+					args.id,
+					sourceType,
+				);
 
 			fmt.output(result);
 		});
@@ -414,31 +386,25 @@ const syncCommand = app
 		const sourceType = validateSourceType(flags.type);
 
 		await withErrorHandling({ domain: "Source" }, async () => {
-			const result = await spinner({
-				message: "Syncing source...",
-				task: async () => {
-					const sdk = await createSdk({ apiKey: flags["api-key"] });
+			const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-					// Fetch the existing source to get its URL/identifier
-					const source =
-						await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(
-							args.id,
-							sourceType,
-						);
+			// Fetch the existing source to get its URL/identifier
+			const source = await V2ApiSourcesService.getSourceV2SourcesSourceIdGet(
+				args.id,
+				sourceType,
+			);
 
-					const url = source.identifier;
-					if (!url) {
-						throw new Error(
-							"Could not determine the source URL. The source may not have an identifier.",
-						);
-					}
+			const url = source.identifier;
+			if (!url) {
+				throw new Error(
+					"Could not determine the source URL. The source may not have an identifier.",
+				);
+			}
 
-					// Re-index by creating with the same URL
-					return await sdk.sources.create({
-						url,
-						display_name: source.display_name,
-					});
-				},
+			// Re-index by creating with the same URL
+			const result = await sdk.sources.create({
+				url,
+				display_name: source.display_name,
 			});
 
 			fmt.output(result);
@@ -466,19 +432,15 @@ const renameCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Source" }, async () => {
-			const result = await spinner({
-				message: "Renaming source...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiDataSourcesService.renameDataSourceV2V2DataSourcesRenamePatch(
-						{
-							identifier: args.identifier,
-							new_name: args["new-name"],
-						},
-					);
-				},
-			});
+			const result =
+				await V2ApiDataSourcesService.renameDataSourceV2V2DataSourcesRenamePatch(
+					{
+						identifier: args.identifier,
+						new_name: args["new-name"],
+					},
+				);
 
 			fmt.output(result);
 		});
@@ -528,22 +490,18 @@ const readCommand = app
 		validateSourceType(flags.type);
 
 		await withErrorHandling({ domain: "Source" }, async () => {
-			const result = await spinner({
-				message: "Reading file...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiDataSourcesService.readDocumentationFileV2V2DataSourcesSourceIdReadGet(
-						args.id,
-						args.path,
-						undefined, // page
-						undefined, // treeNodeId
-						flags["line-start"] ?? undefined,
-						flags["line-end"] ?? undefined,
-						flags["max-length"] ?? undefined,
-					);
-				},
-			});
+			const result =
+				await V2ApiDataSourcesService.readDocumentationFileV2V2DataSourcesSourceIdReadGet(
+					args.id,
+					args.path,
+					undefined, // page
+					undefined, // treeNodeId
+					flags["line-start"] ?? undefined,
+					flags["line-end"] ?? undefined,
+					flags["max-length"] ?? undefined,
+				);
 
 			fmt.output(result);
 		});
@@ -607,43 +565,39 @@ const grepCommand = app
 		validateSourceType(flags.type);
 
 		await withErrorHandling({ domain: "Source" }, async () => {
-			const result = await spinner({
-				message: "Searching source files...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const requestBody: GrepRequest = {
-						pattern: args.pattern,
-					};
+			const requestBody: GrepRequest = {
+				pattern: args.pattern,
+			};
 
-					if (flags.path) {
-						requestBody.path = flags.path;
-					}
-					if (flags["case-sensitive"] !== undefined) {
-						requestBody.case_sensitive = flags["case-sensitive"];
-					}
-					if (flags["whole-word"] !== undefined) {
-						requestBody.whole_word = flags["whole-word"];
-					}
-					if (flags["lines-before"] !== undefined) {
-						requestBody.B = flags["lines-before"];
-					}
-					if (flags["lines-after"] !== undefined) {
-						requestBody.A = flags["lines-after"];
-					}
-					if (flags["max-per-file"] !== undefined) {
-						requestBody.max_matches_per_file = flags["max-per-file"];
-					}
-					if (flags["max-total"] !== undefined) {
-						requestBody.max_total_matches = flags["max-total"];
-					}
+			if (flags.path) {
+				requestBody.path = flags.path;
+			}
+			if (flags["case-sensitive"] !== undefined) {
+				requestBody.case_sensitive = flags["case-sensitive"];
+			}
+			if (flags["whole-word"] !== undefined) {
+				requestBody.whole_word = flags["whole-word"];
+			}
+			if (flags["lines-before"] !== undefined) {
+				requestBody.B = flags["lines-before"];
+			}
+			if (flags["lines-after"] !== undefined) {
+				requestBody.A = flags["lines-after"];
+			}
+			if (flags["max-per-file"] !== undefined) {
+				requestBody.max_matches_per_file = flags["max-per-file"];
+			}
+			if (flags["max-total"] !== undefined) {
+				requestBody.max_total_matches = flags["max-total"];
+			}
 
-					return await V2ApiDataSourcesService.grepDocumentationV2V2DataSourcesSourceIdGrepPost(
-						args.id,
-						requestBody,
-					);
-				},
-			});
+			const result =
+				await V2ApiDataSourcesService.grepDocumentationV2V2DataSourcesSourceIdGrepPost(
+					args.id,
+					requestBody,
+				);
 
 			fmt.output(result);
 		});
@@ -673,16 +627,12 @@ const treeCommand = app
 		validateSourceType(flags.type);
 
 		await withErrorHandling({ domain: "Source" }, async () => {
-			const result = await spinner({
-				message: "Fetching tree...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiDataSourcesService.getDocumentationTreeV2V2DataSourcesSourceIdTreeGet(
-						args.id,
-					);
-				},
-			});
+			const result =
+				await V2ApiDataSourcesService.getDocumentationTreeV2V2DataSourcesSourceIdTreeGet(
+					args.id,
+				);
 
 			// If there's a tree_string, show it directly in text mode for readability
 			if (result.tree_string) {
@@ -714,17 +664,13 @@ const lsCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Source" }, async () => {
-			const result = await spinner({
-				message: "Listing directory...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiDataSourcesService.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet(
-						args.id,
-						flags.path,
-					);
-				},
-			});
+			const result =
+				await V2ApiDataSourcesService.listDocumentationDirectoryV2V2DataSourcesSourceIdLsGet(
+					args.id,
+					flags.path,
+				);
 
 			fmt.output(result);
 		});

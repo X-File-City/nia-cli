@@ -1,4 +1,4 @@
-import { input, spinner } from "@crustjs/prompts";
+import { input } from "@crustjs/prompts";
 import type { OracleSessionChatRequest } from "nia-ai-ts";
 import { DefaultService, OpenAPI } from "nia-ai-ts";
 import { app } from "../app.ts";
@@ -65,31 +65,26 @@ const jobCommand = app
 			undefined;
 
 		await withErrorHandling({ domain: "Oracle" }, async () => {
-			const result = await spinner({
-				message: "Creating Oracle research job...",
-				task: async () => {
-					const sdk = await createSdk({ apiKey: flags["api-key"] });
+			const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-					const payload: Record<string, unknown> = {
-						query,
-					};
+			const payload: Record<string, unknown> = {
+				query,
+			};
 
-					if (repos) {
-						payload.repositories = repos.split(",").map((s) => s.trim());
-					}
-					if (flags.docs) {
-						payload.data_sources = flags.docs.split(",").map((s) => s.trim());
-					}
-					if (outputFormat) {
-						payload.output_format = outputFormat;
-					}
-					if (flags.model) {
-						payload.model = flags.model;
-					}
+			if (repos) {
+				payload.repositories = repos.split(",").map((s) => s.trim());
+			}
+			if (flags.docs) {
+				payload.data_sources = flags.docs.split(",").map((s) => s.trim());
+			}
+			if (outputFormat) {
+				payload.output_format = outputFormat;
+			}
+			if (flags.model) {
+				payload.model = flags.model;
+			}
 
-					return await sdk.oracle.createJob(payload);
-				},
-			});
+			const result = await sdk.oracle.createJob(payload);
 
 			fmt.output(result);
 
@@ -116,14 +111,9 @@ const statusCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Oracle" }, async () => {
-			const result = await spinner({
-				message: "Fetching job status...",
-				task: async () => {
-					const sdk = await createSdk({ apiKey: flags["api-key"] });
+			const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-					return await sdk.oracle.getJob(args["job-id"]);
-				},
-			});
+			const result = await sdk.oracle.getJob(args["job-id"]);
 
 			// In text mode, show a formatted summary
 			const job = result as Record<string, unknown>;
@@ -164,16 +154,11 @@ const cancelCommand = app
 	] as const)
 	.run(async ({ args, flags }) => {
 		await withErrorHandling({ domain: "Oracle" }, async () => {
-			await spinner({
-				message: "Cancelling Oracle job...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await DefaultService.cancelOracleJobV2OracleJobsJobIdDelete(
-						args["job-id"],
-					);
-				},
-			});
+			await DefaultService.cancelOracleJobV2OracleJobsJobIdDelete(
+				args["job-id"],
+			);
 
 			console.log(`Job ${args["job-id"]} has been cancelled.`);
 		});
@@ -216,18 +201,13 @@ const jobsCommand = app
 		}
 
 		await withErrorHandling({ domain: "Oracle" }, async () => {
-			const result = await spinner({
-				message: "Fetching Oracle jobs...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await DefaultService.listOracleJobsV2OracleJobsGet(
-						flags.status ?? undefined,
-						flags.limit ?? undefined,
-						flags.skip ?? undefined,
-					);
-				},
-			});
+			const result = await DefaultService.listOracleJobsV2OracleJobsGet(
+				flags.status ?? undefined,
+				flags.limit ?? undefined,
+				flags.skip ?? undefined,
+			);
 
 			// In text/table mode, format as a table
 			if (Array.isArray(result)) {
@@ -266,14 +246,9 @@ const streamCommand = app
 	] as const)
 	.run(async ({ args, flags }) => {
 		await withErrorHandling({ domain: "Oracle" }, async () => {
-			const stream = await spinner({
-				message: "Connecting to Oracle job stream...",
-				task: async () => {
-					const sdk = await createSdk({ apiKey: flags["api-key"] });
+			const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-					return sdk.oracle.streamJob(args["job-id"]);
-				},
-			});
+			const stream = sdk.oracle.streamJob(args["job-id"]);
 
 			await renderStream(stream, { color: flags.color });
 
@@ -301,17 +276,12 @@ const sessionsCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Oracle" }, async () => {
-			const result = await spinner({
-				message: "Fetching Oracle sessions...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await DefaultService.listOracleSessionsV2OracleSessionsGet(
-						flags.limit ?? undefined,
-						flags.skip ?? undefined,
-					);
-				},
-			});
+			const result = await DefaultService.listOracleSessionsV2OracleSessionsGet(
+				flags.limit ?? undefined,
+				flags.skip ?? undefined,
+			);
 
 			if (Array.isArray(result)) {
 				if (result.length === 0) {
@@ -349,16 +319,12 @@ const sessionCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Oracle" }, async () => {
-			const result = await spinner({
-				message: "Fetching session details...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet(
-						args["session-id"],
-					);
-				},
-			});
+			const result =
+				await DefaultService.getOracleSessionDetailV2OracleSessionsSessionIdGet(
+					args["session-id"],
+				);
 
 			const session = result as Record<string, unknown>;
 			console.log(`Session ID: ${session.session_id ?? args["session-id"]}`);
@@ -408,17 +374,13 @@ const messagesCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Oracle" }, async () => {
-			const result = await spinner({
-				message: "Fetching session messages...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await DefaultService.getOracleSessionMessagesV2OracleSessionsSessionIdMessagesGet(
-						args["session-id"],
-						flags.limit ?? undefined,
-					);
-				},
-			});
+			const result =
+				await DefaultService.getOracleSessionMessagesV2OracleSessionsSessionIdMessagesGet(
+					args["session-id"],
+					flags.limit ?? undefined,
+				);
 
 			if (Array.isArray(result)) {
 				if (result.length === 0) {
@@ -464,45 +426,38 @@ const chatCommand = app
 	] as const)
 	.run(async ({ args, flags }) => {
 		await withErrorHandling({ domain: "Oracle" }, async () => {
-			const { reader, decoder } = await spinner({
-				message: "Connecting to session chat...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					// The DefaultService chat endpoint returns a CancelablePromise,
-					// but the actual response is an SSE stream. Use manual fetch
-					// with SSE parsing similar to sdk.oracle.streamJob().
-					const baseUrl = await resolveBaseUrl();
-					const token = OpenAPI.TOKEN;
+			// The DefaultService chat endpoint returns a CancelablePromise,
+			// but the actual response is an SSE stream. Use manual fetch
+			// with SSE parsing similar to sdk.oracle.streamJob().
+			const baseUrl = await resolveBaseUrl();
+			const token = OpenAPI.TOKEN;
 
-					const response = await fetch(
-						`${baseUrl}/oracle/sessions/${encodeURIComponent(args["session-id"])}/chat/stream`,
-						{
-							method: "POST",
-							headers: {
-								Authorization: `Bearer ${token}`,
-								"Content-Type": "application/json",
-							},
-							body: JSON.stringify({
-								message: args.message,
-							} satisfies OracleSessionChatRequest),
-						},
-					);
-
-					if (!response.ok || !response.body) {
-						const err = new Error(
-							`Chat request failed with status ${response.status}`,
-						);
-						(err as Error & { status: number }).status = response.status;
-						throw err;
-					}
-
-					return {
-						reader: response.body.getReader(),
-						decoder: new TextDecoder(),
-					};
+			const response = await fetch(
+				`${baseUrl}/oracle/sessions/${encodeURIComponent(args["session-id"])}/chat/stream`,
+				{
+					method: "POST",
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						message: args.message,
+					} satisfies OracleSessionChatRequest),
 				},
-			});
+			);
+
+			if (!response.ok || !response.body) {
+				const err = new Error(
+					`Chat request failed with status ${response.status}`,
+				);
+				(err as Error & { status: number }).status = response.status;
+				throw err;
+			}
+
+			const reader = response.body.getReader();
+			const decoder = new TextDecoder();
 
 			// Parse SSE stream manually
 			let buffer = "";
@@ -549,16 +504,11 @@ const deleteSessionCommand = app
 	] as const)
 	.run(async ({ args, flags }) => {
 		await withErrorHandling({ domain: "Oracle" }, async () => {
-			await spinner({
-				message: "Deleting Oracle session...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete(
-						args["session-id"],
-					);
-				},
-			});
+			await DefaultService.deleteOracleSessionV2OracleSessionsSessionIdDelete(
+				args["session-id"],
+			);
 
 			console.log(
 				`Session ${args["session-id"]} and its chat history have been deleted.`,
@@ -573,16 +523,11 @@ const oracleUsageCommand = app
 	})
 	.run(async ({ flags }) => {
 		await withErrorHandling({ domain: "Oracle" }, async () => {
-			const result = await spinner({
-				message: "Fetching Oracle usage...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					// Use the general usage endpoint — it includes Oracle operation counts
-					const { V2ApiService } = await import("nia-ai-ts");
-					return await V2ApiService.getUsageSummaryV2V2UsageGet();
-				},
-			});
+			// Use the general usage endpoint — it includes Oracle operation counts
+			const { V2ApiService } = await import("nia-ai-ts");
+			const result = await V2ApiService.getUsageSummaryV2V2UsageGet();
 
 			const usage = result as Record<string, unknown>;
 			if (usage.subscription_tier) {

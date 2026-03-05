@@ -1,4 +1,3 @@
-import { spinner } from "@crustjs/prompts";
 import type { TracerRequest } from "nia-ai-ts";
 import { GithubSearchService, OpenAPI } from "nia-ai-ts";
 import { app } from "../app.ts";
@@ -41,30 +40,24 @@ const runCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Tracer" }, async () => {
-			const result = await spinner({
-				message: "Creating Tracer search job...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const payload: TracerRequest = {
-						query: args.query,
-					};
+			const payload: TracerRequest = {
+				query: args.query,
+			};
 
-					if (flags.repos) {
-						payload.repositories = flags.repos.split(",").map((s) => s.trim());
-					}
-					if (flags.context) {
-						payload.context = flags.context;
-					}
-					if (flags.model) {
-						payload.model = flags.model;
-					}
+			if (flags.repos) {
+				payload.repositories = flags.repos.split(",").map((s) => s.trim());
+			}
+			if (flags.context) {
+				payload.context = flags.context;
+			}
+			if (flags.model) {
+				payload.model = flags.model;
+			}
 
-					return await GithubSearchService.createTracerJobV2GithubTracerPost(
-						payload,
-					);
-				},
-			});
+			const result =
+				await GithubSearchService.createTracerJobV2GithubTracerPost(payload);
 
 			fmt.output(result);
 
@@ -91,16 +84,12 @@ const statusCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Tracer" }, async () => {
-			const result = await spinner({
-				message: "Fetching Tracer job status...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await GithubSearchService.getTracerJobV2GithubTracerJobIdGet(
-						args["job-id"],
-					);
-				},
-			});
+			const result =
+				await GithubSearchService.getTracerJobV2GithubTracerJobIdGet(
+					args["job-id"],
+				);
 
 			// Show a formatted summary
 			const job = result as Record<string, unknown>;
@@ -141,39 +130,32 @@ const streamCommand = app
 	] as const)
 	.run(async ({ args, flags }) => {
 		await withErrorHandling({ domain: "Tracer" }, async () => {
-			const response = await spinner({
-				message: "Connecting to Tracer job stream...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					// GithubSearchService.streamTracerJobV2GithubTracerJobIdStreamGet()
-					// returns CancelablePromise<any>, not an AsyncGenerator.
-					// Use manual SSE fetch + reader pattern (same as oracle chat).
-					const baseUrl = await resolveBaseUrl();
-					const token = OpenAPI.TOKEN;
+			// GithubSearchService.streamTracerJobV2GithubTracerJobIdStreamGet()
+			// returns CancelablePromise<any>, not an AsyncGenerator.
+			// Use manual SSE fetch + reader pattern (same as oracle chat).
+			const baseUrl = await resolveBaseUrl();
+			const token = OpenAPI.TOKEN;
 
-					const res = await fetch(
-						`${baseUrl}/github/tracer/${encodeURIComponent(args["job-id"])}/stream`,
-						{
-							method: "GET",
-							headers: {
-								Authorization: `Bearer ${token}`,
-								Accept: "text/event-stream",
-							},
-						},
-					);
-
-					if (!res.ok || !res.body) {
-						const err = new Error(
-							`Stream request failed with status ${res.status}`,
-						);
-						(err as Error & { status: number }).status = res.status;
-						throw err;
-					}
-
-					return res;
+			const response = await fetch(
+				`${baseUrl}/github/tracer/${encodeURIComponent(args["job-id"])}/stream`,
+				{
+					method: "GET",
+					headers: {
+						Authorization: `Bearer ${token}`,
+						Accept: "text/event-stream",
+					},
 				},
-			});
+			);
+
+			if (!response.ok || !response.body) {
+				const err = new Error(
+					`Stream request failed with status ${response.status}`,
+				);
+				(err as Error & { status: number }).status = response.status;
+				throw err;
+			}
 
 			// Parse SSE stream manually
 			if (!response.body) {
@@ -247,18 +229,13 @@ const listCommand = app
 		}
 
 		await withErrorHandling({ domain: "Tracer" }, async () => {
-			const result = await spinner({
-				message: "Fetching Tracer jobs...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await GithubSearchService.listTracerJobsV2GithubTracerGet(
-						flags.status ?? undefined,
-						flags.limit ?? undefined,
-						flags.skip ?? undefined,
-					);
-				},
-			});
+			const result = await GithubSearchService.listTracerJobsV2GithubTracerGet(
+				flags.status ?? undefined,
+				flags.limit ?? undefined,
+				flags.skip ?? undefined,
+			);
 
 			// Format as a table
 			if (Array.isArray(result)) {
@@ -295,16 +272,11 @@ const deleteCommand = app
 	] as const)
 	.run(async ({ args, flags }) => {
 		await withErrorHandling({ domain: "Tracer" }, async () => {
-			await spinner({
-				message: "Deleting Tracer job...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete(
-						args["job-id"],
-					);
-				},
-			});
+			await GithubSearchService.deleteTracerJobV2GithubTracerJobIdDelete(
+				args["job-id"],
+			);
 
 			console.log(`Tracer job ${args["job-id"]} has been deleted.`);
 		});

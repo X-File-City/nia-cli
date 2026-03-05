@@ -1,4 +1,3 @@
-import { spinner } from "@crustjs/prompts";
 import { V2ApiService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
@@ -9,13 +8,8 @@ export const usageCommand = app
 	.meta({ description: "View API usage summary" })
 	.run(async ({ flags }) => {
 		await withErrorHandling({ domain: "Usage" }, async () => {
-			const result = await spinner({
-				message: "Fetching usage summary...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
-					return await V2ApiService.getUsageSummaryV2V2UsageGet();
-				},
-			});
+			await createSdk({ apiKey: flags["api-key"] });
+			const result = await V2ApiService.getUsageSummaryV2V2UsageGet();
 
 			// Text/table mode — structured human-readable output
 			const usage = result as Record<string, unknown>;

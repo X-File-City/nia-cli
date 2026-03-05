@@ -1,4 +1,3 @@
-import { spinner } from "@crustjs/prompts";
 import type { ContextShareRequest, ContextShareUpdateRequest } from "nia-ai-ts";
 import { V2ApiContextsService } from "nia-ai-ts";
 import { app } from "../app.ts";
@@ -118,35 +117,29 @@ const saveCommand = app
 		}
 
 		await withErrorHandling({ domain: "Context" }, async () => {
-			const result = await spinner({
-				message: "Saving context...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const payload: ContextShareRequest = {
-						title: args.title,
-						summary: flags.summary,
-						content,
-						agent_source: flags.agent,
-					};
+			const payload: ContextShareRequest = {
+				title: args.title,
+				summary: flags.summary,
+				content,
+				agent_source: flags.agent,
+			};
 
-					if (flags.tags) {
-						payload.tags = flags.tags.split(",").map((s) => s.trim());
-					}
-					if (flags["memory-type"]) {
-						payload.memory_type = flags[
-							"memory-type"
-						] as ContextShareRequest["memory_type"];
-					}
-					if (flags.ttl !== undefined) {
-						payload.ttl_seconds = flags.ttl;
-					}
+			if (flags.tags) {
+				payload.tags = flags.tags.split(",").map((s) => s.trim());
+			}
+			if (flags["memory-type"]) {
+				payload.memory_type = flags[
+					"memory-type"
+				] as ContextShareRequest["memory_type"];
+			}
+			if (flags.ttl !== undefined) {
+				payload.ttl_seconds = flags.ttl;
+			}
 
-					return await V2ApiContextsService.saveContextV2V2ContextsPost(
-						payload,
-					);
-				},
-			});
+			const result =
+				await V2ApiContextsService.saveContextV2V2ContextsPost(payload);
 
 			const ctx = result as Record<string, unknown>;
 			console.log(`Context ID: ${ctx.id ?? "unknown"}`);
@@ -195,20 +188,15 @@ const listCommand = app
 		}
 
 		await withErrorHandling({ domain: "Context" }, async () => {
-			const result = await spinner({
-				message: "Fetching contexts...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiContextsService.listContextsV2V2ContextsGet(
-						flags.limit ?? undefined,
-						flags.offset ?? undefined,
-						flags.tags ?? undefined,
-						flags.agent ?? undefined,
-						flags["memory-type"] ?? undefined,
-					);
-				},
-			});
+			const result = await V2ApiContextsService.listContextsV2V2ContextsGet(
+				flags.limit ?? undefined,
+				flags.offset ?? undefined,
+				flags.tags ?? undefined,
+				flags.agent ?? undefined,
+				flags["memory-type"] ?? undefined,
+			);
 
 			const response = result as Record<string, unknown>;
 			const items = (response.items ?? response.contexts ?? []) as Array<
@@ -276,19 +264,15 @@ const searchCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Context" }, async () => {
-			const result = await spinner({
-				message: "Searching contexts...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiContextsService.searchContextsV2V2ContextsSearchGet(
-						args.query,
-						flags.limit ?? undefined,
-						flags.tags ?? undefined,
-						flags.agent ?? undefined,
-					);
-				},
-			});
+			const result =
+				await V2ApiContextsService.searchContextsV2V2ContextsSearchGet(
+					args.query,
+					flags.limit ?? undefined,
+					flags.tags ?? undefined,
+					flags.agent ?? undefined,
+				);
 
 			const response = result as Record<string, unknown>;
 			const contexts = (response.contexts ?? []) as Array<
@@ -347,19 +331,15 @@ const semanticCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Context" }, async () => {
-			const result = await spinner({
-				message: "Running semantic search...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiContextsService.semanticSearchContextsV2V2ContextsSemanticSearchGet(
-						args.query,
-						flags.limit ?? undefined,
-						flags.highlights ?? undefined,
-						flags.workspace ?? undefined,
-					);
-				},
-			});
+			const result =
+				await V2ApiContextsService.semanticSearchContextsV2V2ContextsSemanticSearchGet(
+					args.query,
+					flags.limit ?? undefined,
+					flags.highlights ?? undefined,
+					flags.workspace ?? undefined,
+				);
 
 			const response = result as Record<string, unknown>;
 			const results = (response.results ?? []) as Array<
@@ -424,16 +404,10 @@ const getCommand = app
 	] as const)
 	.run(async ({ args, flags }) => {
 		await withErrorHandling({ domain: "Context" }, async () => {
-			const result = await spinner({
-				message: "Fetching context...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiContextsService.getContextV2V2ContextsContextIdGet(
-						args.id,
-					);
-				},
-			});
+			const result =
+				await V2ApiContextsService.getContextV2V2ContextsContextIdGet(args.id);
 
 			const ctx = result as Record<string, unknown>;
 			console.log(`ID:           ${ctx.id ?? args.id}`);
@@ -546,17 +520,13 @@ const updateCommand = app
 		}
 
 		await withErrorHandling({ domain: "Context" }, async () => {
-			const result = await spinner({
-				message: "Updating context...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
-						args.id,
-						payload,
-					);
-				},
-			});
+			const result =
+				await V2ApiContextsService.updateContextV2V2ContextsContextIdPut(
+					args.id,
+					payload,
+				);
 
 			const ctx = result as Record<string, unknown>;
 			console.log(`Context ${ctx.id ?? args.id} updated successfully.`);
@@ -579,16 +549,11 @@ const deleteCommand = app
 	] as const)
 	.run(async ({ args, flags }) => {
 		await withErrorHandling({ domain: "Context" }, async () => {
-			await spinner({
-				message: "Deleting context...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete(
-						args.id,
-					);
-				},
-			});
+			await V2ApiContextsService.deleteContextV2V2ContextsContextIdDelete(
+				args.id,
+			);
 
 			console.log(`Context ${args.id} has been deleted.`);
 		});

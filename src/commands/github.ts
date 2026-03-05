@@ -1,4 +1,3 @@
-import { spinner } from "@crustjs/prompts";
 import type {
 	GitHubGlobRequest,
 	GitHubReadRequest,
@@ -56,23 +55,19 @@ const globCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "GitHub" }, async () => {
-			const result = await spinner({
-				message: "Searching for matching files...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const payload: GitHubGlobRequest = {
-						repository: args.repo,
-						pattern: args.pattern,
-					};
+			const payload: GitHubGlobRequest = {
+				repository: args.repo,
+				pattern: args.pattern,
+			};
 
-					if (flags.ref) {
-						payload.ref = flags.ref;
-					}
+			if (flags.ref) {
+				payload.ref = flags.ref;
+			}
 
-					return await GithubSearchService.githubGlobV2GithubGlobPost(payload);
-				},
-			});
+			const result =
+				await GithubSearchService.githubGlobV2GithubGlobPost(payload);
 
 			// In text mode, display as a file list
 			const data = result as Record<string, unknown>;
@@ -134,29 +129,25 @@ const readCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "GitHub" }, async () => {
-			const result = await spinner({
-				message: "Reading file...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const payload: GitHubReadRequest = {
-						repository: args.repo,
-						path: args.path,
-					};
+			const payload: GitHubReadRequest = {
+				repository: args.repo,
+				path: args.path,
+			};
 
-					if (flags.ref) {
-						payload.ref = flags.ref;
-					}
-					if (flags.start !== undefined) {
-						payload.start_line = flags.start;
-					}
-					if (flags.end !== undefined) {
-						payload.end_line = flags.end;
-					}
+			if (flags.ref) {
+				payload.ref = flags.ref;
+			}
+			if (flags.start !== undefined) {
+				payload.start_line = flags.start;
+			}
+			if (flags.end !== undefined) {
+				payload.end_line = flags.end;
+			}
 
-					return await GithubSearchService.githubReadV2GithubReadPost(payload);
-				},
-			});
+			const result =
+				await GithubSearchService.githubReadV2GithubReadPost(payload);
 
 			// In text mode, display file content with line numbers
 			const data = result as Record<string, unknown>;
@@ -208,28 +199,22 @@ const searchCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "GitHub" }, async () => {
-			const result = await spinner({
-				message: "Searching code...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const payload: GitHubSearchRequest = {
-						query: args.query,
-						repository: args.repo,
-					};
+			const payload: GitHubSearchRequest = {
+				query: args.query,
+				repository: args.repo,
+			};
 
-					if (flags["per-page"] !== undefined) {
-						payload.per_page = flags["per-page"];
-					}
-					if (flags.page !== undefined) {
-						payload.page = flags.page;
-					}
+			if (flags["per-page"] !== undefined) {
+				payload.per_page = flags["per-page"];
+			}
+			if (flags.page !== undefined) {
+				payload.page = flags.page;
+			}
 
-					return await GithubSearchService.githubCodeSearchV2GithubSearchPost(
-						payload,
-					);
-				},
-			});
+			const result =
+				await GithubSearchService.githubCodeSearchV2GithubSearchPost(payload);
 
 			// In text mode, display search results with file paths and matched lines
 			const data = result as Record<string, unknown>;
@@ -289,19 +274,15 @@ const treeCommand = app
 		const { owner, repo } = parseOwnerRepo(args.repo);
 
 		await withErrorHandling({ domain: "GitHub" }, async () => {
-			const result = await spinner({
-				message: "Fetching repository tree...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await GithubSearchService.githubTreeV2GithubTreeOwnerRepoGet(
-						owner,
-						repo,
-						flags.ref ?? undefined,
-						flags.path ?? undefined,
-					);
-				},
-			});
+			const result =
+				await GithubSearchService.githubTreeV2GithubTreeOwnerRepoGet(
+					owner,
+					repo,
+					flags.ref ?? undefined,
+					flags.path ?? undefined,
+				);
 
 			// In text mode, show tree_text directly if available
 			const data = result as Record<string, unknown>;

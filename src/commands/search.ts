@@ -1,4 +1,3 @@
-import { spinner } from "@crustjs/prompts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { withErrorHandling } from "../utils/errors.ts";
@@ -33,28 +32,23 @@ const universalCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Search" }, async () => {
-			const result = await spinner({
-				message: "Searching...",
-				task: async () => {
-					const sdk = await createSdk({ apiKey: flags["api-key"] });
+			const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-					const params: Record<string, unknown> = {
-						query: args.query,
-					};
+			const params: Record<string, unknown> = {
+				query: args.query,
+			};
 
-					if (flags["top-k"] !== undefined) {
-						params.top_k = flags["top-k"];
-					}
-					if (flags["include-repos"] !== undefined) {
-						params.include_repos = flags["include-repos"];
-					}
-					if (flags["include-docs"] !== undefined) {
-						params.include_docs = flags["include-docs"];
-					}
+			if (flags["top-k"] !== undefined) {
+				params.top_k = flags["top-k"];
+			}
+			if (flags["include-repos"] !== undefined) {
+				params.include_repos = flags["include-repos"];
+			}
+			if (flags["include-docs"] !== undefined) {
+				params.include_docs = flags["include-docs"];
+			}
 
-					return await sdk.search.universal(params);
-				},
-			});
+			const result = await sdk.search.universal(params);
 
 			fmt.output(result);
 		});
@@ -109,43 +103,38 @@ const queryCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Search" }, async () => {
-			const result = await spinner({
-				message: "Querying...",
-				task: async () => {
-					const sdk = await createSdk({ apiKey: flags["api-key"] });
+			const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-					const params: Record<string, unknown> = {
-						messages: [{ role: "user", content: args.query }],
-					};
+			const params: Record<string, unknown> = {
+				messages: [{ role: "user", content: args.query }],
+			};
 
-					if (flags.repos) {
-						params.repositories = flags.repos.split(",").map((s) => s.trim());
-					}
-					if (flags.docs) {
-						params.data_sources = flags.docs.split(",").map((s) => s.trim());
-					}
-					if (flags["search-mode"]) {
-						params.search_mode = flags["search-mode"];
-					}
-					if (flags["max-tokens"] !== undefined) {
-						params.max_tokens = flags["max-tokens"];
-					}
-					if (flags.fast !== undefined) {
-						params.fast_mode = flags.fast;
-					}
-					if (flags["skip-llm"] !== undefined) {
-						params.skip_llm = flags["skip-llm"];
-					}
-					if (flags.strategy) {
-						params.reasoning_strategy = flags.strategy;
-					}
-					if (flags.model) {
-						params.model = flags.model;
-					}
+			if (flags.repos) {
+				params.repositories = flags.repos.split(",").map((s) => s.trim());
+			}
+			if (flags.docs) {
+				params.data_sources = flags.docs.split(",").map((s) => s.trim());
+			}
+			if (flags["search-mode"]) {
+				params.search_mode = flags["search-mode"];
+			}
+			if (flags["max-tokens"] !== undefined) {
+				params.max_tokens = flags["max-tokens"];
+			}
+			if (flags.fast !== undefined) {
+				params.fast_mode = flags.fast;
+			}
+			if (flags["skip-llm"] !== undefined) {
+				params.skip_llm = flags["skip-llm"];
+			}
+			if (flags.strategy) {
+				params.reasoning_strategy = flags.strategy;
+			}
+			if (flags.model) {
+				params.model = flags.model;
+			}
 
-					return await sdk.search.query(params);
-				},
-			});
+			const result = await sdk.search.query(params);
 
 			fmt.output(result);
 		});
@@ -204,28 +193,23 @@ const webCommand = app
 		}
 
 		await withErrorHandling({ domain: "Search" }, async () => {
-			const result = await spinner({
-				message: "Searching the web...",
-				task: async () => {
-					const sdk = await createSdk({ apiKey: flags["api-key"] });
+			const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-					const params: Record<string, unknown> = {
-						query: args.query,
-					};
+			const params: Record<string, unknown> = {
+				query: args.query,
+			};
 
-					if (flags["num-results"] !== undefined) {
-						params.num_results = flags["num-results"];
-					}
-					if (flags.category) {
-						params.category = flags.category;
-					}
-					if (flags["days-back"] !== undefined) {
-						params.days_back = flags["days-back"];
-					}
+			if (flags["num-results"] !== undefined) {
+				params.num_results = flags["num-results"];
+			}
+			if (flags.category) {
+				params.category = flags.category;
+			}
+			if (flags["days-back"] !== undefined) {
+				params.days_back = flags["days-back"];
+			}
 
-					return await sdk.search.web(params);
-				},
-			});
+			const result = await sdk.search.web(params);
 
 			fmt.output(result);
 		});
@@ -256,28 +240,23 @@ const deepCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Search" }, async () => {
-			const result = await spinner({
-				message: "Running deep research...",
-				task: async () => {
-					const sdk = await createSdk({ apiKey: flags["api-key"] });
+			const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-					const params: Record<string, unknown> = {
-						query: args.query,
-					};
+			const params: Record<string, unknown> = {
+				query: args.query,
+			};
 
-					if (flags["output-format"]) {
-						params.output_format = flags["output-format"];
-					}
-					if (flags.model) {
-						params.model = flags.model;
-					}
-					if (flags.verbose) {
-						params.verbose = true;
-					}
+			if (flags["output-format"]) {
+				params.output_format = flags["output-format"];
+			}
+			if (flags.model) {
+				params.model = flags.model;
+			}
+			if (flags.verbose) {
+				params.verbose = true;
+			}
 
-					return await sdk.search.deep(params);
-				},
-			});
+			const result = await sdk.search.deep(params);
 
 			fmt.output(result);
 		});

@@ -1,4 +1,3 @@
-import { spinner } from "@crustjs/prompts";
 import type { HuggingFaceDatasetRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService } from "nia-ai-ts";
 import { app } from "../app.ts";
@@ -33,28 +32,24 @@ const indexCommand = app
 	})
 	.run(async ({ args, flags }) => {
 		await withErrorHandling({ domain: "Dataset" }, async () => {
-			const result = await spinner({
-				message: "Indexing HuggingFace dataset...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const payload: HuggingFaceDatasetRequest = {
-						url: args.dataset,
-					};
+			const payload: HuggingFaceDatasetRequest = {
+				url: args.dataset,
+			};
 
-					if (flags.config) {
-						payload.config = flags.config;
-					}
+			if (flags.config) {
+				payload.config = flags.config;
+			}
 
-					if (flags.global === false) {
-						payload.add_as_global_source = false;
-					}
+			if (flags.global === false) {
+				payload.add_as_global_source = false;
+			}
 
-					return await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
-						payload,
-					);
-				},
-			});
+			const result =
+				await V2ApiDataSourcesService.indexHuggingfaceDatasetV2V2HuggingfaceDatasetsPost(
+					payload,
+				);
 
 			const data = result as Record<string, unknown>;
 			console.log("Dataset indexed successfully.");
@@ -94,18 +89,14 @@ const listCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Dataset" }, async () => {
-			const result = await spinner({
-				message: "Loading HuggingFace datasets...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiDataSourcesService.listHuggingfaceDatasetsV2V2HuggingfaceDatasetsGet(
-						flags.status ?? undefined,
-						flags.limit ?? undefined,
-						flags.offset ?? undefined,
-					);
-				},
-			});
+			const result =
+				await V2ApiDataSourcesService.listHuggingfaceDatasetsV2V2HuggingfaceDatasetsGet(
+					flags.status ?? undefined,
+					flags.limit ?? undefined,
+					flags.offset ?? undefined,
+				);
 
 			const data = result as Record<string, unknown>;
 			const datasets = (data.datasets ?? data.items ?? []) as Array<

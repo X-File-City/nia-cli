@@ -1,4 +1,3 @@
-import { spinner } from "@crustjs/prompts";
 import type {
 	CategoryAssignRequest,
 	routes__v2__categories__CategoryCreate,
@@ -29,17 +28,12 @@ const listCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Category" }, async () => {
-			const result = await spinner({
-				message: "Loading categories...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiCategoriesService.listCategoriesV2CategoriesGet(
-						flags.limit ?? undefined,
-						flags.offset ?? undefined,
-					);
-				},
-			});
+			const result = await V2ApiCategoriesService.listCategoriesV2CategoriesGet(
+				flags.limit ?? undefined,
+				flags.offset ?? undefined,
+			);
 
 			const data = result as Record<string, unknown>;
 			const categories = (data.categories ?? data.items ?? []) as Array<
@@ -87,28 +81,22 @@ const createCommand = app
 	})
 	.run(async ({ args, flags }) => {
 		await withErrorHandling({ domain: "Category" }, async () => {
-			const result = await spinner({
-				message: "Creating category...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const payload: routes__v2__categories__CategoryCreate = {
-						name: args.name,
-					};
+			const payload: routes__v2__categories__CategoryCreate = {
+				name: args.name,
+			};
 
-					if (flags["hex-color"]) {
-						payload.color = flags["hex-color"];
-					}
+			if (flags["hex-color"]) {
+				payload.color = flags["hex-color"];
+			}
 
-					if (flags.order !== undefined) {
-						payload.order = flags.order;
-					}
+			if (flags.order !== undefined) {
+				payload.order = flags.order;
+			}
 
-					return await V2ApiCategoriesService.createCategoryV2CategoriesPost(
-						payload,
-					);
-				},
-			});
+			const result =
+				await V2ApiCategoriesService.createCategoryV2CategoriesPost(payload);
 
 			const data = result as Record<string, unknown>;
 			console.log("Category created successfully.");
@@ -164,31 +152,27 @@ const updateCommand = app
 		}
 
 		await withErrorHandling({ domain: "Category" }, async () => {
-			const result = await spinner({
-				message: "Updating category...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const payload: routes__v2__categories__CategoryUpdate = {};
+			const payload: routes__v2__categories__CategoryUpdate = {};
 
-					if (flags.name) {
-						payload.name = flags.name;
-					}
+			if (flags.name) {
+				payload.name = flags.name;
+			}
 
-					if (flags["hex-color"]) {
-						payload.color = flags["hex-color"];
-					}
+			if (flags["hex-color"]) {
+				payload.color = flags["hex-color"];
+			}
 
-					if (flags.order !== undefined) {
-						payload.order = flags.order;
-					}
+			if (flags.order !== undefined) {
+				payload.order = flags.order;
+			}
 
-					return await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch(
-						args.id,
-						payload,
-					);
-				},
-			});
+			const result =
+				await V2ApiCategoriesService.updateCategoryV2CategoriesCategoryIdPatch(
+					args.id,
+					payload,
+				);
 
 			const data = result as Record<string, unknown>;
 			console.log("Category updated successfully.");
@@ -220,16 +204,11 @@ const deleteCommand = app
 	] as const)
 	.run(async ({ args, flags }) => {
 		await withErrorHandling({ domain: "Category" }, async () => {
-			await spinner({
-				message: "Deleting category...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiCategoriesService.deleteCategoryV2CategoriesCategoryIdDelete(
-						args.id,
-					);
-				},
-			});
+			await V2ApiCategoriesService.deleteCategoryV2CategoriesCategoryIdDelete(
+				args.id,
+			);
 
 			console.log(`Category ${args.id} deleted successfully.`);
 		});
@@ -264,21 +243,16 @@ const assignCommand = app
 			: "Assigning category...";
 
 		await withErrorHandling({ domain: "Category" }, async () => {
-			await spinner({
-				message,
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const payload: CategoryAssignRequest = {
-						category_id: isUnassign ? null : categoryId,
-					};
+			const payload: CategoryAssignRequest = {
+				category_id: isUnassign ? null : categoryId,
+			};
 
-					return await V2ApiDataSourcesService.assignDataSourceCategoryV2DataSourcesSourceIdCategoryPatch(
-						sourceId,
-						payload,
-					);
-				},
-			});
+			await V2ApiDataSourcesService.assignDataSourceCategoryV2DataSourcesSourceIdCategoryPatch(
+				sourceId,
+				payload,
+			);
 
 			if (isUnassign) {
 				console.log(`Category removed from source ${sourceId}.`);

@@ -1,4 +1,3 @@
-import { spinner } from "@crustjs/prompts";
 import type { CodeGrepRequest, RepositoryRequest } from "nia-ai-ts";
 import { V2ApiRepositoriesService } from "nia-ai-ts";
 import { app } from "../app.ts";
@@ -44,30 +43,26 @@ const indexCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
-			const result = await spinner({
-				message: "Indexing repository...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const requestBody: RepositoryRequest = {
-						repository: args.repo,
-					};
+			const requestBody: RepositoryRequest = {
+				repository: args.repo,
+			};
 
-					if (flags.branch) {
-						requestBody.branch = flags.branch;
-					}
-					if (flags.ref) {
-						requestBody.ref = flags.ref;
-					}
-					if (flags.private !== undefined) {
-						requestBody.add_as_global_source = !flags.private;
-					}
+			if (flags.branch) {
+				requestBody.branch = flags.branch;
+			}
+			if (flags.ref) {
+				requestBody.ref = flags.ref;
+			}
+			if (flags.private !== undefined) {
+				requestBody.add_as_global_source = !flags.private;
+			}
 
-					return await V2ApiRepositoriesService.indexRepositoryV2V2RepositoriesPost(
-						requestBody,
-					);
-				},
-			});
+			const result =
+				await V2ApiRepositoriesService.indexRepositoryV2V2RepositoriesPost(
+					requestBody,
+				);
 
 			fmt.output(result);
 		});
@@ -98,19 +93,15 @@ const listCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
-			const result = await spinner({
-				message: "Listing repositories...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiRepositoriesService.listRepositoriesV2V2RepositoriesGet(
-						flags.query,
-						flags.status,
-						flags.limit,
-						flags.offset,
-					);
-				},
-			});
+			const result =
+				await V2ApiRepositoriesService.listRepositoriesV2V2RepositoriesGet(
+					flags.query,
+					flags.status,
+					flags.limit,
+					flags.offset,
+				);
 
 			fmt.output(result);
 		});
@@ -131,16 +122,12 @@ const statusCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
-			const result = await spinner({
-				message: "Checking repository status...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiRepositoriesService.getRepositoryStatusV2V2RepositoriesRepositoryIdGet(
-						args.id,
-					);
-				},
-			});
+			const result =
+				await V2ApiRepositoriesService.getRepositoryStatusV2V2RepositoriesRepositoryIdGet(
+					args.id,
+				);
 
 			// Show progress info if available
 			if (result.progress) {
@@ -185,16 +172,12 @@ const deleteCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
-			const result = await spinner({
-				message: "Deleting repository...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiRepositoriesService.deleteRepositoryV2V2RepositoriesRepositoryIdDelete(
-						args.id,
-					);
-				},
-			});
+			const result =
+				await V2ApiRepositoriesService.deleteRepositoryV2V2RepositoriesRepositoryIdDelete(
+					args.id,
+				);
 
 			fmt.output(result);
 		});
@@ -221,17 +204,13 @@ const renameCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
-			const result = await spinner({
-				message: "Renaming repository...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiRepositoriesService.renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch(
-						args.id,
-						{ new_name: args["new-name"] },
-					);
-				},
-			});
+			const result =
+				await V2ApiRepositoriesService.renameRepositoryV2V2RepositoriesRepositoryIdRenamePatch(
+					args.id,
+					{ new_name: args["new-name"] },
+				);
 
 			fmt.output(result);
 		});
@@ -272,19 +251,15 @@ const readCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
-			const result = await spinner({
-				message: "Reading file...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiRepositoriesService.getRepositoryContentV2V2RepositoriesRepositoryIdContentGet(
-						args["repo-id"],
-						args.path,
-						flags.branch ?? undefined,
-						flags.ref ?? undefined,
-					);
-				},
-			});
+			const result =
+				await V2ApiRepositoriesService.getRepositoryContentV2V2RepositoriesRepositoryIdContentGet(
+					args["repo-id"],
+					args.path,
+					flags.branch ?? undefined,
+					flags.ref ?? undefined,
+				);
 
 			// Show file content with line numbers for readability
 			if (result.success && result.content) {
@@ -363,52 +338,48 @@ const grepCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
-			const result = await spinner({
-				message: "Searching repository files...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const requestBody: CodeGrepRequest = {
-						pattern: args.pattern,
-					};
+			const requestBody: CodeGrepRequest = {
+				pattern: args.pattern,
+			};
 
-					if (flags.path) {
-						requestBody.path = flags.path;
-					}
-					if (flags.ref) {
-						requestBody.ref = flags.ref;
-					}
-					if (flags["case-sensitive"] !== undefined) {
-						requestBody.case_sensitive = flags["case-sensitive"];
-					}
-					if (flags["whole-word"] !== undefined) {
-						requestBody.whole_word = flags["whole-word"];
-					}
-					if (flags["fixed-string"] !== undefined) {
-						requestBody.fixed_string = flags["fixed-string"];
-					}
-					if (flags["lines-before"] !== undefined) {
-						requestBody.B = flags["lines-before"];
-					}
-					if (flags["lines-after"] !== undefined) {
-						requestBody.A = flags["lines-after"];
-					}
-					if (flags["max-per-file"] !== undefined) {
-						requestBody.max_matches_per_file = flags["max-per-file"];
-					}
-					if (flags["max-total"] !== undefined) {
-						requestBody.max_total_matches = flags["max-total"];
-					}
-					if (flags.exhaustive !== undefined) {
-						requestBody.exhaustive = flags.exhaustive;
-					}
+			if (flags.path) {
+				requestBody.path = flags.path;
+			}
+			if (flags.ref) {
+				requestBody.ref = flags.ref;
+			}
+			if (flags["case-sensitive"] !== undefined) {
+				requestBody.case_sensitive = flags["case-sensitive"];
+			}
+			if (flags["whole-word"] !== undefined) {
+				requestBody.whole_word = flags["whole-word"];
+			}
+			if (flags["fixed-string"] !== undefined) {
+				requestBody.fixed_string = flags["fixed-string"];
+			}
+			if (flags["lines-before"] !== undefined) {
+				requestBody.B = flags["lines-before"];
+			}
+			if (flags["lines-after"] !== undefined) {
+				requestBody.A = flags["lines-after"];
+			}
+			if (flags["max-per-file"] !== undefined) {
+				requestBody.max_matches_per_file = flags["max-per-file"];
+			}
+			if (flags["max-total"] !== undefined) {
+				requestBody.max_total_matches = flags["max-total"];
+			}
+			if (flags.exhaustive !== undefined) {
+				requestBody.exhaustive = flags.exhaustive;
+			}
 
-					return await V2ApiRepositoriesService.grepRepositoryV2V2RepositoriesRepositoryIdGrepPost(
-						args["repo-id"],
-						requestBody,
-					);
-				},
-			});
+			const result =
+				await V2ApiRepositoriesService.grepRepositoryV2V2RepositoriesRepositoryIdGrepPost(
+					args["repo-id"],
+					requestBody,
+				);
 
 			fmt.output(result);
 		});
@@ -456,22 +427,18 @@ const treeCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
-			const result = await spinner({
-				message: "Fetching tree...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiRepositoriesService.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet(
-						args["repo-id"],
-						flags.branch ?? undefined,
-						flags["include-paths"] ?? undefined,
-						flags["exclude-paths"] ?? undefined,
-						flags.extensions ?? undefined,
-						flags["exclude-extensions"] ?? undefined,
-						flags["full-paths"] ?? undefined,
-					);
-				},
-			});
+			const result =
+				await V2ApiRepositoriesService.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet(
+					args["repo-id"],
+					flags.branch ?? undefined,
+					flags["include-paths"] ?? undefined,
+					flags["exclude-paths"] ?? undefined,
+					flags.extensions ?? undefined,
+					flags["exclude-extensions"] ?? undefined,
+					flags["full-paths"] ?? undefined,
+				);
 
 			// If there's a tree_text, show it directly for readability
 			if (result.tree_text) {

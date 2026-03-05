@@ -1,4 +1,3 @@
-import { spinner } from "@crustjs/prompts";
 import type { routes__v2__data_sources__ResearchPaperRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService } from "nia-ai-ts";
 import { app } from "../app.ts";
@@ -33,24 +32,20 @@ const indexCommand = app
 	})
 	.run(async ({ args, flags }) => {
 		await withErrorHandling({ domain: "Paper" }, async () => {
-			const result = await spinner({
-				message: "Indexing research paper...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					const payload: routes__v2__data_sources__ResearchPaperRequest = {
-						url: args.paper,
-					};
+			const payload: routes__v2__data_sources__ResearchPaperRequest = {
+				url: args.paper,
+			};
 
-					if (flags.global === false) {
-						payload.add_as_global_source = false;
-					}
+			if (flags.global === false) {
+				payload.add_as_global_source = false;
+			}
 
-					return await V2ApiDataSourcesService.indexResearchPaperV2V2ResearchPapersPost(
-						payload,
-					);
-				},
-			});
+			const result =
+				await V2ApiDataSourcesService.indexResearchPaperV2V2ResearchPapersPost(
+					payload,
+				);
 
 			const data = result as Record<string, unknown>;
 			console.log(`Paper indexed successfully.`);
@@ -90,18 +85,14 @@ const listCommand = app
 		const fmt = createFormatter({ color: flags.color });
 
 		await withErrorHandling({ domain: "Paper" }, async () => {
-			const result = await spinner({
-				message: "Loading research papers...",
-				task: async () => {
-					await createSdk({ apiKey: flags["api-key"] });
+			await createSdk({ apiKey: flags["api-key"] });
 
-					return await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet(
-						flags.status ?? undefined,
-						flags.limit ?? undefined,
-						flags.offset ?? undefined,
-					);
-				},
-			});
+			const result =
+				await V2ApiDataSourcesService.listResearchPapersV2V2ResearchPapersGet(
+					flags.status ?? undefined,
+					flags.limit ?? undefined,
+					flags.offset ?? undefined,
+				);
 
 			const data = result as Record<string, unknown>;
 			const papers = (data.papers ?? data.items ?? []) as Array<
