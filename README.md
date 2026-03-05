@@ -1,6 +1,62 @@
 # nia-cli
 
-A CLI built with [Crust](https://crustjs.com).
+CLI for [Nia](https://www.trynia.ai/).
+
+## Quick Start
+
+```sh
+# Install dependencies
+bun install
+
+# Explore commands
+bun run dev --help
+```
+
+## Authentication
+
+Provide your Nia API key via env var or the auth command:
+
+```sh
+# Option 1: environment variable
+export NIA_API_KEY=nia_your_api_key
+
+# Option 2: store key in local config
+nia auth login --api-key nia_your_api_key
+
+# Check active auth source
+nia auth status
+```
+
+## Command Examples
+
+```sh
+# Search indexed sources
+nia search query "How does auth middleware work?"
+
+# Search the web
+nia search web "latest OpenTelemetry collector changes" --category github
+
+# Index and inspect a repository
+nia repos index vercel/ai
+nia repos list
+
+# Index documentation sources
+nia sources index https://docs.anthropic.com
+
+# Run autonomous research
+nia oracle create "Compare RAG evaluation frameworks"
+
+# View account usage
+nia usage
+```
+
+## Global Flags
+
+All commands inherit these options:
+
+- `--api-key` Override API key for a single command
+- `--verbose` Enable verbose output
+- `--color` Toggle colored output
 
 ## Development
 
@@ -11,14 +67,15 @@ bun run dev
 # Type-check
 bun run check:types
 
+# Run tests
+bun run test
+
+# Lint and static checks
+bun run check
+
 # Build standalone executable
 bun run build
-```
 
-## Usage
-
-```sh
-# Run the CLI
-nia-cli world
-nia-cli --greet Hey world
+# Run built CLI
+bun run start
 ```
