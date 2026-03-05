@@ -1,6 +1,6 @@
 {
 	"name": "nia-cli",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"type": "module",
 	"description": "CLI for the Nia — search code, docs, and research from the terminal",
 	"files": [
