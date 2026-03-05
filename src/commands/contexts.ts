@@ -3,7 +3,7 @@ import type { ContextShareRequest, ContextShareUpdateRequest } from "nia-ai-ts";
 import { V2ApiContextsService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 
 /**
@@ -117,7 +117,7 @@ const saveCommand = app
 			}
 		}
 
-		try {
+		await withErrorHandling({ domain: "Context" }, async () => {
 			const result = await spinner({
 				message: "Saving context...",
 				task: async () => {
@@ -157,9 +157,7 @@ const saveCommand = app
 			if (ctx.expires_at) {
 				console.log(`Expires:    ${ctx.expires_at}`);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Context" });
-		}
+		});
 	});
 
 const listCommand = app
@@ -196,7 +194,7 @@ const listCommand = app
 			validateMemoryType(flags["memory-type"]);
 		}
 
-		try {
+		await withErrorHandling({ domain: "Context" }, async () => {
 			const result = await spinner({
 				message: "Fetching contexts...",
 				task: async () => {
@@ -244,9 +242,7 @@ const listCommand = app
 					console.log(`\nTotal: ${total}${hasMore ? " (more available)" : ""}`);
 				}
 			}
-		} catch (error) {
-			handleError(error, { domain: "Context" });
-		}
+		});
 	});
 
 const searchCommand = app
@@ -279,7 +275,7 @@ const searchCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Context" }, async () => {
 			const result = await spinner({
 				message: "Searching contexts...",
 				task: async () => {
@@ -317,9 +313,7 @@ const searchCommand = app
 					console.log(`\nTotal results: ${response.total_results}`);
 				}
 			}
-		} catch (error) {
-			handleError(error, { domain: "Context" });
-		}
+		});
 	});
 
 const semanticCommand = app
@@ -352,7 +346,7 @@ const semanticCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Context" }, async () => {
 			const result = await spinner({
 				message: "Running semantic search...",
 				task: async () => {
@@ -414,9 +408,7 @@ const semanticCommand = app
 					console.log(`\nTips: ${tips.join("; ")}`);
 				}
 			}
-		} catch (error) {
-			handleError(error, { domain: "Context" });
-		}
+		});
 	});
 
 const getCommand = app
@@ -431,7 +423,7 @@ const getCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		try {
+		await withErrorHandling({ domain: "Context" }, async () => {
 			const result = await spinner({
 				message: "Fetching context...",
 				task: async () => {
@@ -467,9 +459,7 @@ const getCommand = app
 				console.log("\n--- Content ---");
 				console.log(String(ctx.content));
 			}
-		} catch (error) {
-			handleError(error, { domain: "Context" });
-		}
+		});
 	});
 
 const updateCommand = app
@@ -555,7 +545,7 @@ const updateCommand = app
 			process.exit(1);
 		}
 
-		try {
+		await withErrorHandling({ domain: "Context" }, async () => {
 			const result = await spinner({
 				message: "Updating context...",
 				task: async () => {
@@ -573,9 +563,7 @@ const updateCommand = app
 			if (ctx.title) {
 				console.log(`Title: ${ctx.title}`);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Context" });
-		}
+		});
 	});
 
 const deleteCommand = app
@@ -590,7 +578,7 @@ const deleteCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		try {
+		await withErrorHandling({ domain: "Context" }, async () => {
 			await spinner({
 				message: "Deleting context...",
 				task: async () => {
@@ -603,9 +591,7 @@ const deleteCommand = app
 			});
 
 			console.log(`Context ${args.id} has been deleted.`);
-		} catch (error) {
-			handleError(error, { domain: "Context" });
-		}
+		});
 	});
 
 export const contextsCommand = app

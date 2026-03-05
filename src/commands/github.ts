@@ -7,7 +7,7 @@ import type {
 import { GithubSearchService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 
 /**
@@ -55,7 +55,7 @@ const globCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "GitHub" }, async () => {
 			const result = await spinner({
 				message: "Searching for matching files...",
 				task: async () => {
@@ -93,9 +93,7 @@ const globCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "GitHub" });
-		}
+		});
 	});
 
 const readCommand = app
@@ -135,7 +133,7 @@ const readCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "GitHub" }, async () => {
 			const result = await spinner({
 				message: "Reading file...",
 				task: async () => {
@@ -173,9 +171,7 @@ const readCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "GitHub" });
-		}
+		});
 	});
 
 const searchCommand = app
@@ -211,7 +207,7 @@ const searchCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "GitHub" }, async () => {
 			const result = await spinner({
 				message: "Searching code...",
 				task: async () => {
@@ -261,9 +257,7 @@ const searchCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "GitHub" });
-		}
+		});
 	});
 
 const treeCommand = app
@@ -294,7 +288,7 @@ const treeCommand = app
 
 		const { owner, repo } = parseOwnerRepo(args.repo);
 
-		try {
+		await withErrorHandling({ domain: "GitHub" }, async () => {
 			const result = await spinner({
 				message: "Fetching repository tree...",
 				task: async () => {
@@ -334,9 +328,7 @@ const treeCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "GitHub" });
-		}
+		});
 	});
 
 export const githubCommand = app

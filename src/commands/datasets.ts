@@ -3,7 +3,7 @@ import type { HuggingFaceDatasetRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 
 // --- Subcommands ---
@@ -32,7 +32,7 @@ const indexCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		try {
+		await withErrorHandling({ domain: "Dataset" }, async () => {
 			const result = await spinner({
 				message: "Indexing HuggingFace dataset...",
 				task: async () => {
@@ -70,9 +70,7 @@ const indexCommand = app
 			if (data.message) {
 				console.log(`  ${data.message}`);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Dataset" });
-		}
+		});
 	});
 
 const listCommand = app
@@ -95,7 +93,7 @@ const listCommand = app
 	.run(async ({ flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Dataset" }, async () => {
 			const result = await spinner({
 				message: "Loading HuggingFace datasets...",
 				task: async () => {
@@ -129,9 +127,7 @@ const listCommand = app
 					console.log(`\nTotal: ${data.total} datasets`);
 				}
 			}
-		} catch (error) {
-			handleError(error, { domain: "Dataset" });
-		}
+		});
 	});
 
 export const datasetsCommand = app

@@ -17,11 +17,7 @@ const originalArgv = process.argv;
 // Import the actual error classes
 import { CrustError } from "@crustjs/core";
 import { ApiError, NiaSDKError, NiaTimeoutError } from "nia-ai-ts";
-import {
-	findClosestMatch,
-	handleError,
-	withErrorHandling,
-} from "../../src/utils/errors.ts";
+import { handleError, withErrorHandling } from "../../src/utils/errors.ts";
 
 describe("error handling", () => {
 	let consoleErrorOutput: string[];
@@ -268,117 +264,20 @@ describe("error handling", () => {
 	// --- CrustError handling ---
 
 	describe("CrustError handling", () => {
-		test("handles COMMAND_NOT_FOUND with suggestion", () => {
-			const error = new CrustError(
-				"COMMAND_NOT_FOUND",
-				'Unknown command: "serch"',
-				{
-					input: "serch",
-					available: ["search", "sources", "repos"],
-					commandPath: ["nia"],
-					// biome-ignore lint/suspicious/noExplicitAny: test mock
-					parentCommand: {} as any,
-				},
-			);
-			try {
-				handleError(error);
-			} catch {}
-			expect(
-				consoleErrorOutput.some((s) => s.includes('Unknown command: "serch"')),
-			).toBe(true);
-			expect(
-				consoleErrorOutput.some((s) => s.includes('Did you mean "search"')),
-			).toBe(true);
-			expect(
-				consoleErrorOutput.some((s) => s.includes("Available commands")),
-			).toBe(true);
-		});
-
-		test("handles COMMAND_NOT_FOUND without close match", () => {
-			const error = new CrustError(
-				"COMMAND_NOT_FOUND",
-				'Unknown command: "xyz"',
-				{
-					input: "xyz",
-					available: ["search", "sources", "repos"],
-					commandPath: ["nia"],
-					// biome-ignore lint/suspicious/noExplicitAny: test mock
-					parentCommand: {} as any,
-				},
-			);
-			try {
-				handleError(error);
-			} catch {}
-			expect(
-				consoleErrorOutput.some((s) => s.includes('Unknown command: "xyz"')),
-			).toBe(true);
-			expect(
-				consoleErrorOutput.some((s) => s.includes("Available commands")),
-			).toBe(true);
-			// Should not have a "Did you mean" suggestion for completely different input
-		});
-
-		test("handles VALIDATION with missing argument", () => {
-			const error = new CrustError("VALIDATION", "Missing required argument", {
-				issues: [{ message: "query is required", path: "argument" }],
-			});
-			try {
-				handleError(error);
-			} catch {}
-			expect(
-				consoleErrorOutput.some((s) => s.includes("Missing required")),
-			).toBe(true);
-			expect(
-				consoleErrorOutput.some((s) => s.includes("query is required")),
-			).toBe(true);
-		});
-
-		test("handles VALIDATION without details", () => {
-			const error = new CrustError("VALIDATION", "Missing required arguments");
-			try {
-				handleError(error);
-			} catch {}
-			expect(
-				consoleErrorOutput.some((s) =>
-					s.includes("Missing required arguments"),
-				),
-			).toBe(true);
-		});
-
-		test("handles PARSE error", () => {
+		test("rethrows CrustError for Crust-native formatting", () => {
 			const error = new CrustError("PARSE", 'Unknown flag "--foo"');
-			try {
-				handleError(error);
-			} catch {}
-			expect(
-				consoleErrorOutput.some((s) => s.includes("Invalid arguments")),
-			).toBe(true);
-			expect(consoleErrorOutput.some((s) => s.includes("--foo"))).toBe(true);
+			expect(() => handleError(error)).toThrow(CrustError);
+			expect(consoleErrorOutput.length).toBe(0);
 		});
 
-		test("handles DEFINITION error", () => {
-			const error = new CrustError(
-				"DEFINITION",
-				"Command name cannot be empty",
-			);
-			try {
-				handleError(error);
-			} catch {}
-			expect(
-				consoleErrorOutput.some((s) =>
-					s.includes("Command name cannot be empty"),
-				),
-			).toBe(true);
-		});
-
-		test("handles EXECUTION error", () => {
-			const error = new CrustError("EXECUTION", "Runtime execution error");
-			try {
-				handleError(error);
-			} catch {}
-			expect(
-				consoleErrorOutput.some((s) => s.includes("Runtime execution error")),
-			).toBe(true);
+		test("withErrorHandling also rethrows CrustError", async () => {
+			const error = new CrustError("VALIDATION", "Missing required argument");
+			await expect(
+				withErrorHandling({ domain: "Search" }, async () => {
+					throw error;
+				}),
+			).rejects.toThrow(CrustError);
+			expect(consoleErrorOutput.length).toBe(0);
 		});
 	});
 
@@ -472,52 +371,6 @@ describe("error handling", () => {
 				}
 			}
 		});
-	});
-});
-
-// --- findClosestMatch ---
-
-describe("findClosestMatch", () => {
-	const commands = [
-		"search",
-		"sources",
-		"repos",
-		"oracle",
-		"tracer",
-		"contexts",
-		"packages",
-	];
-
-	test("finds exact match", () => {
-		expect(findClosestMatch("search", commands)).toBe("search");
-	});
-
-	test("finds close match with typo", () => {
-		expect(findClosestMatch("serch", commands)).toBe("search");
-	});
-
-	test("finds match for different typo", () => {
-		expect(findClosestMatch("soruces", commands)).toBe("sources");
-	});
-
-	test("finds match for prefix", () => {
-		expect(findClosestMatch("trac", commands)).toBe("tracer");
-	});
-
-	test("returns undefined for completely different input", () => {
-		expect(findClosestMatch("xyzabc", commands)).toBeUndefined();
-	});
-
-	test("returns undefined for empty candidates", () => {
-		expect(findClosestMatch("search", [])).toBeUndefined();
-	});
-
-	test("is case-insensitive", () => {
-		expect(findClosestMatch("SEARCH", commands)).toBe("search");
-	});
-
-	test("handles single character difference", () => {
-		expect(findClosestMatch("packges", commands)).toBe("packages");
 	});
 });
 

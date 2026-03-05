@@ -3,7 +3,7 @@ import type { routes__v2__data_sources__ResearchPaperRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 
 // --- Subcommands ---
@@ -32,7 +32,7 @@ const indexCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		try {
+		await withErrorHandling({ domain: "Paper" }, async () => {
 			const result = await spinner({
 				message: "Indexing research paper...",
 				task: async () => {
@@ -66,9 +66,7 @@ const indexCommand = app
 			if (data.message) {
 				console.log(`  ${data.message}`);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Paper" });
-		}
+		});
 	});
 
 const listCommand = app
@@ -91,7 +89,7 @@ const listCommand = app
 	.run(async ({ flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Paper" }, async () => {
 			const result = await spinner({
 				message: "Loading research papers...",
 				task: async () => {
@@ -127,9 +125,7 @@ const listCommand = app
 					console.log(`\nTotal: ${data.total} papers`);
 				}
 			}
-		} catch (error) {
-			handleError(error, { domain: "Paper" });
-		}
+		});
 	});
 
 export const papersCommand = app

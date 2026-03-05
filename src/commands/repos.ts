@@ -3,7 +3,7 @@ import type { CodeGrepRequest, RepositoryRequest } from "nia-ai-ts";
 import { V2ApiRepositoriesService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 
 // --- Subcommands ---
@@ -43,7 +43,7 @@ const indexCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Repository" }, async () => {
 			const result = await spinner({
 				message: "Indexing repository...",
 				task: async () => {
@@ -70,9 +70,7 @@ const indexCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Repository" });
-		}
+		});
 	});
 
 const listCommand = app
@@ -99,7 +97,7 @@ const listCommand = app
 	.run(async ({ flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Repository" }, async () => {
 			const result = await spinner({
 				message: "Listing repositories...",
 				task: async () => {
@@ -115,9 +113,7 @@ const listCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Repository" });
-		}
+		});
 	});
 
 const statusCommand = app
@@ -134,7 +130,7 @@ const statusCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Repository" }, async () => {
 			const result = await spinner({
 				message: "Checking repository status...",
 				task: async () => {
@@ -171,9 +167,7 @@ const statusCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Repository" });
-		}
+		});
 	});
 
 const deleteCommand = app
@@ -190,7 +184,7 @@ const deleteCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Repository" }, async () => {
 			const result = await spinner({
 				message: "Deleting repository...",
 				task: async () => {
@@ -203,9 +197,7 @@ const deleteCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Repository" });
-		}
+		});
 	});
 
 const renameCommand = app
@@ -228,7 +220,7 @@ const renameCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Repository" }, async () => {
 			const result = await spinner({
 				message: "Renaming repository...",
 				task: async () => {
@@ -242,9 +234,7 @@ const renameCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Repository" });
-		}
+		});
 	});
 
 // --- Content subcommands ---
@@ -281,7 +271,7 @@ const readCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Repository" }, async () => {
 			const result = await spinner({
 				message: "Reading file...",
 				task: async () => {
@@ -307,9 +297,7 @@ const readCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Repository" });
-		}
+		});
 	});
 
 const grepCommand = app
@@ -374,7 +362,7 @@ const grepCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Repository" }, async () => {
 			const result = await spinner({
 				message: "Searching repository files...",
 				task: async () => {
@@ -423,9 +411,7 @@ const grepCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Repository" });
-		}
+		});
 	});
 
 const treeCommand = app
@@ -469,7 +455,7 @@ const treeCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Repository" }, async () => {
 			const result = await spinner({
 				message: "Fetching tree...",
 				task: async () => {
@@ -508,9 +494,7 @@ const treeCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Repository" });
-		}
+		});
 	});
 
 // --- Parent command ---

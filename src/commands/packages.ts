@@ -7,7 +7,7 @@ import type {
 import { V2ApiPackageSearchService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 
 /**
@@ -94,7 +94,7 @@ const grepCommand = app
 
 		validateRegistry(args.registry);
 
-		try {
+		await withErrorHandling({ domain: "Package search" }, async () => {
 			const result = await spinner({
 				message: "Searching package source code...",
 				task: async () => {
@@ -135,9 +135,7 @@ const grepCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Package search" });
-		}
+		});
 	});
 
 const hybridCommand = app
@@ -187,7 +185,7 @@ const hybridCommand = app
 
 		validateRegistry(args.registry);
 
-		try {
+		await withErrorHandling({ domain: "Package search" }, async () => {
 			const result = await spinner({
 				message: "Running semantic package search...",
 				task: async () => {
@@ -222,9 +220,7 @@ const hybridCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Package search" });
-		}
+		});
 	});
 
 const readCommand = app
@@ -283,7 +279,7 @@ const readCommand = app
 			process.exit(1);
 		}
 
-		try {
+		await withErrorHandling({ domain: "Package search" }, async () => {
 			const result = await spinner({
 				message: "Reading package file...",
 				task: async () => {
@@ -320,9 +316,7 @@ const readCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Package search" });
-		}
+		});
 	});
 
 export const packagesCommand = app

@@ -4,7 +4,7 @@ import { DefaultService, OpenAPI } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { resolveBaseUrl } from "../services/config.ts";
 import { createSdk } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 import { renderStream, renderStreamEvent } from "../utils/streaming.ts";
 
@@ -64,7 +64,7 @@ const jobCommand = app
 			})) ||
 			undefined;
 
-		try {
+		await withErrorHandling({ domain: "Oracle" }, async () => {
 			const result = await spinner({
 				message: "Creating Oracle research job...",
 				task: async () => {
@@ -98,9 +98,7 @@ const jobCommand = app
 			if (jobId) {
 				console.log(`\nUse \`nia oracle stream ${jobId}\` to watch progress`);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Oracle" });
-		}
+		});
 	});
 
 const statusCommand = app
@@ -117,7 +115,7 @@ const statusCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Oracle" }, async () => {
 			const result = await spinner({
 				message: "Fetching job status...",
 				task: async () => {
@@ -150,9 +148,7 @@ const statusCommand = app
 			if (job.error) {
 				console.log(`\nError: ${job.error}`);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Oracle" });
-		}
+		});
 	});
 
 const cancelCommand = app
@@ -167,7 +163,7 @@ const cancelCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		try {
+		await withErrorHandling({ domain: "Oracle" }, async () => {
 			await spinner({
 				message: "Cancelling Oracle job...",
 				task: async () => {
@@ -180,9 +176,7 @@ const cancelCommand = app
 			});
 
 			console.log(`Job ${args["job-id"]} has been cancelled.`);
-		} catch (error) {
-			handleError(error, { domain: "Oracle" });
-		}
+		});
 	});
 
 const jobsCommand = app
@@ -221,7 +215,7 @@ const jobsCommand = app
 			process.exit(1);
 		}
 
-		try {
+		await withErrorHandling({ domain: "Oracle" }, async () => {
 			const result = await spinner({
 				message: "Fetching Oracle jobs...",
 				task: async () => {
@@ -254,9 +248,7 @@ const jobsCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Oracle" });
-		}
+		});
 	});
 
 // --- Streaming & Session Subcommands ---
@@ -273,7 +265,7 @@ const streamCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		try {
+		await withErrorHandling({ domain: "Oracle" }, async () => {
 			const stream = await spinner({
 				message: "Connecting to Oracle job stream...",
 				task: async () => {
@@ -289,9 +281,7 @@ const streamCommand = app
 			if (process.stdout.isTTY) {
 				console.log();
 			}
-		} catch (error) {
-			handleError(error, { domain: "Oracle" });
-		}
+		});
 	});
 
 const sessionsCommand = app
@@ -310,7 +300,7 @@ const sessionsCommand = app
 	.run(async ({ flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Oracle" }, async () => {
 			const result = await spinner({
 				message: "Fetching Oracle sessions...",
 				task: async () => {
@@ -341,9 +331,7 @@ const sessionsCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Oracle" });
-		}
+		});
 	});
 
 const sessionCommand = app
@@ -360,7 +348,7 @@ const sessionCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Oracle" }, async () => {
 			const result = await spinner({
 				message: "Fetching session details...",
 				task: async () => {
@@ -396,9 +384,7 @@ const sessionCommand = app
 			if (session.job_id) {
 				console.log(`\nJob ID: ${session.job_id}`);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Oracle" });
-		}
+		});
 	});
 
 const messagesCommand = app
@@ -421,7 +407,7 @@ const messagesCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Oracle" }, async () => {
 			const result = await spinner({
 				message: "Fetching session messages...",
 				task: async () => {
@@ -454,9 +440,7 @@ const messagesCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Oracle" });
-		}
+		});
 	});
 
 const chatCommand = app
@@ -479,7 +463,7 @@ const chatCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		try {
+		await withErrorHandling({ domain: "Oracle" }, async () => {
 			const { reader, decoder } = await spinner({
 				message: "Connecting to session chat...",
 				task: async () => {
@@ -547,9 +531,7 @@ const chatCommand = app
 			if (process.stdout.isTTY) {
 				console.log();
 			}
-		} catch (error) {
-			handleError(error, { domain: "Oracle" });
-		}
+		});
 	});
 
 const deleteSessionCommand = app
@@ -566,7 +548,7 @@ const deleteSessionCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		try {
+		await withErrorHandling({ domain: "Oracle" }, async () => {
 			await spinner({
 				message: "Deleting Oracle session...",
 				task: async () => {
@@ -581,9 +563,7 @@ const deleteSessionCommand = app
 			console.log(
 				`Session ${args["session-id"]} and its chat history have been deleted.`,
 			);
-		} catch (error) {
-			handleError(error, { domain: "Oracle" });
-		}
+		});
 	});
 
 const oracleUsageCommand = app
@@ -592,7 +572,7 @@ const oracleUsageCommand = app
 		description: "Show Oracle usage summary including 1M context operations",
 	})
 	.run(async ({ flags }) => {
-		try {
+		await withErrorHandling({ domain: "Oracle" }, async () => {
 			const result = await spinner({
 				message: "Fetching Oracle usage...",
 				task: async () => {
@@ -630,9 +610,7 @@ const oracleUsageCommand = app
 					}
 				}
 			}
-		} catch (error) {
-			handleError(error, { domain: "Oracle" });
-		}
+		});
 	});
 
 export const oracleCommand = app

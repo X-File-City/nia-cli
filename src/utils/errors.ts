@@ -1,7 +1,7 @@
 /**
  * Centralized error handling for the Nia CLI.
  *
- * Provides a unified `handleError()` function that maps SDK, API, and framework
+ * Provides a unified `handleError()` function that maps SDK and API
  * errors to user-friendly messages, and a `withErrorHandling()` wrapper for
  * command handlers.
  */
@@ -21,7 +21,7 @@ export interface ErrorHandlerOptions {
 
 /**
  * Format a user-friendly error message for the given error and print it.
- * Calls `process.exit(1)` after printing.
+ * Delegates `CrustError` formatting to Crust; otherwise exits with code 1.
  */
 export function handleError(
 	error: unknown,
@@ -29,44 +29,40 @@ export function handleError(
 ): never {
 	const { verbose = false, domain } = options;
 
-	// --- CrustError (framework-level) ---
 	if (error instanceof CrustError) {
-		handleCrustError(error, verbose);
+		throw error;
 	}
 
-	// --- ApiError (generated OpenAPI client) ---
 	if (error instanceof ApiError) {
-		handleApiError(error, verbose, domain);
+		return handleStatusCode(
+			error.status,
+			error.message,
+			verbose,
+			domain,
+			error.body,
+			error.stack,
+		);
 	}
 
-	// --- NiaTimeoutError (SDK timeout) ---
 	if (error instanceof NiaTimeoutError) {
 		console.error(
 			"Request timed out — the server took too long to respond. Try again later.",
 		);
-		if (verbose) {
-			console.error(`\nDetails: ${error.message}`);
-			if (error.stack) {
-				console.error(`\nStack trace:\n${error.stack}`);
-			}
-		}
-		process.exit(1);
+		if (verbose) console.error(`\nDetails: ${error.message}`);
+		printStackIfVerbose(verbose, error.stack);
+		exitWithError();
 	}
 
-	// --- NiaSDKError (generic SDK error) ---
 	if (error instanceof NiaSDKError) {
 		console.error(`SDK error: ${error.message}`);
-		if (verbose && error.stack) {
-			console.error(`\nStack trace:\n${error.stack}`);
-		}
-		process.exit(1);
+		printStackIfVerbose(verbose, error.stack);
+		exitWithError();
 	}
 
-	// --- Generic Error with status (e.g., fetch errors with status) ---
 	if (error instanceof Error) {
 		const statusError = error as Error & { status?: number };
 		if (typeof statusError.status === "number") {
-			handleStatusCode(
+			return handleStatusCode(
 				statusError.status,
 				statusError.message,
 				verbose,
@@ -76,83 +72,13 @@ export function handleError(
 
 		const label = domain ? `${domain} failed` : "Error";
 		console.error(`${label}: ${error.message}`);
-		if (verbose && error.stack) {
-			console.error(`\nStack trace:\n${error.stack}`);
-		}
-		process.exit(1);
+		printStackIfVerbose(verbose, error.stack);
+		exitWithError();
 	}
 
-	// --- Non-Error thrown values ---
 	const label = domain ? `${domain} failed` : "Error";
 	console.error(`${label}: ${String(error)}`);
-	process.exit(1);
-}
-
-/**
- * Handle CrustError (framework-level errors).
- */
-function handleCrustError(error: CrustError, verbose: boolean): never {
-	if (error.is("COMMAND_NOT_FOUND")) {
-		const { input, available } = error.details;
-		console.error(`Unknown command: "${input}"`);
-
-		// Suggest closest match
-		const suggestion = findClosestMatch(input, available);
-		if (suggestion) {
-			console.error(`Did you mean "${suggestion}"?`);
-		}
-
-		if (available.length > 0) {
-			console.error(`\nAvailable commands: ${available.join(", ")}`);
-		}
-
-		process.exit(1);
-	}
-
-	if (error.is("VALIDATION")) {
-		const details = error.details;
-		if (details?.issues && details.issues.length > 0) {
-			for (const issue of details.issues) {
-				console.error(`Missing required ${issue.path}: ${issue.message}`);
-			}
-		} else {
-			console.error(error.message);
-		}
-		process.exit(1);
-	}
-
-	if (error.is("PARSE")) {
-		console.error(`Invalid arguments: ${error.message}`);
-		if (verbose && error.stack) {
-			console.error(`\nStack trace:\n${error.stack}`);
-		}
-		process.exit(1);
-	}
-
-	// DEFINITION, EXECUTION, or other codes
-	console.error(error.message);
-	if (verbose && error.stack) {
-		console.error(`\nStack trace:\n${error.stack}`);
-	}
-	process.exit(1);
-}
-
-/**
- * Handle ApiError from the generated OpenAPI client.
- */
-function handleApiError(
-	error: ApiError,
-	verbose: boolean,
-	domain?: string,
-): never {
-	handleStatusCode(
-		error.status,
-		error.message,
-		verbose,
-		domain,
-		error.body,
-		error.stack,
-	);
+	exitWithError();
 }
 
 /**
@@ -205,11 +131,22 @@ function handleStatusCode(
 		if (body !== undefined) {
 			console.error(`\nResponse body:\n${formatBody(body)}`);
 		}
-		if (stack) {
-			console.error(`\nStack trace:\n${stack}`);
-		}
+		printStackIfVerbose(verbose, stack);
 	}
 
+	exitWithError();
+}
+
+function printStackIfVerbose(
+	verbose: boolean,
+	stack: string | undefined,
+): void {
+	if (verbose && stack) {
+		console.error(`\nStack trace:\n${stack}`);
+	}
+}
+
+function exitWithError(): never {
 	process.exit(1);
 }
 
@@ -267,61 +204,6 @@ function formatBody(body: unknown): string {
 	} catch {
 		return String(body);
 	}
-}
-
-/**
- * Find the closest string match using Levenshtein distance.
- * Returns undefined if no match is close enough (threshold: half the input length + 2).
- */
-export function findClosestMatch(
-	input: string,
-	candidates: string[],
-): string | undefined {
-	if (candidates.length === 0) return undefined;
-
-	let bestMatch: string | undefined;
-	let bestDistance = Number.POSITIVE_INFINITY;
-	const threshold = Math.max(Math.floor(input.length / 3) + 1, 2);
-
-	for (const candidate of candidates) {
-		const distance = levenshteinDistance(
-			input.toLowerCase(),
-			candidate.toLowerCase(),
-		);
-		if (distance < bestDistance) {
-			bestDistance = distance;
-			bestMatch = candidate;
-		}
-	}
-
-	return bestDistance <= threshold ? bestMatch : undefined;
-}
-
-/**
- * Compute Levenshtein distance between two strings.
- */
-function levenshteinDistance(a: string, b: string): number {
-	const m = a.length;
-	const n = b.length;
-
-	// Use a 1D array for space efficiency
-	const dp: number[] = Array.from({ length: n + 1 }, (_, i) => i);
-
-	for (let i = 1; i <= m; i++) {
-		let prev = dp[0] ?? 0;
-		dp[0] = i;
-		for (let j = 1; j <= n; j++) {
-			const temp = dp[j] ?? 0;
-			if (a[i - 1] === b[j - 1]) {
-				dp[j] = prev;
-			} else {
-				dp[j] = 1 + Math.min(prev, dp[j] ?? 0, dp[j - 1] ?? 0);
-			}
-			prev = temp;
-		}
-	}
-
-	return dp[n] ?? 0;
 }
 
 /**

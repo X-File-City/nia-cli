@@ -1,7 +1,7 @@
 import { spinner } from "@crustjs/prompts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 
 const universalCommand = app
@@ -32,7 +32,7 @@ const universalCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Search" }, async () => {
 			const result = await spinner({
 				message: "Searching...",
 				task: async () => {
@@ -57,9 +57,7 @@ const universalCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Search" });
-		}
+		});
 	});
 
 const queryCommand = app
@@ -110,7 +108,7 @@ const queryCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Search" }, async () => {
 			const result = await spinner({
 				message: "Querying...",
 				task: async () => {
@@ -150,9 +148,7 @@ const queryCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Search" });
-		}
+		});
 	});
 
 const WEB_SEARCH_CATEGORIES = [
@@ -207,7 +203,7 @@ const webCommand = app
 			process.exit(1);
 		}
 
-		try {
+		await withErrorHandling({ domain: "Search" }, async () => {
 			const result = await spinner({
 				message: "Searching the web...",
 				task: async () => {
@@ -232,9 +228,7 @@ const webCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Search" });
-		}
+		});
 	});
 
 const deepCommand = app
@@ -261,7 +255,7 @@ const deepCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Search" }, async () => {
 			const result = await spinner({
 				message: "Running deep research...",
 				task: async () => {
@@ -286,9 +280,7 @@ const deepCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Search" });
-		}
+		});
 	});
 
 export const searchCommand = app

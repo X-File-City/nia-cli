@@ -7,7 +7,7 @@ import {
 	maskApiKey,
 } from "../services/config.ts";
 import { configureOpenApi } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 
 const loginCommand = app
 	.sub("login")
@@ -41,7 +41,7 @@ const loginCommand = app
 		// Validate the API key by calling the usage endpoint
 		configureOpenApi(apiKey);
 
-		try {
+		await withErrorHandling({ domain: "Authentication" }, async () => {
 			const usage = await V2ApiService.getUsageSummaryV2V2UsageGet();
 
 			// API key is valid — store it in config
@@ -66,9 +66,7 @@ const loginCommand = app
 					}
 				}
 			}
-		} catch (error: unknown) {
-			handleError(error, { domain: "Authentication" });
-		}
+		});
 	});
 
 const logoutCommand = app

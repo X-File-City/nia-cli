@@ -7,7 +7,7 @@ import type {
 import { V2ApiCategoriesService, V2ApiDataSourcesService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 
 // --- Subcommands ---
@@ -28,7 +28,7 @@ const listCommand = app
 	.run(async ({ flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Category" }, async () => {
 			const result = await spinner({
 				message: "Loading categories...",
 				task: async () => {
@@ -61,9 +61,7 @@ const listCommand = app
 					console.log(`\nTotal: ${data.total} categories`);
 				}
 			}
-		} catch (error) {
-			handleError(error, { domain: "Category" });
-		}
+		});
 	});
 
 const createCommand = app
@@ -88,7 +86,7 @@ const createCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		try {
+		await withErrorHandling({ domain: "Category" }, async () => {
 			const result = await spinner({
 				message: "Creating category...",
 				task: async () => {
@@ -126,9 +124,7 @@ const createCommand = app
 			if (data.order !== undefined) {
 				console.log(`  Order: ${data.order}`);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Category" });
-		}
+		});
 	});
 
 const updateCommand = app
@@ -167,7 +163,7 @@ const updateCommand = app
 			process.exit(1);
 		}
 
-		try {
+		await withErrorHandling({ domain: "Category" }, async () => {
 			const result = await spinner({
 				message: "Updating category...",
 				task: async () => {
@@ -208,9 +204,7 @@ const updateCommand = app
 			if (data.order !== undefined) {
 				console.log(`  Order: ${data.order}`);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Category" });
-		}
+		});
 	});
 
 const deleteCommand = app
@@ -225,7 +219,7 @@ const deleteCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		try {
+		await withErrorHandling({ domain: "Category" }, async () => {
 			await spinner({
 				message: "Deleting category...",
 				task: async () => {
@@ -238,9 +232,7 @@ const deleteCommand = app
 			});
 
 			console.log(`Category ${args.id} deleted successfully.`);
-		} catch (error) {
-			handleError(error, { domain: "Category" });
-		}
+		});
 	});
 
 const assignCommand = app
@@ -271,7 +263,7 @@ const assignCommand = app
 			? "Removing category from source..."
 			: "Assigning category...";
 
-		try {
+		await withErrorHandling({ domain: "Category" }, async () => {
 			await spinner({
 				message,
 				task: async () => {
@@ -293,9 +285,7 @@ const assignCommand = app
 			} else {
 				console.log(`Category ${categoryId} assigned to source ${sourceId}.`);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Category" });
-		}
+		});
 	});
 
 export const categoriesCommand = app

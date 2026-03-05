@@ -2,13 +2,13 @@ import { spinner } from "@crustjs/prompts";
 import { V2ApiService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 
 export const usageCommand = app
 	.sub("usage")
 	.meta({ description: "View API usage summary" })
 	.run(async ({ flags }) => {
-		try {
+		await withErrorHandling({ domain: "Usage" }, async () => {
 			const result = await spinner({
 				message: "Fetching usage summary...",
 				task: async () => {
@@ -49,7 +49,5 @@ export const usageCommand = app
 			} else {
 				console.log("\nNo usage data available.");
 			}
-		} catch (error) {
-			handleError(error, { domain: "Usage" });
-		}
+		});
 	});

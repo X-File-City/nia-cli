@@ -3,7 +3,7 @@ import type { GrepRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService, V2ApiSourcesService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 
 /**
@@ -108,7 +108,7 @@ const indexCommand = app
 			],
 		});
 
-		try {
+		await withErrorHandling({ domain: "Source" }, async () => {
 			const result = await spinner({
 				message: "Indexing source...",
 				task: async () => {
@@ -148,9 +148,7 @@ const indexCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Source" });
-		}
+		});
 	});
 
 const listCommand = app
@@ -188,7 +186,7 @@ const listCommand = app
 
 		const sourceType = validateSourceType(flags.type);
 
-		try {
+		await withErrorHandling({ domain: "Source" }, async () => {
 			const result = await spinner({
 				message: "Listing sources...",
 				task: async () => {
@@ -206,9 +204,7 @@ const listCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Source" });
-		}
+		});
 	});
 
 const getCommand = app
@@ -234,7 +230,7 @@ const getCommand = app
 
 		const sourceType = validateSourceType(flags.type);
 
-		try {
+		await withErrorHandling({ domain: "Source" }, async () => {
 			const result = await spinner({
 				message: "Fetching source...",
 				task: async () => {
@@ -248,9 +244,7 @@ const getCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Source" });
-		}
+		});
 	});
 
 const resolveCommand = app
@@ -276,7 +270,7 @@ const resolveCommand = app
 
 		const sourceType = validateSourceType(flags.type);
 
-		try {
+		await withErrorHandling({ domain: "Source" }, async () => {
 			const result = await spinner({
 				message: "Resolving source...",
 				task: async () => {
@@ -287,9 +281,7 @@ const resolveCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Source" });
-		}
+		});
 	});
 
 const updateCommand = app
@@ -328,7 +320,7 @@ const updateCommand = app
 			process.exit(1);
 		}
 
-		try {
+		await withErrorHandling({ domain: "Source" }, async () => {
 			const result = await spinner({
 				message: "Updating source...",
 				task: async () => {
@@ -353,9 +345,7 @@ const updateCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Source" });
-		}
+		});
 	});
 
 const deleteCommand = app
@@ -381,7 +371,7 @@ const deleteCommand = app
 
 		const sourceType = validateSourceType(flags.type);
 
-		try {
+		await withErrorHandling({ domain: "Source" }, async () => {
 			const result = await spinner({
 				message: "Deleting source...",
 				task: async () => {
@@ -395,9 +385,7 @@ const deleteCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Source" });
-		}
+		});
 	});
 
 const syncCommand = app
@@ -425,7 +413,7 @@ const syncCommand = app
 
 		const sourceType = validateSourceType(flags.type);
 
-		try {
+		await withErrorHandling({ domain: "Source" }, async () => {
 			const result = await spinner({
 				message: "Syncing source...",
 				task: async () => {
@@ -454,9 +442,7 @@ const syncCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Source" });
-		}
+		});
 	});
 
 const renameCommand = app
@@ -479,7 +465,7 @@ const renameCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Source" }, async () => {
 			const result = await spinner({
 				message: "Renaming source...",
 				task: async () => {
@@ -495,9 +481,7 @@ const renameCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Source" });
-		}
+		});
 	});
 
 // --- Content subcommands ---
@@ -543,7 +527,7 @@ const readCommand = app
 
 		validateSourceType(flags.type);
 
-		try {
+		await withErrorHandling({ domain: "Source" }, async () => {
 			const result = await spinner({
 				message: "Reading file...",
 				task: async () => {
@@ -562,9 +546,7 @@ const readCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Source" });
-		}
+		});
 	});
 
 const grepCommand = app
@@ -624,7 +606,7 @@ const grepCommand = app
 
 		validateSourceType(flags.type);
 
-		try {
+		await withErrorHandling({ domain: "Source" }, async () => {
 			const result = await spinner({
 				message: "Searching source files...",
 				task: async () => {
@@ -664,9 +646,7 @@ const grepCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Source" });
-		}
+		});
 	});
 
 const treeCommand = app
@@ -692,7 +672,7 @@ const treeCommand = app
 
 		validateSourceType(flags.type);
 
-		try {
+		await withErrorHandling({ domain: "Source" }, async () => {
 			const result = await spinner({
 				message: "Fetching tree...",
 				task: async () => {
@@ -710,9 +690,7 @@ const treeCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Source" });
-		}
+		});
 	});
 
 const lsCommand = app
@@ -735,7 +713,7 @@ const lsCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Source" }, async () => {
 			const result = await spinner({
 				message: "Listing directory...",
 				task: async () => {
@@ -749,9 +727,7 @@ const lsCommand = app
 			});
 
 			fmt.output(result);
-		} catch (error) {
-			handleError(error, { domain: "Source" });
-		}
+		});
 	});
 
 // --- Parent command ---

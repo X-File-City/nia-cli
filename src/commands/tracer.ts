@@ -4,7 +4,7 @@ import { GithubSearchService, OpenAPI } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { resolveBaseUrl } from "../services/config.ts";
 import { createSdk } from "../services/sdk.ts";
-import { handleError } from "../utils/errors.ts";
+import { withErrorHandling } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 
 import { renderStreamEvent } from "../utils/streaming.ts";
@@ -40,7 +40,7 @@ const runCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Tracer" }, async () => {
 			const result = await spinner({
 				message: "Creating Tracer search job...",
 				task: async () => {
@@ -73,9 +73,7 @@ const runCommand = app
 			if (jobId) {
 				console.log(`\nUse \`nia tracer stream ${jobId}\` to watch progress`);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Tracer" });
-		}
+		});
 	});
 
 const statusCommand = app
@@ -92,7 +90,7 @@ const statusCommand = app
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
 
-		try {
+		await withErrorHandling({ domain: "Tracer" }, async () => {
 			const result = await spinner({
 				message: "Fetching Tracer job status...",
 				task: async () => {
@@ -127,9 +125,7 @@ const statusCommand = app
 			if (job.error) {
 				console.log(`\nError: ${job.error}`);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Tracer" });
-		}
+		});
 	});
 
 const streamCommand = app
@@ -144,7 +140,7 @@ const streamCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		try {
+		await withErrorHandling({ domain: "Tracer" }, async () => {
 			const response = await spinner({
 				message: "Connecting to Tracer job stream...",
 				task: async () => {
@@ -211,9 +207,7 @@ const streamCommand = app
 			if (process.stdout.isTTY) {
 				console.log();
 			}
-		} catch (error) {
-			handleError(error, { domain: "Tracer" });
-		}
+		});
 	});
 
 const listCommand = app
@@ -252,7 +246,7 @@ const listCommand = app
 			process.exit(1);
 		}
 
-		try {
+		await withErrorHandling({ domain: "Tracer" }, async () => {
 			const result = await spinner({
 				message: "Fetching Tracer jobs...",
 				task: async () => {
@@ -285,9 +279,7 @@ const listCommand = app
 			} else {
 				fmt.output(result);
 			}
-		} catch (error) {
-			handleError(error, { domain: "Tracer" });
-		}
+		});
 	});
 
 const deleteCommand = app
@@ -302,7 +294,7 @@ const deleteCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		try {
+		await withErrorHandling({ domain: "Tracer" }, async () => {
 			await spinner({
 				message: "Deleting Tracer job...",
 				task: async () => {
@@ -315,9 +307,7 @@ const deleteCommand = app
 			});
 
 			console.log(`Tracer job ${args["job-id"]} has been deleted.`);
-		} catch (error) {
-			handleError(error, { domain: "Tracer" });
-		}
+		});
 	});
 
 export const tracerCommand = app
