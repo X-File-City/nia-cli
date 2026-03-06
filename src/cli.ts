@@ -64,6 +64,7 @@ const main = app
 	.use(
 		skillPlugin({
 			version: pkg.version,
+			defaultScope: "global",
 		}),
 	);
 
