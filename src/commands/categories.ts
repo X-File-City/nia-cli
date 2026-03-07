@@ -238,10 +238,6 @@ const assignCommand = app
 		const categoryId = args["category-id"];
 		const isUnassign = categoryId === "null";
 
-		const message = isUnassign
-			? "Removing category from source..."
-			: "Assigning category...";
-
 		await withErrorHandling({ domain: "Category" }, async () => {
 			await createSdk({ apiKey: flags["api-key"] });
 
