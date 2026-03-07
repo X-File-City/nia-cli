@@ -45,7 +45,7 @@
 		"@crustjs/crust": "0.0.17",
 		"@crustjs/plugins": "0.0.15",
 		"@crustjs/prompts": "^0.0.8",
-		"@crustjs/skills": "^0.0.14",
+		"@crustjs/skills": "^0.0.15",
 		"@crustjs/store": "^0.0.4",
 		"@crustjs/style": "^0.0.4",
 		"@types/bun": "^1.3.10",
