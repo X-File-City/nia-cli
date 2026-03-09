@@ -1,5 +1,5 @@
 import type { StyleInstance } from "@crustjs/style";
-import { createStyle, stripAnsi, table as styleTable } from "@crustjs/style";
+import { createStyle, table as styleTable } from "@crustjs/style";
 
 /**
  * Output format modes.
@@ -303,9 +303,3 @@ function formatValue(value: unknown): string {
 export function createFormatter(flags: FormatterOptions = {}): Formatter {
 	return new Formatter(flags);
 }
-
-/**
- * Strip all ANSI escape codes from a string.
- * Re-exported for convenience.
- */
-export { stripAnsi };

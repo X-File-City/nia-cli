@@ -33,7 +33,7 @@ const updateStore = createStore({
 	},
 });
 
-const cache: UpdateNotifierCacheAdapter = {
+const cacheAdaptor: UpdateNotifierCacheAdapter = {
 	read: async () => updateStore.read(),
 	write: async (state) =>
 		updateStore.write({
@@ -57,7 +57,15 @@ const main = app
 	.command(datasetsCommand)
 	.command(categoriesCommand)
 	.command(usageCommand)
-	.use(updateNotifierPlugin({ currentVersion: pkg.version, cache }))
+	.use(
+		updateNotifierPlugin({
+			packageName: pkg.name,
+			currentVersion: pkg.version,
+			cache: {
+				adapter: cacheAdaptor,
+			},
+		}),
+	)
 	.use(versionPlugin(pkg.version))
 	.use(helpPlugin())
 	.use(autoCompletePlugin({ mode: "help" }))
