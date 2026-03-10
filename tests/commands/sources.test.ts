@@ -8,6 +8,9 @@ import {
 
 // --- Mock SDK and low-level services ---
 
+const mockPromptInput = mock(() => Promise.resolve(""));
+const mockPromptSelect = mock(() => Promise.resolve("documentation"));
+
 const mockSourcesCreate = mock(() =>
 	Promise.resolve({
 		id: "src-123",
@@ -87,6 +90,11 @@ const mockRenameDataSource = mock(() =>
 	}),
 );
 
+mock.module("@crustjs/prompts", () => ({
+	input: mockPromptInput,
+	select: mockPromptSelect,
+}));
+
 mock.module("nia-ai-ts", () => ({
 	NiaSDK: class {
 		search = {};
@@ -114,6 +122,10 @@ mock.module("nia-ai-ts", () => ({
 
 // --- Import after mocking ---
 
+import {
+	buildDocumentationSourceCreateRequest,
+	sourcesCommand,
+} from "../../src/commands/sources.ts";
 import { createSdk } from "../../src/services/sdk.ts";
 
 describe("sources commands", () => {
@@ -137,6 +149,9 @@ describe("sources commands", () => {
 		mockUpdateSource.mockClear();
 		mockDeleteSource.mockClear();
 		mockRenameDataSource.mockClear();
+		mockPromptInput.mockClear();
+		mockPromptSelect.mockClear();
+		process.exitCode = 0;
 	});
 
 	afterEach(() => {
@@ -149,6 +164,29 @@ describe("sources commands", () => {
 	});
 
 	describe("index (sources.create)", () => {
+		test("builds a documentation request and leaves name inference to the API by default", () => {
+			expect(
+				buildDocumentationSourceCreateRequest({
+					url: "https://docs.example.com",
+					branch: "main",
+					focus: "API reference only",
+					extractBranding: true,
+					maxDepth: 10,
+					checkLlmsTxt: false,
+					onlyMainContent: true,
+				}),
+			).toEqual({
+				type: "documentation",
+				url: "https://docs.example.com",
+				branch: "main",
+				focus_instructions: "API reference only",
+				extract_branding: true,
+				max_depth: 10,
+				check_llms_txt: false,
+				only_main_content: true,
+			});
+		});
+
 		test("calls sdk.sources.create with url", async () => {
 			const sdk = await createSdk();
 
@@ -209,6 +247,41 @@ describe("sources commands", () => {
 			expect(result.id).toBe("src-123");
 			expect(result.type).toBe("documentation");
 			expect(result.status).toBe("indexing");
+		});
+
+		test("does not require prompts when URL is provided in non-interactive mode", async () => {
+			const originalLog = console.log;
+			const originalError = console.error;
+			const originalIsTTY = process.stdin.isTTY;
+
+			console.log = (() => {}) as typeof console.log;
+			console.error = (() => {}) as typeof console.error;
+
+			Object.defineProperty(process.stdin, "isTTY", {
+				value: false,
+				configurable: true,
+			});
+
+			try {
+				await sourcesCommand.execute({
+					argv: ["index", "https://docs.example.com"],
+				});
+
+				expect(process.exitCode).toBe(0);
+				expect(mockPromptInput).not.toHaveBeenCalled();
+				expect(mockPromptSelect).not.toHaveBeenCalled();
+				expect(mockSourcesCreate).toHaveBeenCalledWith({
+					type: "documentation",
+					url: "https://docs.example.com",
+				});
+			} finally {
+				Object.defineProperty(process.stdin, "isTTY", {
+					value: originalIsTTY,
+					configurable: true,
+				});
+				console.log = originalLog;
+				console.error = originalError;
+			}
 		});
 	});
 

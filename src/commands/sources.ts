@@ -1,5 +1,5 @@
-import { input, select } from "@crustjs/prompts";
-import type { GrepRequest } from "nia-ai-ts";
+import { input } from "@crustjs/prompts";
+import type { GrepRequest, SourceCreateRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService, V2ApiSourcesService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
@@ -18,6 +18,10 @@ const SOURCE_TYPES = [
 ] as const;
 
 type SourceType = (typeof SOURCE_TYPES)[number];
+type DocumentationSourceCreateRequest = SourceCreateRequest & {
+	type: "documentation";
+	extract_branding?: boolean;
+};
 
 /**
  * Validate a source type flag value.
@@ -32,6 +36,79 @@ function validateSourceType(type: string | undefined): SourceType | undefined {
 		`Invalid source type: "${type}". Allowed: ${SOURCE_TYPES.join(", ")}`,
 	);
 	process.exit(1);
+}
+
+function validateIndexUrl(url: string): string {
+	try {
+		new URL(url);
+		return url;
+	} catch {
+		throw new Error(
+			"Please provide a valid URL (for example, https://docs.example.com).",
+		);
+	}
+}
+
+async function resolveIndexUrl(url: string | undefined): Promise<string> {
+	if (url) {
+		return validateIndexUrl(url);
+	}
+
+	if (!process.stdin.isTTY) {
+		throw new Error("URL is required when stdin is not a TTY.");
+	}
+
+	return input({
+		message: "URL to index:",
+		validate: (value: string) => {
+			try {
+				validateIndexUrl(value);
+				return true;
+			} catch (error) {
+				return error instanceof Error ? error.message : String(error);
+			}
+		},
+	});
+}
+
+export function buildDocumentationSourceCreateRequest(input: {
+	url: string;
+	name?: string;
+	branch?: string;
+	focus?: string;
+	extractBranding?: boolean;
+	maxDepth?: number;
+	checkLlmsTxt?: boolean;
+	onlyMainContent?: boolean;
+}): DocumentationSourceCreateRequest {
+	const request: DocumentationSourceCreateRequest = {
+		type: "documentation",
+		url: input.url,
+	};
+
+	if (input.name) {
+		request.display_name = input.name;
+	}
+	if (input.branch) {
+		request.branch = input.branch;
+	}
+	if (input.focus) {
+		request.focus_instructions = input.focus;
+	}
+	if (input.extractBranding !== undefined) {
+		request.extract_branding = input.extractBranding;
+	}
+	if (input.maxDepth !== undefined) {
+		request.max_depth = input.maxDepth;
+	}
+	if (input.checkLlmsTxt !== undefined) {
+		request.check_llms_txt = input.checkLlmsTxt;
+	}
+	if (input.onlyMainContent !== undefined) {
+		request.only_main_content = input.onlyMainContent;
+	}
+
+	return request;
 }
 
 // --- Subcommands ---
@@ -78,69 +155,23 @@ const indexCommand = app
 	})
 	.run(async ({ args, flags }) => {
 		const fmt = createFormatter({ color: flags.color });
-
-		// Interactive mode: prompt for missing required arg and optional fields
-		const url = await input({
-			message: "URL to index:",
-			initial: args.url,
-			validate: (v: string) => {
-				try {
-					new URL(v);
-					return true;
-				} catch {
-					return "Please enter a valid URL (e.g., https://docs.example.com)";
-				}
-			},
-		});
-
-		const displayName =
-			flags.name ||
-			(await input({ message: "Display name (optional):" })) ||
-			undefined;
-
-		const sourceType = await select({
-			message: "Source type:",
-			choices: [
-				{ label: "Documentation", value: "documentation" as const },
-				{ label: "Repository", value: "repository" as const },
-				{ label: "Research Paper", value: "research_paper" as const },
-				{ label: "HuggingFace Dataset", value: "huggingface_dataset" as const },
-			],
-		});
+		const url = await resolveIndexUrl(args.url);
 
 		await withErrorHandling({ domain: "Source" }, async () => {
 			const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-			const params: Record<string, unknown> = {
-				url,
-			};
-
-			if (displayName) {
-				params.display_name = displayName;
-			}
-			if (sourceType) {
-				params.type = sourceType;
-			}
-			if (flags.branch) {
-				params.branch = flags.branch;
-			}
-			if (flags.focus) {
-				params.focus_instructions = flags.focus;
-			}
-			if (flags["extract-branding"] !== undefined) {
-				params.extract_branding = flags["extract-branding"];
-			}
-			if (flags["max-depth"] !== undefined) {
-				params.max_depth = flags["max-depth"];
-			}
-			if (flags["check-llms-txt"] !== undefined) {
-				params.check_llms_txt = flags["check-llms-txt"];
-			}
-			if (flags["only-main-content"] !== undefined) {
-				params.only_main_content = flags["only-main-content"];
-			}
-
-			const result = await sdk.sources.create(params);
+			const result = await sdk.sources.create(
+				buildDocumentationSourceCreateRequest({
+					url,
+					name: flags.name,
+					branch: flags.branch,
+					focus: flags.focus,
+					extractBranding: flags["extract-branding"],
+					maxDepth: flags["max-depth"],
+					checkLlmsTxt: flags["check-llms-txt"],
+					onlyMainContent: flags["only-main-content"],
+				}),
+			);
 
 			fmt.output(result);
 		});

@@ -8,7 +8,7 @@
         "@biomejs/biome": "^2.4.6",
         "@changesets/cli": "^2.30.0",
         "@crustjs/core": "0.0.13",
-        "@crustjs/crust": "0.0.17",
+        "@crustjs/crust": "0.0.20",
         "@crustjs/plugins": "0.0.16",
         "@crustjs/prompts": "^0.0.9",
         "@crustjs/skills": "^0.0.16",
@@ -77,7 +77,19 @@
 
     "@crustjs/core": ["@crustjs/core@0.0.13", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-kAjSL68kjEdO68uGQVWn6RQwaFFx17skogokyTF3UutF7WZepMhzQ7Zhw4Q5joKrVZJjCcSkRkDYzb6bye/Rgg=="],
 
-    "@crustjs/crust": ["@crustjs/crust@0.0.17", "", { "dependencies": { "@crustjs/core": "0.0.11", "@crustjs/plugins": "0.0.14", "@crustjs/style": "0.0.4" }, "peerDependencies": { "typescript": "^5" }, "bin": { "crust": "dist/cli" } }, "sha512-y59RsIXfqV7aBfsO9YGJNheYkPxm3Vi7PdpLnkvZWwU+S9QuOqYvDS1xghwN1KulcZAh8MX20ID/68keaNIzaw=="],
+    "@crustjs/crust": ["@crustjs/crust@0.0.20", "", { "optionalDependencies": { "@crustjs/crust-darwin-arm64": "0.0.20", "@crustjs/crust-darwin-x64": "0.0.20", "@crustjs/crust-linux-arm64": "0.0.20", "@crustjs/crust-linux-x64": "0.0.20", "@crustjs/crust-windows-arm64": "0.0.20", "@crustjs/crust-windows-x64": "0.0.20" }, "bin": { "crust": "bin/crust" } }, "sha512-b461stOgG8kyX3N/7D2mLcobNjmvURs+n6efNshdguLc9s/fCUEv/6tEwTALhppjgUfHzeCOEY8kXBDRusG60g=="],
+
+    "@crustjs/crust-darwin-arm64": ["@crustjs/crust-darwin-arm64@0.0.20", "", { "os": "darwin", "cpu": "arm64", "bin": { "crust": "bin/crust-bun-darwin-arm64" } }, "sha512-lNlkG3Qxl2OARae6aYgw8Cg7Jl6oJ6YS0QIcloQK1s/ChICXt0llcg3ofLxofT9bWIgWlAwPQmjWjaNVG5hnnA=="],
+
+    "@crustjs/crust-darwin-x64": ["@crustjs/crust-darwin-x64@0.0.20", "", { "os": "darwin", "cpu": "x64", "bin": { "crust": "bin/crust-bun-darwin-x64" } }, "sha512-IMMohck6zJ2f6ktoj3wLke45h3S4pNq4mTESZV6wF1xgOBETlgpAAx0abDalgRSxGhJzM09ELpHgSKO2EbXLpQ=="],
+
+    "@crustjs/crust-linux-arm64": ["@crustjs/crust-linux-arm64@0.0.20", "", { "os": "linux", "cpu": "arm64", "bin": { "crust": "bin/crust-bun-linux-arm64" } }, "sha512-zeCas/WLArvD1lfjNSt6/HlFSMwYEVOPx1GZWTLvgXuhAhCUK258/gFXUmA8l3CZQEWvAJN1hcpBlkWu256pEA=="],
+
+    "@crustjs/crust-linux-x64": ["@crustjs/crust-linux-x64@0.0.20", "", { "os": "linux", "cpu": "x64", "bin": { "crust": "bin/crust-bun-linux-x64-baseline" } }, "sha512-uQpAwJGd6C2pofCYFNPrzMe4/y8Gwc3ZlQxO3o9yaMxIUr/CBRdY1bOtl2L3Vmc4bn5Ob5IAP6pM9YNIhmJPJQ=="],
+
+    "@crustjs/crust-windows-arm64": ["@crustjs/crust-windows-arm64@0.0.20", "", { "os": "win32", "cpu": "arm64", "bin": { "crust": "bin/crust-bun-windows-arm64.exe" } }, "sha512-rxfqonLXjYd6WSWXaR7K8gjzq6ezMNfVo6XNB7INMSSQA8cVbuxXL9v1czR5ocq3c+s4Fr9hjTe6jQ021Pp5Mw=="],
+
+    "@crustjs/crust-windows-x64": ["@crustjs/crust-windows-x64@0.0.20", "", { "os": "win32", "cpu": "x64", "bin": { "crust": "bin/crust-bun-windows-x64-baseline.exe" } }, "sha512-VOzdEO+5OZ/ROVk7szcHgTpfXorvulp3psk9qgLvy13DJBj1wMFB3pc9Zc8CGuJVjLKZx4o6yMRVQyGd8GlwZg=="],
 
     "@crustjs/plugins": ["@crustjs/plugins@0.0.16", "", { "dependencies": { "@crustjs/style": "0.0.5" }, "peerDependencies": { "@crustjs/core": "0.0.13", "typescript": "^5" } }, "sha512-Y3MuwpHxPEutEqBzpR8sLuG3z61BRPDiWDOQppw1M2xaEI/RTTfuYRVfPF58NGrcKSRFFDn8vfty+rUdkacnwg=="],
 
@@ -254,12 +266,6 @@
     "universalify": ["universalify@0.1.2", "", {}, "sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg=="],
 
     "which": ["which@2.0.2", "", { "dependencies": { "isexe": "^2.0.0" }, "bin": { "node-which": "./bin/node-which" } }, "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA=="],
-
-    "@crustjs/crust/@crustjs/core": ["@crustjs/core@0.0.11", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-CHq4ASiurj7Cacj5y+kEe/th6eH8S3f7pqVj9FcmPkuTt8507SO8xCbHfyKqBwLD4E+5pwmHUbtZ9LXLY8e9Bw=="],
-
-    "@crustjs/crust/@crustjs/plugins": ["@crustjs/plugins@0.0.14", "", { "dependencies": { "@crustjs/style": "0.0.4" }, "peerDependencies": { "@crustjs/core": "0.0.11", "typescript": "^5" } }, "sha512-ami1TVueAq0yO4dNe9/2bYV/BNIlaNQ67l+5hHDdrzDheQxqvs7MsZ93Yu/ZEkbnWaHzQ9zAZrbfiE7V8tJkkg=="],
-
-    "@crustjs/crust/@crustjs/style": ["@crustjs/style@0.0.4", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-yCpXARz8+i8FBceu6dCAxf1ebc53E0bSyWXLeop2GD1RtbVpS2i6p8QmQOdTGB1zdadYpf6V+HRFoz//AlQ0ew=="],
 
     "@manypkg/find-root/@types/node": ["@types/node@12.20.55", "", {}, "sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ=="],
 
