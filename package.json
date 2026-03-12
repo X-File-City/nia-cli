@@ -1,5 +1,5 @@
 {
-	"name": "nia-cli",
+	"name": "@nozomioai/nia",
 	"version": "0.0.4",
 	"type": "module",
 	"description": "CLI for the Nia — search code, docs, and research from the terminal",
