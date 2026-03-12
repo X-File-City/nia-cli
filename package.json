@@ -32,11 +32,12 @@
 	},
 	"scripts": {
 		"dev": "bun run src/cli.ts",
-		"build": "crust build",
+		"build": "crust build --package",
 		"start": "./dist/cli",
 		"check:types": "tsc --noEmit",
 		"test": "bun test",
-		"check": "biome check ."
+		"check": "biome check .",
+		"publish": "crust publish"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.6",
