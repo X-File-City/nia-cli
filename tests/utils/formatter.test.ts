@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { stripAnsi } from "@crustjs/style";
 import {
 	createFormatter,
 	Formatter,
@@ -145,7 +144,7 @@ describe("Formatter", () => {
 				{ name: "Bob", age: "25" },
 			];
 			const result = formatter.formatTable(rows);
-			const plain = stripAnsi(result);
+			const plain = Bun.stripANSI(result);
 
 			// Should contain header and data
 			expect(plain).toContain("Name");
@@ -159,7 +158,7 @@ describe("Formatter", () => {
 		test("uses explicit columns when provided", () => {
 			const rows = [{ name: "Alice", age: "30", email: "alice@test.com" }];
 			const result = formatter.formatTable(rows, ["name", "email"]);
-			const plain = stripAnsi(result);
+			const plain = Bun.stripANSI(result);
 
 			expect(plain).toContain("Name");
 			expect(plain).toContain("Email");
@@ -173,7 +172,7 @@ describe("Formatter", () => {
 			const longValue = "a".repeat(100);
 			const rows = [{ value: longValue }];
 			const result = formatter.formatTable(rows);
-			const plain = stripAnsi(result);
+			const plain = Bun.stripANSI(result);
 
 			// The cell value should be truncated (MAX_CELL_WIDTH is 60)
 			// The table itself has borders, headers, and separators adding to total length
@@ -185,7 +184,7 @@ describe("Formatter", () => {
 		test("capitalizes column headers", () => {
 			const rows = [{ firstName: "Alice" }];
 			const result = formatter.formatTable(rows);
-			const plain = stripAnsi(result);
+			const plain = Bun.stripANSI(result);
 
 			// camelCase should be split: "firstName" → "First Name"
 			expect(plain).toContain("First Name");
@@ -230,14 +229,14 @@ describe("Formatter", () => {
 
 		test("formats flat object with key-value pairs", () => {
 			const result = formatter.formatText({ name: "test", count: 3 });
-			const plain = stripAnsi(result);
+			const plain = Bun.stripANSI(result);
 			expect(plain).toContain("name: test");
 			expect(plain).toContain("count: 3");
 		});
 
 		test("formats nested objects with indentation", () => {
 			const result = formatter.formatText({ outer: { inner: "value" } });
-			const plain = stripAnsi(result);
+			const plain = Bun.stripANSI(result);
 			expect(plain).toContain("outer:");
 			expect(plain).toContain("inner: value");
 		});
@@ -261,7 +260,7 @@ describe("Formatter", () => {
 				{ id: "ghi789", name: "No Status" },
 			];
 			const result = formatter.formatList(items);
-			const plain = stripAnsi(result);
+			const plain = Bun.stripANSI(result);
 
 			expect(plain).toContain("abc123");
 			expect(plain).toContain("My Source");
@@ -276,7 +275,7 @@ describe("Formatter", () => {
 		test("truncates long IDs", () => {
 			const items = [{ id: "very-long-identifier-value-here", name: "Test" }];
 			const result = formatter.formatList(items);
-			const plain = stripAnsi(result);
+			const plain = Bun.stripANSI(result);
 
 			// ID should be truncated to 12 chars
 			expect(plain).toContain("very-long...");
@@ -336,7 +335,7 @@ describe("Formatter output method", () => {
 		const fmt = new Formatter({ output: "table", color: false });
 		fmt.output([{ name: "Alice", age: "30" }]);
 		expect(logOutput.length).toBe(1);
-		const plain = stripAnsi(logOutput[0] as string);
+		const plain = Bun.stripANSI(logOutput[0] as string);
 		expect(plain).toContain("Alice");
 	});
 
@@ -344,7 +343,7 @@ describe("Formatter output method", () => {
 		const fmt = new Formatter({ output: "table", color: false });
 		fmt.output({ name: "single" });
 		expect(logOutput.length).toBe(1);
-		const plain = stripAnsi(logOutput[0] as string);
+		const plain = Bun.stripANSI(logOutput[0] as string);
 		expect(plain).toContain("single");
 	});
 });

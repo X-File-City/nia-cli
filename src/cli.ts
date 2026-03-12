@@ -22,9 +22,10 @@ import { searchCommand } from "./commands/search";
 import { sourcesCommand } from "./commands/sources";
 import { tracerCommand } from "./commands/tracer";
 import { usageCommand } from "./commands/usage";
+import { APP_NAME } from "./services/config.ts";
 
 const updateStore = createStore({
-	dirPath: stateDir(pkg.name),
+	dirPath: stateDir(APP_NAME),
 	name: "update-notifier",
 	fields: {
 		lastCheckedAt: { type: "number", default: 0 },
