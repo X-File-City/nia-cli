@@ -1,3 +1,4 @@
+import { annotate } from "@crustjs/skills";
 import type {
 	GitHubGlobRequest,
 	GitHubReadRequest,
@@ -165,85 +166,91 @@ const readCommand = app
 		});
 	});
 
-const searchCommand = app
-	.sub("search")
-	.meta({
-		description:
-			"Search code in a GitHub repository (rate limited to 10 requests/minute by GitHub)",
-	})
-	.args([
-		{
-			name: "repo",
-			type: "string",
-			description: "Repository in owner/repo format (e.g., vercel/next.js)",
-			required: true,
-		},
-		{
-			name: "query",
-			type: "string",
-			description: "Code search query",
-			required: true,
-		},
-	] as const)
-	.flags({
-		"per-page": {
-			type: "number",
-			description: "Results per page",
-		},
-		page: {
-			type: "number",
-			description: "Page number",
-		},
-	})
-	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+const searchCommand = annotate(
+	app
+		.sub("search")
+		.meta({
+			description:
+				"Search code in a GitHub repository (rate limited to 10 requests/minute by GitHub)",
+		})
+		.args([
+			{
+				name: "repo",
+				type: "string",
+				description: "Repository in owner/repo format (e.g., vercel/next.js)",
+				required: true,
+			},
+			{
+				name: "query",
+				type: "string",
+				description: "Code search query",
+				required: true,
+			},
+		] as const)
+		.flags({
+			"per-page": {
+				type: "number",
+				description: "Results per page",
+			},
+			page: {
+				type: "number",
+				description: "Page number",
+			},
+		})
+		.run(async ({ args, flags }) => {
+			const fmt = createFormatter({ color: flags.color });
 
-		await withErrorHandling({ domain: "GitHub" }, async () => {
-			await createSdk({ apiKey: flags["api-key"] });
+			await withErrorHandling({ domain: "GitHub" }, async () => {
+				await createSdk({ apiKey: flags["api-key"] });
 
-			const payload: GitHubSearchRequest = {
-				query: args.query,
-				repository: args.repo,
-			};
+				const payload: GitHubSearchRequest = {
+					query: args.query,
+					repository: args.repo,
+				};
 
-			if (flags["per-page"] !== undefined) {
-				payload.per_page = flags["per-page"];
-			}
-			if (flags.page !== undefined) {
-				payload.page = flags.page;
-			}
+				if (flags["per-page"] !== undefined) {
+					payload.per_page = flags["per-page"];
+				}
+				if (flags.page !== undefined) {
+					payload.page = flags.page;
+				}
 
-			const result =
-				await GithubSearchService.githubCodeSearchV2GithubSearchPost(payload);
+				const result =
+					await GithubSearchService.githubCodeSearchV2GithubSearchPost(payload);
 
-			// In text mode, display search results with file paths and matched lines
-			const data = result as Record<string, unknown>;
-			const items = data.items ?? data.results ?? data.matches;
-			if (Array.isArray(items)) {
-				if (items.length === 0) {
-					console.log("No matching code found.");
-				} else {
-					for (const item of items) {
-						const entry = item as Record<string, unknown>;
-						const path = entry.path ?? entry.file ?? entry.name ?? "";
-						console.log(`${path}`);
-						if (entry.text_matches && Array.isArray(entry.text_matches)) {
-							for (const match of entry.text_matches as Array<
-								Record<string, unknown>
-							>) {
-								if (match.fragment) {
-									console.log(`  ${match.fragment}`);
+				// In text mode, display search results with file paths and matched lines
+				const data = result as Record<string, unknown>;
+				const items = data.items ?? data.results ?? data.matches;
+				if (Array.isArray(items)) {
+					if (items.length === 0) {
+						console.log("No matching code found.");
+					} else {
+						for (const item of items) {
+							const entry = item as Record<string, unknown>;
+							const path = entry.path ?? entry.file ?? entry.name ?? "";
+							console.log(`${path}`);
+							if (entry.text_matches && Array.isArray(entry.text_matches)) {
+								for (const match of entry.text_matches as Array<
+									Record<string, unknown>
+								>) {
+									if (match.fragment) {
+										console.log(`  ${match.fragment}`);
+									}
 								}
 							}
 						}
+						console.log(`\n${items.length} result(s) found`);
 					}
-					console.log(`\n${items.length} result(s) found`);
+				} else {
+					fmt.output(result);
 				}
-			} else {
-				fmt.output(result);
-			}
-		});
-	});
+			});
+		}),
+	[
+		"Rate limited to 10 requests/minute by GitHub.",
+		"For indexed repository search, use `nia repos grep` instead (faster and unlimited).",
+	],
+);
 
 const treeCommand = app
 	.sub("tree")
@@ -312,12 +319,19 @@ const treeCommand = app
 		});
 	});
 
-export const githubCommand = app
-	.sub("github")
-	.meta({
-		description: "Live search and browse any GitHub repo without indexing",
-	})
-	.command(globCommand)
-	.command(readCommand)
-	.command(searchCommand)
-	.command(treeCommand);
+export const githubCommand = annotate(
+	app
+		.sub("github")
+		.meta({
+			description: "Live search and browse any GitHub repo without indexing",
+		})
+		.command(globCommand)
+		.command(readCommand)
+		.command(searchCommand)
+		.command(treeCommand),
+	[
+		"Live GitHub access without requiring indexing. Good for quick lookups.",
+		"For indexed repo operations (faster, richer features), use `nia repos` instead.",
+		"Code search is rate limited to 10 req/min by GitHub. Use `nia repos grep` for indexed repos.",
+	],
+);

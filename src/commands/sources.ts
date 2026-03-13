@@ -1,4 +1,5 @@
 import { input } from "@crustjs/prompts";
+import { annotate } from "@crustjs/skills";
 import type { GrepRequest, SourceCreateRequest } from "nia-ai-ts";
 import { V2ApiDataSourcesService, V2ApiSourcesService } from "nia-ai-ts";
 import { app } from "../app.ts";
@@ -113,69 +114,80 @@ export function buildDocumentationSourceCreateRequest(input: {
 
 // --- Subcommands ---
 
-const indexCommand = app
-	.sub("index")
-	.meta({ description: "Index a documentation URL or website as a source" })
-	.args([
-		{
-			name: "url",
-			type: "string",
-			description: "URL to index (prompted interactively if omitted in a TTY)",
-		},
-	] as const)
-	.flags({
-		name: {
-			type: "string",
-			description: "Display name for the source",
-		},
-		branch: {
-			type: "string",
-			description: "Git branch to index",
-		},
-		focus: {
-			type: "string",
-			description: "Focus instructions for LLM filtering",
-		},
-		"extract-branding": {
-			type: "boolean",
-			description: "Extract branding information",
-		},
-		"max-depth": {
-			type: "number",
-			description: "Maximum crawl depth (default: 20)",
-		},
-		"check-llms-txt": {
-			type: "boolean",
-			description: "Check for llms.txt file (default: true)",
-		},
-		"only-main-content": {
-			type: "boolean",
-			description: "Extract only main content, skip navigation/footer",
-		},
-	})
-	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
-		const url = await resolveIndexUrl(args.url);
+const indexCommand = annotate(
+	app
+		.sub("index")
+		.meta({
+			description: "Index a documentation URL or website as a source",
+		})
+		.args([
+			{
+				name: "url",
+				type: "string",
+				description:
+					"URL to index (prompted interactively if omitted in a TTY)",
+			},
+		] as const)
+		.flags({
+			name: {
+				type: "string",
+				description: "Display name for the source",
+			},
+			branch: {
+				type: "string",
+				description: "Git branch to index",
+			},
+			focus: {
+				type: "string",
+				description: "Focus instructions for LLM filtering",
+			},
+			"extract-branding": {
+				type: "boolean",
+				description: "Extract branding information",
+			},
+			"max-depth": {
+				type: "number",
+				description: "Maximum crawl depth (default: 20)",
+			},
+			"check-llms-txt": {
+				type: "boolean",
+				description: "Check for llms.txt file (default: true)",
+			},
+			"only-main-content": {
+				type: "boolean",
+				description: "Extract only main content, skip navigation/footer",
+			},
+		})
+		.run(async ({ args, flags }) => {
+			const fmt = createFormatter({ color: flags.color });
+			const url = await resolveIndexUrl(args.url);
 
-		await withErrorHandling({ domain: "Source" }, async () => {
-			const sdk = await createSdk({ apiKey: flags["api-key"] });
+			await withErrorHandling({ domain: "Source" }, async () => {
+				const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-			const result = await sdk.sources.create(
-				buildDocumentationSourceCreateRequest({
-					url,
-					name: flags.name,
-					branch: flags.branch,
-					focus: flags.focus,
-					extractBranding: flags["extract-branding"],
-					maxDepth: flags["max-depth"],
-					checkLlmsTxt: flags["check-llms-txt"],
-					onlyMainContent: flags["only-main-content"],
-				}),
-			);
+				const result = await sdk.sources.create(
+					buildDocumentationSourceCreateRequest({
+						url,
+						name: flags.name,
+						branch: flags.branch,
+						focus: flags.focus,
+						extractBranding: flags["extract-branding"],
+						maxDepth: flags["max-depth"],
+						checkLlmsTxt: flags["check-llms-txt"],
+						onlyMainContent: flags["only-main-content"],
+					}),
+				);
 
-			fmt.output(result);
-		});
-	});
+				fmt.output(result);
+			});
+		}),
+	[
+		"Always index the root link (e.g., `https://docs.stripe.com`) to scrape all pages.",
+		"Indexing takes 1-5 minutes. Check status with `nia sources list`.",
+		"Use `--focus` to provide LLM instructions for filtering relevant content.",
+		"Use `--only-main-content` to skip navigation, headers, and footers.",
+	],
+);
 
 const listCommand = app
 	.sub("list")
@@ -263,37 +275,43 @@ const getCommand = app
 		});
 	});
 
-const resolveCommand = app
-	.sub("resolve")
-	.meta({ description: "Resolve a source by name, URL, or slug" })
-	.args([
-		{
-			name: "identifier",
-			type: "string",
-			description: "Source identifier (name, URL, or slug)",
-			required: true,
-		},
-	] as const)
-	.flags({
-		type: {
-			type: "string",
-			description:
-				"Source type hint: repository, documentation, research_paper, huggingface_dataset",
-		},
-	})
-	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+const resolveCommand = annotate(
+	app
+		.sub("resolve")
+		.meta({ description: "Resolve a source by name, URL, or slug" })
+		.args([
+			{
+				name: "identifier",
+				type: "string",
+				description: "Source identifier (name, URL, or slug)",
+				required: true,
+			},
+		] as const)
+		.flags({
+			type: {
+				type: "string",
+				description:
+					"Source type hint: repository, documentation, research_paper, huggingface_dataset",
+			},
+		})
+		.run(async ({ args, flags }) => {
+			const fmt = createFormatter({ color: flags.color });
 
-		const sourceType = validateSourceType(flags.type);
+			const sourceType = validateSourceType(flags.type);
 
-		await withErrorHandling({ domain: "Source" }, async () => {
-			const sdk = await createSdk({ apiKey: flags["api-key"] });
+			await withErrorHandling({ domain: "Source" }, async () => {
+				const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-			const result = await sdk.sources.resolve(args.identifier, sourceType);
+				const result = await sdk.sources.resolve(args.identifier, sourceType);
 
-			fmt.output(result);
-		});
-	});
+				fmt.output(result);
+			});
+		}),
+	[
+		"Accepts UUID, display name, or URL as the identifier.",
+		"Use `--type` to narrow the lookup when names are ambiguous across source types.",
+	],
+);
 
 const updateCommand = app
 	.sub("update")
@@ -709,18 +727,26 @@ const lsCommand = app
 
 // --- Parent command ---
 
-export const sourcesCommand = app
-	.sub("sources")
-	.meta({ description: "Manage indexed documentation and data sources" })
-	.command(indexCommand)
-	.command(listCommand)
-	.command(getCommand)
-	.command(resolveCommand)
-	.command(updateCommand)
-	.command(deleteCommand)
-	.command(syncCommand)
-	.command(renameCommand)
-	.command(readCommand)
-	.command(grepCommand)
-	.command(treeCommand)
-	.command(lsCommand);
+export const sourcesCommand = annotate(
+	app
+		.sub("sources")
+		.meta({ description: "Manage indexed documentation and data sources" })
+		.command(indexCommand)
+		.command(listCommand)
+		.command(getCommand)
+		.command(resolveCommand)
+		.command(updateCommand)
+		.command(deleteCommand)
+		.command(syncCommand)
+		.command(renameCommand)
+		.command(readCommand)
+		.command(grepCommand)
+		.command(treeCommand)
+		.command(lsCommand),
+	[
+		"Manages documentation, research papers, and HuggingFace datasets as indexed data sources.",
+		"Most commands accept flexible identifiers: UUID, display name, or URL.",
+		"Use `list` to check what's already indexed before indexing new sources.",
+		"Use `tree` and `ls` to explore source structure, then `read` and `grep` for content.",
+	],
+);

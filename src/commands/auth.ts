@@ -1,4 +1,5 @@
 import { password } from "@crustjs/prompts";
+import { annotate } from "@crustjs/skills";
 import { V2ApiService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import {
@@ -158,9 +159,16 @@ export function resolveApiKeySource(
 	return "none";
 }
 
-export const authCommand = app
-	.sub("auth")
-	.meta({ description: "Authenticate with the Nia platform" })
-	.command(loginCommand)
-	.command(logoutCommand)
-	.command(statusCommand);
+export const authCommand = annotate(
+	app
+		.sub("auth")
+		.meta({ description: "Authenticate with the Nia platform" })
+		.command(loginCommand)
+		.command(logoutCommand)
+		.command(statusCommand),
+	[
+		"Run `nia auth login` to authenticate interactively, or `nia auth login --api-key <key>` for CI.",
+		"The `NIA_API_KEY` environment variable can also be used and takes precedence over stored config.",
+		"Use `nia auth status` to check current authentication state and plan info.",
+	],
+);

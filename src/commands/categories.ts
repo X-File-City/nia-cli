@@ -1,3 +1,4 @@
+import { annotate } from "@crustjs/skills";
 import type {
 	CategoryAssignRequest,
 	routes__v2__categories__CategoryCreate,
@@ -258,11 +259,17 @@ const assignCommand = app
 		});
 	});
 
-export const categoriesCommand = app
-	.sub("categories")
-	.meta({ description: "Create and manage source categories" })
-	.command(listCommand)
-	.command(createCommand)
-	.command(updateCommand)
-	.command(deleteCommand)
-	.command(assignCommand);
+export const categoriesCommand = annotate(
+	app
+		.sub("categories")
+		.meta({ description: "Create and manage source categories" })
+		.command(listCommand)
+		.command(createCommand)
+		.command(updateCommand)
+		.command(deleteCommand)
+		.command(assignCommand),
+	[
+		"Organize indexed sources into categories for better management.",
+		"Use `assign` to tag a source with a category, or pass `null` as the category ID to unassign.",
+	],
+);

@@ -1,3 +1,4 @@
+import { annotate } from "@crustjs/skills";
 import type { CodeGrepRequest, RepositoryRequest } from "nia-ai-ts";
 import { V2ApiRepositoriesService } from "nia-ai-ts";
 import { app } from "../app.ts";
@@ -7,66 +8,73 @@ import { createFormatter } from "../utils/formatter.ts";
 
 // --- Subcommands ---
 
-const indexCommand = app
-	.sub("index")
-	.meta({ description: "Index a GitHub repository" })
-	.args([
-		{
-			name: "repo",
-			type: "string",
-			description: "Repository in owner/repo format (e.g., vercel/ai)",
-			required: true,
-		},
-	] as const)
-	.flags({
-		branch: {
-			type: "string",
-			short: "b",
-			description:
-				"Branch to index (defaults to the repository's default branch)",
-		},
-		ref: {
-			type: "string",
-			description:
-				"Git ref to index (branch, tag, or commit SHA). Takes precedence over --branch",
-		},
-		name: {
-			type: "string",
-			description: "Custom display name for the repository",
-		},
-		private: {
-			type: "boolean",
-			description: "Index privately (don't add to global pool)",
-		},
-	})
-	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+const indexCommand = annotate(
+	app
+		.sub("index")
+		.meta({ description: "Index a GitHub repository" })
+		.args([
+			{
+				name: "repo",
+				type: "string",
+				description: "Repository in owner/repo format (e.g., vercel/ai)",
+				required: true,
+			},
+		] as const)
+		.flags({
+			branch: {
+				type: "string",
+				short: "b",
+				description:
+					"Branch to index (defaults to the repository's default branch)",
+			},
+			ref: {
+				type: "string",
+				description:
+					"Git ref to index (branch, tag, or commit SHA). Takes precedence over --branch",
+			},
+			name: {
+				type: "string",
+				description: "Custom display name for the repository",
+			},
+			private: {
+				type: "boolean",
+				description: "Index privately (don't add to global pool)",
+			},
+		})
+		.run(async ({ args, flags }) => {
+			const fmt = createFormatter({ color: flags.color });
 
-		await withErrorHandling({ domain: "Repository" }, async () => {
-			await createSdk({ apiKey: flags["api-key"] });
+			await withErrorHandling({ domain: "Repository" }, async () => {
+				await createSdk({ apiKey: flags["api-key"] });
 
-			const requestBody: RepositoryRequest = {
-				repository: args.repo,
-			};
+				const requestBody: RepositoryRequest = {
+					repository: args.repo,
+				};
 
-			if (flags.branch) {
-				requestBody.branch = flags.branch;
-			}
-			if (flags.ref) {
-				requestBody.ref = flags.ref;
-			}
-			if (flags.private !== undefined) {
-				requestBody.add_as_global_source = !flags.private;
-			}
+				if (flags.branch) {
+					requestBody.branch = flags.branch;
+				}
+				if (flags.ref) {
+					requestBody.ref = flags.ref;
+				}
+				if (flags.private !== undefined) {
+					requestBody.add_as_global_source = !flags.private;
+				}
 
-			const result =
-				await V2ApiRepositoriesService.indexRepositoryV2V2RepositoriesPost(
-					requestBody,
-				);
+				const result =
+					await V2ApiRepositoriesService.indexRepositoryV2V2RepositoriesPost(
+						requestBody,
+					);
 
-			fmt.output(result);
-		});
-	});
+				fmt.output(result);
+			});
+		}),
+	[
+		"Indexing takes 1-5 minutes. Use `nia repos status` to check progress.",
+		"Use `--private` to keep the repository private (not added to global pool).",
+		"Repos are added to the global pool by default, making them searchable by all users.",
+	],
+);
 
 const listCommand = app
 	.sub("list")
@@ -275,205 +283,225 @@ const readCommand = app
 		});
 	});
 
-const grepCommand = app
-	.sub("grep")
-	.meta({ description: "Search for a pattern in repository files" })
-	.args([
-		{
-			name: "repo-id",
-			type: "string",
-			description: "Repository ID",
-			required: true,
-		},
-		{
-			name: "pattern",
-			type: "string",
-			description: "Search pattern (regex or fixed string)",
-			required: true,
-		},
-	] as const)
-	.flags({
-		path: {
-			type: "string",
-			description: "Filter by file path prefix",
-		},
-		"case-sensitive": {
-			type: "boolean",
-			description: "Enable case-sensitive matching",
-		},
-		"whole-word": {
-			type: "boolean",
-			description: "Match whole words only",
-		},
-		"fixed-string": {
-			type: "boolean",
-			description: "Treat pattern as a literal string instead of regex",
-		},
-		"lines-before": {
-			type: "number",
-			description: "Number of context lines before each match",
-		},
-		"lines-after": {
-			type: "number",
-			description: "Number of context lines after each match",
-		},
-		"max-per-file": {
-			type: "number",
-			description: "Maximum matches per file",
-		},
-		"max-total": {
-			type: "number",
-			description: "Maximum total matches",
-		},
-		exhaustive: {
-			type: "boolean",
-			description: "Search all chunks for complete results (default: true)",
-		},
-		ref: {
-			type: "string",
-			description: "Git ref (branch, tag, or commit SHA)",
-		},
-	})
-	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+const grepCommand = annotate(
+	app
+		.sub("grep")
+		.meta({ description: "Search for a pattern in repository files" })
+		.args([
+			{
+				name: "repo-id",
+				type: "string",
+				description: "Repository ID",
+				required: true,
+			},
+			{
+				name: "pattern",
+				type: "string",
+				description: "Search pattern (regex or fixed string)",
+				required: true,
+			},
+		] as const)
+		.flags({
+			path: {
+				type: "string",
+				description: "Filter by file path prefix",
+			},
+			"case-sensitive": {
+				type: "boolean",
+				description: "Enable case-sensitive matching",
+			},
+			"whole-word": {
+				type: "boolean",
+				description: "Match whole words only",
+			},
+			"fixed-string": {
+				type: "boolean",
+				description: "Treat pattern as a literal string instead of regex",
+			},
+			"lines-before": {
+				type: "number",
+				description: "Number of context lines before each match",
+			},
+			"lines-after": {
+				type: "number",
+				description: "Number of context lines after each match",
+			},
+			"max-per-file": {
+				type: "number",
+				description: "Maximum matches per file",
+			},
+			"max-total": {
+				type: "number",
+				description: "Maximum total matches",
+			},
+			exhaustive: {
+				type: "boolean",
+				description: "Search all chunks for complete results (default: true)",
+			},
+			ref: {
+				type: "string",
+				description: "Git ref (branch, tag, or commit SHA)",
+			},
+		})
+		.run(async ({ args, flags }) => {
+			const fmt = createFormatter({ color: flags.color });
 
-		await withErrorHandling({ domain: "Repository" }, async () => {
-			await createSdk({ apiKey: flags["api-key"] });
+			await withErrorHandling({ domain: "Repository" }, async () => {
+				await createSdk({ apiKey: flags["api-key"] });
 
-			const requestBody: CodeGrepRequest = {
-				pattern: args.pattern,
-			};
+				const requestBody: CodeGrepRequest = {
+					pattern: args.pattern,
+				};
 
-			if (flags.path) {
-				requestBody.path = flags.path;
-			}
-			if (flags.ref) {
-				requestBody.ref = flags.ref;
-			}
-			if (flags["case-sensitive"] !== undefined) {
-				requestBody.case_sensitive = flags["case-sensitive"];
-			}
-			if (flags["whole-word"] !== undefined) {
-				requestBody.whole_word = flags["whole-word"];
-			}
-			if (flags["fixed-string"] !== undefined) {
-				requestBody.fixed_string = flags["fixed-string"];
-			}
-			if (flags["lines-before"] !== undefined) {
-				requestBody.B = flags["lines-before"];
-			}
-			if (flags["lines-after"] !== undefined) {
-				requestBody.A = flags["lines-after"];
-			}
-			if (flags["max-per-file"] !== undefined) {
-				requestBody.max_matches_per_file = flags["max-per-file"];
-			}
-			if (flags["max-total"] !== undefined) {
-				requestBody.max_total_matches = flags["max-total"];
-			}
-			if (flags.exhaustive !== undefined) {
-				requestBody.exhaustive = flags.exhaustive;
-			}
-
-			const result =
-				await V2ApiRepositoriesService.grepRepositoryV2V2RepositoriesRepositoryIdGrepPost(
-					args["repo-id"],
-					requestBody,
-				);
-
-			fmt.output(result);
-		});
-	});
-
-const treeCommand = app
-	.sub("tree")
-	.meta({ description: "View the file tree of an indexed repository" })
-	.args([
-		{
-			name: "repo-id",
-			type: "string",
-			description: "Repository ID",
-			required: true,
-		},
-	] as const)
-	.flags({
-		branch: {
-			type: "string",
-			short: "b",
-			description: "Branch name",
-		},
-		"include-paths": {
-			type: "string",
-			description: "Comma-separated path prefixes to include",
-		},
-		"exclude-paths": {
-			type: "string",
-			description: "Comma-separated path prefixes to exclude",
-		},
-		extensions: {
-			type: "string",
-			description: "Comma-separated file extensions to include (e.g., ts,js)",
-		},
-		"exclude-extensions": {
-			type: "string",
-			description: "Comma-separated file extensions to exclude",
-		},
-		"full-paths": {
-			type: "boolean",
-			description: "Show full file paths instead of tree structure",
-		},
-	})
-	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
-
-		await withErrorHandling({ domain: "Repository" }, async () => {
-			await createSdk({ apiKey: flags["api-key"] });
-
-			const result =
-				await V2ApiRepositoriesService.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet(
-					args["repo-id"],
-					flags.branch ?? undefined,
-					flags["include-paths"] ?? undefined,
-					flags["exclude-paths"] ?? undefined,
-					flags.extensions ?? undefined,
-					flags["exclude-extensions"] ?? undefined,
-					flags["full-paths"] ?? undefined,
-				);
-
-			// If there's a tree_text, show it directly for readability
-			if (result.tree_text) {
-				console.log(result.tree_text);
-
-				// Show stats summary if available
-				if (result.stats) {
-					const stats = result.stats as Record<string, unknown>;
-					const parts: string[] = [];
-					if (stats.total_files !== undefined) {
-						parts.push(`${stats.total_files} files`);
-					}
-					if (stats.total_directories !== undefined) {
-						parts.push(`${stats.total_directories} directories`);
-					}
-					if (parts.length > 0) {
-						console.log(`\n${parts.join(", ")}`);
-					}
+				if (flags.path) {
+					requestBody.path = flags.path;
 				}
-			} else {
+				if (flags.ref) {
+					requestBody.ref = flags.ref;
+				}
+				if (flags["case-sensitive"] !== undefined) {
+					requestBody.case_sensitive = flags["case-sensitive"];
+				}
+				if (flags["whole-word"] !== undefined) {
+					requestBody.whole_word = flags["whole-word"];
+				}
+				if (flags["fixed-string"] !== undefined) {
+					requestBody.fixed_string = flags["fixed-string"];
+				}
+				if (flags["lines-before"] !== undefined) {
+					requestBody.B = flags["lines-before"];
+				}
+				if (flags["lines-after"] !== undefined) {
+					requestBody.A = flags["lines-after"];
+				}
+				if (flags["max-per-file"] !== undefined) {
+					requestBody.max_matches_per_file = flags["max-per-file"];
+				}
+				if (flags["max-total"] !== undefined) {
+					requestBody.max_total_matches = flags["max-total"];
+				}
+				if (flags.exhaustive !== undefined) {
+					requestBody.exhaustive = flags.exhaustive;
+				}
+
+				const result =
+					await V2ApiRepositoriesService.grepRepositoryV2V2RepositoriesRepositoryIdGrepPost(
+						args["repo-id"],
+						requestBody,
+					);
+
 				fmt.output(result);
-			}
-		});
-	});
+			});
+		}),
+	[
+		"Supports regex patterns by default. Use `--fixed-string` for literal string matching.",
+		"Use `--path` to narrow search to a specific directory or file prefix.",
+		"Use `--ref` to search a specific branch, tag, or commit.",
+	],
+);
+
+const treeCommand = annotate(
+	app
+		.sub("tree")
+		.meta({ description: "View the file tree of an indexed repository" })
+		.args([
+			{
+				name: "repo-id",
+				type: "string",
+				description: "Repository ID",
+				required: true,
+			},
+		] as const)
+		.flags({
+			branch: {
+				type: "string",
+				short: "b",
+				description: "Branch name",
+			},
+			"include-paths": {
+				type: "string",
+				description: "Comma-separated path prefixes to include",
+			},
+			"exclude-paths": {
+				type: "string",
+				description: "Comma-separated path prefixes to exclude",
+			},
+			extensions: {
+				type: "string",
+				description: "Comma-separated file extensions to include (e.g., ts,js)",
+			},
+			"exclude-extensions": {
+				type: "string",
+				description: "Comma-separated file extensions to exclude",
+			},
+			"full-paths": {
+				type: "boolean",
+				description: "Show full file paths instead of tree structure",
+			},
+		})
+		.run(async ({ args, flags }) => {
+			const fmt = createFormatter({ color: flags.color });
+
+			await withErrorHandling({ domain: "Repository" }, async () => {
+				await createSdk({ apiKey: flags["api-key"] });
+
+				const result =
+					await V2ApiRepositoriesService.getRepositoryTreeV2V2RepositoriesRepositoryIdTreeGet(
+						args["repo-id"],
+						flags.branch ?? undefined,
+						flags["include-paths"] ?? undefined,
+						flags["exclude-paths"] ?? undefined,
+						flags.extensions ?? undefined,
+						flags["exclude-extensions"] ?? undefined,
+						flags["full-paths"] ?? undefined,
+					);
+
+				// If there's a tree_text, show it directly for readability
+				if (result.tree_text) {
+					console.log(result.tree_text);
+
+					// Show stats summary if available
+					if (result.stats) {
+						const stats = result.stats as Record<string, unknown>;
+						const parts: string[] = [];
+						if (stats.total_files !== undefined) {
+							parts.push(`${stats.total_files} files`);
+						}
+						if (stats.total_directories !== undefined) {
+							parts.push(`${stats.total_directories} directories`);
+						}
+						if (parts.length > 0) {
+							console.log(`\n${parts.join(", ")}`);
+						}
+					}
+				} else {
+					fmt.output(result);
+				}
+			});
+		}),
+	[
+		"Use tree first to understand the repository structure before reading or grepping files.",
+		"Filter with `--extensions` and `--include-paths`/`--exclude-paths` to reduce noise.",
+	],
+);
 
 // --- Parent command ---
 
-export const reposCommand = app
-	.sub("repos")
-	.meta({ description: "Manage indexed repositories" })
-	.command(indexCommand)
-	.command(listCommand)
-	.command(statusCommand)
-	.command(deleteCommand)
-	.command(renameCommand)
-	.command(readCommand)
-	.command(grepCommand)
-	.command(treeCommand);
+export const reposCommand = annotate(
+	app
+		.sub("repos")
+		.meta({ description: "Manage indexed repositories" })
+		.command(indexCommand)
+		.command(listCommand)
+		.command(statusCommand)
+		.command(deleteCommand)
+		.command(renameCommand)
+		.command(readCommand)
+		.command(grepCommand)
+		.command(treeCommand),
+	[
+		"Use for managing and searching GitHub repositories that have been indexed by Nia.",
+		"For live GitHub access without indexing, use `nia github` instead.",
+		"Prefer `tree` before `read`/`grep` to understand repository structure.",
+	],
+);

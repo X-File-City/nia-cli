@@ -1,3 +1,4 @@
+import { annotate } from "@crustjs/skills";
 import type {
 	PackageSearchGrepRequest,
 	PackageSearchHybridRequest,
@@ -306,9 +307,16 @@ const readCommand = app
 		});
 	});
 
-export const packagesCommand = app
-	.sub("packages")
-	.meta({ description: "Search npm, PyPI, crates.io, and Go packages" })
-	.command(grepCommand)
-	.command(hybridCommand)
-	.command(readCommand);
+export const packagesCommand = annotate(
+	app
+		.sub("packages")
+		.meta({ description: "Search npm, PyPI, crates.io, and Go packages" })
+		.command(grepCommand)
+		.command(hybridCommand)
+		.command(readCommand),
+	[
+		"Search package source code without local installation. Registries: npm, py_pi, crates_io, golang_proxy, ruby_gems.",
+		"Use `grep` first to find matches, then `read` for full file context with line ranges.",
+		"Use `hybrid` for semantic + keyword search when grep patterns are too broad.",
+	],
+);

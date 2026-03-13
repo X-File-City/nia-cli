@@ -1,4 +1,5 @@
 import { input } from "@crustjs/prompts";
+import { annotate } from "@crustjs/skills";
 import type { OracleSessionChatRequest } from "nia-ai-ts";
 import { DefaultService, OpenAPI } from "nia-ai-ts";
 import { app } from "../app.ts";
@@ -10,91 +11,98 @@ import { renderStream, renderStreamEvent } from "../utils/streaming.ts";
 
 // --- Subcommands ---
 
-const jobCommand = app
-	.sub("job")
-	.meta({ description: "Create a new Oracle research job" })
-	.args([
-		{
-			name: "query",
-			type: "string",
-			description:
-				"Research question (prompted interactively if omitted in a TTY)",
-		},
-	] as const)
-	.flags({
-		repos: {
-			type: "string",
-			description: "Repository names to search (comma-separated)",
-		},
-		docs: {
-			type: "string",
-			description: "Documentation source names to search (comma-separated)",
-		},
-		"output-format": {
-			type: "string",
-			description: "Optional structure hint for the output",
-		},
-		model: {
-			type: "string",
-			description:
-				"Model to use (e.g., claude-opus-4-6, claude-sonnet-4-5-20250929)",
-		},
-	})
-	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+const jobCommand = annotate(
+	app
+		.sub("job")
+		.meta({ description: "Create a new Oracle research job" })
+		.args([
+			{
+				name: "query",
+				type: "string",
+				description:
+					"Research question (prompted interactively if omitted in a TTY)",
+			},
+		] as const)
+		.flags({
+			repos: {
+				type: "string",
+				description: "Repository names to search (comma-separated)",
+			},
+			docs: {
+				type: "string",
+				description: "Documentation source names to search (comma-separated)",
+			},
+			"output-format": {
+				type: "string",
+				description: "Optional structure hint for the output",
+			},
+			model: {
+				type: "string",
+				description:
+					"Model to use (e.g., claude-opus-4-6, claude-sonnet-4-5-20250929)",
+			},
+		})
+		.run(async ({ args, flags }) => {
+			const fmt = createFormatter({ color: flags.color });
 
-		// Interactive mode: prompt for missing required arg and optional fields
-		const query = await input({
-			message: "Research question to investigate:",
-			initial: args.query,
-			validate: (v) => v.trim().length > 0 || "Query is required",
-		});
+			// Interactive mode: prompt for missing required arg and optional fields
+			const query = await input({
+				message: "Research question to investigate:",
+				initial: args.query,
+				validate: (v) => v.trim().length > 0 || "Query is required",
+			});
 
-		const repos =
-			flags.repos ||
-			(await input({
-				message: "Repositories to search (comma-separated, optional):",
-			})) ||
-			undefined;
+			const repos =
+				flags.repos ||
+				(await input({
+					message: "Repositories to search (comma-separated, optional):",
+				})) ||
+				undefined;
 
-		const outputFormat =
-			flags["output-format"] ||
-			(await input({
-				message: "Output format hint (optional):",
-			})) ||
-			undefined;
+			const outputFormat =
+				flags["output-format"] ||
+				(await input({
+					message: "Output format hint (optional):",
+				})) ||
+				undefined;
 
-		await withErrorHandling({ domain: "Oracle" }, async () => {
-			const sdk = await createSdk({ apiKey: flags["api-key"] });
+			await withErrorHandling({ domain: "Oracle" }, async () => {
+				const sdk = await createSdk({ apiKey: flags["api-key"] });
 
-			const payload: Record<string, unknown> = {
-				query,
-			};
+				const payload: Record<string, unknown> = {
+					query,
+				};
 
-			if (repos) {
-				payload.repositories = repos.split(",").map((s) => s.trim());
-			}
-			if (flags.docs) {
-				payload.data_sources = flags.docs.split(",").map((s) => s.trim());
-			}
-			if (outputFormat) {
-				payload.output_format = outputFormat;
-			}
-			if (flags.model) {
-				payload.model = flags.model;
-			}
+				if (repos) {
+					payload.repositories = repos.split(",").map((s) => s.trim());
+				}
+				if (flags.docs) {
+					payload.data_sources = flags.docs.split(",").map((s) => s.trim());
+				}
+				if (outputFormat) {
+					payload.output_format = outputFormat;
+				}
+				if (flags.model) {
+					payload.model = flags.model;
+				}
 
-			const result = await sdk.oracle.createJob(payload);
+				const result = await sdk.oracle.createJob(payload);
 
-			fmt.output(result);
+				fmt.output(result);
 
-			// Print hint for streaming in text/table mode
-			const jobId = (result as Record<string, unknown>)?.job_id;
-			if (jobId) {
-				console.log(`\nUse \`nia oracle stream ${jobId}\` to watch progress`);
-			}
-		});
-	});
+				// Print hint for streaming in text/table mode
+				const jobId = (result as Record<string, unknown>)?.job_id;
+				if (jobId) {
+					console.log(`\nUse \`nia oracle stream ${jobId}\` to watch progress`);
+				}
+			});
+		}),
+	[
+		"Recommended async approach for Oracle research. Creates a job and returns immediately.",
+		"Use `nia oracle stream <job-id>` to watch real-time progress after creating a job.",
+		"Scope the research by passing `--repos` and/or `--docs` for more focused results.",
+	],
+);
 
 const statusCommand = app
 	.sub("status")
@@ -405,89 +413,95 @@ const messagesCommand = app
 		});
 	});
 
-const chatCommand = app
-	.sub("chat")
-	.meta({
-		description: "Send a follow-up message to an Oracle research session",
-	})
-	.args([
-		{
-			name: "session-id",
-			type: "string",
-			description: "Oracle session ID",
-			required: true,
-		},
-		{
-			name: "message",
-			type: "string",
-			description: "Follow-up question or message",
-			required: true,
-		},
-	] as const)
-	.run(async ({ args, flags }) => {
-		await withErrorHandling({ domain: "Oracle" }, async () => {
-			await createSdk({ apiKey: flags["api-key"] });
+const chatCommand = annotate(
+	app
+		.sub("chat")
+		.meta({
+			description: "Send a follow-up message to an Oracle research session",
+		})
+		.args([
+			{
+				name: "session-id",
+				type: "string",
+				description: "Oracle session ID",
+				required: true,
+			},
+			{
+				name: "message",
+				type: "string",
+				description: "Follow-up question or message",
+				required: true,
+			},
+		] as const)
+		.run(async ({ args, flags }) => {
+			await withErrorHandling({ domain: "Oracle" }, async () => {
+				await createSdk({ apiKey: flags["api-key"] });
 
-			// The DefaultService chat endpoint returns a CancelablePromise,
-			// but the actual response is an SSE stream. Use manual fetch
-			// with SSE parsing similar to sdk.oracle.streamJob().
-			const baseUrl = await resolveBaseUrl();
-			const token = OpenAPI.TOKEN;
+				// The DefaultService chat endpoint returns a CancelablePromise,
+				// but the actual response is an SSE stream. Use manual fetch
+				// with SSE parsing similar to sdk.oracle.streamJob().
+				const baseUrl = await resolveBaseUrl();
+				const token = OpenAPI.TOKEN;
 
-			const response = await fetch(
-				`${baseUrl}/oracle/sessions/${encodeURIComponent(args["session-id"])}/chat/stream`,
-				{
-					method: "POST",
-					headers: {
-						Authorization: `Bearer ${token}`,
-						"Content-Type": "application/json",
+				const response = await fetch(
+					`${baseUrl}/oracle/sessions/${encodeURIComponent(args["session-id"])}/chat/stream`,
+					{
+						method: "POST",
+						headers: {
+							Authorization: `Bearer ${token}`,
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							message: args.message,
+						} satisfies OracleSessionChatRequest),
 					},
-					body: JSON.stringify({
-						message: args.message,
-					} satisfies OracleSessionChatRequest),
-				},
-			);
-
-			if (!response.ok || !response.body) {
-				const err = new Error(
-					`Chat request failed with status ${response.status}`,
 				);
-				(err as Error & { status: number }).status = response.status;
-				throw err;
-			}
 
-			const reader = response.body.getReader();
-			const decoder = new TextDecoder();
-
-			// Parse SSE stream manually
-			let buffer = "";
-
-			while (true) {
-				const { done, value } = await reader.read();
-				if (done) break;
-
-				buffer += decoder.decode(value, { stream: true });
-				const lines = buffer.split("\n");
-				buffer = lines.pop() ?? "";
-
-				for (const line of lines) {
-					if (!line.startsWith("data: ")) continue;
-					const payload = line.slice(6).trim();
-					if (!payload) continue;
-
-					try {
-						const event = JSON.parse(payload) as Record<string, unknown>;
-						renderStreamEvent(event, { color: flags.color });
-					} catch {}
+				if (!response.ok || !response.body) {
+					const err = new Error(
+						`Chat request failed with status ${response.status}`,
+					);
+					(err as Error & { status: number }).status = response.status;
+					throw err;
 				}
-			}
 
-			// Print newline after stream completes for clean terminal state
-			if (process.stdout.isTTY) {
-				console.log();
-			}
-		});
-	});
+				const reader = response.body.getReader();
+				const decoder = new TextDecoder();
+
+				// Parse SSE stream manually
+				let buffer = "";
+
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) break;
+
+					buffer += decoder.decode(value, { stream: true });
+					const lines = buffer.split("\n");
+					buffer = lines.pop() ?? "";
+
+					for (const line of lines) {
+						if (!line.startsWith("data: ")) continue;
+						const payload = line.slice(6).trim();
+						if (!payload) continue;
+
+						try {
+							const event = JSON.parse(payload) as Record<string, unknown>;
+							renderStreamEvent(event, { color: flags.color });
+						} catch {}
+					}
+				}
+
+				// Print newline after stream completes for clean terminal state
+				if (process.stdout.isTTY) {
+					console.log();
+				}
+			});
+		}),
+	[
+		"Send follow-up questions to an existing Oracle research session.",
+		"Get the session ID from a completed job via `nia oracle status <job-id>`.",
+	],
+);
 
 const deleteSessionCommand = app
 	.sub("delete-session")
@@ -558,17 +572,23 @@ const oracleUsageCommand = app
 		});
 	});
 
-export const oracleCommand = app
-	.sub("oracle")
-	.meta({ description: "Run autonomous AI research jobs" })
-	.command(jobCommand)
-	.command(statusCommand)
-	.command(cancelCommand)
-	.command(jobsCommand)
-	.command(streamCommand)
-	.command(sessionsCommand)
-	.command(sessionCommand)
-	.command(messagesCommand)
-	.command(chatCommand)
-	.command(deleteSessionCommand)
-	.command(oracleUsageCommand);
+export const oracleCommand = annotate(
+	app
+		.sub("oracle")
+		.meta({ description: "Run autonomous AI research jobs" })
+		.command(jobCommand)
+		.command(statusCommand)
+		.command(cancelCommand)
+		.command(jobsCommand)
+		.command(streamCommand)
+		.command(sessionsCommand)
+		.command(sessionCommand)
+		.command(messagesCommand)
+		.command(chatCommand)
+		.command(deleteSessionCommand)
+		.command(oracleUsageCommand),
+	[
+		"Pro feature. Autonomous AI research that investigates questions across indexed sources.",
+		"Use `chat` to ask follow-up questions on completed research sessions.",
+	],
+);

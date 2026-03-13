@@ -1,3 +1,4 @@
+import { annotate } from "@crustjs/skills";
 import type { ContextShareRequest, ContextShareUpdateRequest } from "nia-ai-ts";
 import { V2ApiContextsService } from "nia-ai-ts";
 import { app } from "../app.ts";
@@ -559,13 +560,21 @@ const deleteCommand = app
 		});
 	});
 
-export const contextsCommand = app
-	.sub("contexts")
-	.meta({ description: "Save and search cross-agent contexts" })
-	.command(saveCommand)
-	.command(listCommand)
-	.command(searchCommand)
-	.command(semanticCommand)
-	.command(getCommand)
-	.command(updateCommand)
-	.command(deleteCommand);
+export const contextsCommand = annotate(
+	app
+		.sub("contexts")
+		.meta({ description: "Save and search cross-agent contexts" })
+		.command(saveCommand)
+		.command(listCommand)
+		.command(searchCommand)
+		.command(semanticCommand)
+		.command(getCommand)
+		.command(updateCommand)
+		.command(deleteCommand),
+	[
+		"Cross-agent context sharing. Save findings from one session to retrieve in another.",
+		"Use `save` to persist context with `--content -` to pipe content from stdin.",
+		"Use `semantic` for vector-based similarity search, `search` for text matching.",
+		"Memory types: `scratchpad` (temporary), `episodic` (session), `fact` (permanent), `procedural` (workflow).",
+	],
+);

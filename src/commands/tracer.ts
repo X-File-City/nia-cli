@@ -1,3 +1,4 @@
+import { annotate } from "@crustjs/skills";
 import type { TracerRequest } from "nia-ai-ts";
 import { GithubSearchService, OpenAPI } from "nia-ai-ts";
 import { app } from "../app.ts";
@@ -10,64 +11,72 @@ import { renderStreamEvent } from "../utils/streaming.ts";
 
 // --- Subcommands ---
 
-const runCommand = app
-	.sub("run")
-	.meta({ description: "Create a new Tracer code search job" })
-	.args([
-		{
-			name: "query",
-			type: "string",
-			description: "Research question to search for in GitHub repositories",
-			required: true,
-		},
-	] as const)
-	.flags({
-		repos: {
-			type: "string",
-			description:
-				"Repositories to search in owner/repo format (comma-separated)",
-		},
-		context: {
-			type: "string",
-			description: "Additional context for the search query",
-		},
-		model: {
-			type: "string",
-			description: "Model override (claude-opus-4-6 or claude-opus-4-6-1m)",
-		},
-	})
-	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+const runCommand = annotate(
+	app
+		.sub("run")
+		.meta({ description: "Create a new Tracer code search job" })
+		.args([
+			{
+				name: "query",
+				type: "string",
+				description: "Research question to search for in GitHub repositories",
+				required: true,
+			},
+		] as const)
+		.flags({
+			repos: {
+				type: "string",
+				description:
+					"Repositories to search in owner/repo format (comma-separated)",
+			},
+			context: {
+				type: "string",
+				description: "Additional context for the search query",
+			},
+			model: {
+				type: "string",
+				description: "Model override (claude-opus-4-6 or claude-opus-4-6-1m)",
+			},
+		})
+		.run(async ({ args, flags }) => {
+			const fmt = createFormatter({ color: flags.color });
 
-		await withErrorHandling({ domain: "Tracer" }, async () => {
-			await createSdk({ apiKey: flags["api-key"] });
+			await withErrorHandling({ domain: "Tracer" }, async () => {
+				await createSdk({ apiKey: flags["api-key"] });
 
-			const payload: TracerRequest = {
-				query: args.query,
-			};
+				const payload: TracerRequest = {
+					query: args.query,
+				};
 
-			if (flags.repos) {
-				payload.repositories = flags.repos.split(",").map((s) => s.trim());
-			}
-			if (flags.context) {
-				payload.context = flags.context;
-			}
-			if (flags.model) {
-				payload.model = flags.model;
-			}
+				if (flags.repos) {
+					payload.repositories = flags.repos.split(",").map((s) => s.trim());
+				}
+				if (flags.context) {
+					payload.context = flags.context;
+				}
+				if (flags.model) {
+					payload.model = flags.model;
+				}
 
-			const result =
-				await GithubSearchService.createTracerJobV2GithubTracerPost(payload);
+				const result =
+					await GithubSearchService.createTracerJobV2GithubTracerPost(payload);
 
-			fmt.output(result);
+				fmt.output(result);
 
-			// Print hint for streaming in text/table mode
-			const jobId = (result as Record<string, unknown>)?.job_id;
-			if (jobId) {
-				console.log(`\nUse \`nia tracer stream ${jobId}\` to watch progress`);
-			}
-		});
-	});
+				// Print hint for streaming in text/table mode
+				const jobId = (result as Record<string, unknown>)?.job_id;
+				if (jobId) {
+					console.log(`\nUse \`nia tracer stream ${jobId}\` to watch progress`);
+				}
+			});
+		}),
+	[
+		"Use when exploring unfamiliar repositories you haven't indexed.",
+		"Delegates to specialized sub-agents for faster, more thorough results.",
+		"Use `--context` to provide additional guidance for the search.",
+		"Use `nia tracer stream <job-id>` to watch real-time progress.",
+	],
+);
 
 const statusCommand = app
 	.sub("status")
@@ -282,11 +291,18 @@ const deleteCommand = app
 		});
 	});
 
-export const tracerCommand = app
-	.sub("tracer")
-	.meta({ description: "Autonomous GitHub code search without indexing" })
-	.command(runCommand)
-	.command(statusCommand)
-	.command(streamCommand)
-	.command(listCommand)
-	.command(deleteCommand);
+export const tracerCommand = annotate(
+	app
+		.sub("tracer")
+		.meta({ description: "Autonomous GitHub code search without indexing" })
+		.command(runCommand)
+		.command(statusCommand)
+		.command(streamCommand)
+		.command(listCommand)
+		.command(deleteCommand),
+	[
+		"Pro feature. Autonomous agent for searching GitHub repositories without indexing.",
+		"Use when exploring unfamiliar repos or searching code you haven't indexed.",
+		"For indexed repository operations, use `nia repos` instead.",
+	],
+);
