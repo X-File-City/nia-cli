@@ -14,6 +14,7 @@ import { categoriesCommand } from "./commands/categories";
 import { contextsCommand } from "./commands/contexts";
 import { datasetsCommand } from "./commands/datasets";
 import { githubCommand } from "./commands/github";
+import { localCommand } from "./commands/local";
 import { oracleCommand } from "./commands/oracle";
 import { packagesCommand } from "./commands/packages";
 import { papersCommand } from "./commands/papers";
@@ -54,6 +55,7 @@ const main = app
 	.command(contextsCommand)
 	.command(packagesCommand)
 	.command(githubCommand)
+	.command(localCommand)
 	.command(papersCommand)
 	.command(datasetsCommand)
 	.command(categoriesCommand)

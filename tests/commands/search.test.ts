@@ -172,6 +172,23 @@ describe("search commands", () => {
 			});
 		});
 
+		test("passes local_folders and category", async () => {
+			const { createSdk } = await import("../../src/services/sdk.ts");
+			const sdk = await createSdk();
+
+			await sdk.search.query({
+				messages: [{ role: "user", content: "test" }],
+				local_folders: ["vault", "src-123"],
+				category: "Work",
+			});
+
+			expect(mockQuery).toHaveBeenCalledWith({
+				messages: [{ role: "user", content: "test" }],
+				local_folders: ["vault", "src-123"],
+				category: "Work",
+			});
+		});
+
 		test("passes search_mode parameter", async () => {
 			const { createSdk } = await import("../../src/services/sdk.ts");
 			const sdk = await createSdk();
@@ -311,6 +328,56 @@ describe("search commands", () => {
 			}
 
 			expect(validCategories.includes("invalid")).toBe(false);
+		});
+	});
+
+	describe("search mode resolution", () => {
+		test("uses explicit mode when provided", async () => {
+			const { resolveQuerySearchMode } = await import(
+				"../../src/commands/search.ts"
+			);
+			expect(
+				resolveQuerySearchMode({
+					explicit: "repositories",
+					repos: "vercel/ai",
+					docs: "react-docs",
+				}),
+			).toBe("repositories");
+		});
+
+		test("returns repositories for repos-only queries", async () => {
+			const { resolveQuerySearchMode } = await import(
+				"../../src/commands/search.ts"
+			);
+			expect(resolveQuerySearchMode({ repos: "vercel/ai" })).toBe(
+				"repositories",
+			);
+		});
+
+		test("returns sources for docs-only queries", async () => {
+			const { resolveQuerySearchMode } = await import(
+				"../../src/commands/search.ts"
+			);
+			expect(resolveQuerySearchMode({ docs: "react-docs" })).toBe("sources");
+		});
+
+		test("returns sources for local-folder-only queries", async () => {
+			const { resolveQuerySearchMode } = await import(
+				"../../src/commands/search.ts"
+			);
+			expect(resolveQuerySearchMode({ localFolders: "vault" })).toBe("sources");
+		});
+
+		test("returns unified for mixed scopes", async () => {
+			const { resolveQuerySearchMode } = await import(
+				"../../src/commands/search.ts"
+			);
+			expect(
+				resolveQuerySearchMode({
+					repos: "vercel/ai",
+					localFolders: "vault",
+				}),
+			).toBe("unified");
 		});
 	});
 

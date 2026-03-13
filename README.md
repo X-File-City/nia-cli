@@ -43,6 +43,14 @@ nia repos list
 # Index documentation sources
 nia sources index https://docs.anthropic.com
 
+# Add and sync a local folder
+nia local add ~/dev/my-project
+nia local sync
+nia local watch
+
+# Search only local folders
+nia search query "Where is auth configured?" --local-folders my-project
+
 # Run autonomous research
 nia oracle create "Compare RAG evaluation frameworks"
 

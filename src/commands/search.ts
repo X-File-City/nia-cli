@@ -4,6 +4,28 @@ import { createSdk } from "../services/sdk.ts";
 import { withErrorHandling } from "../utils/errors.ts";
 import { createFormatter } from "../utils/formatter.ts";
 
+export function resolveQuerySearchMode(input: {
+	explicit?: string;
+	repos?: string;
+	docs?: string;
+	localFolders?: string;
+}): string {
+	if (input.explicit) {
+		return input.explicit;
+	}
+
+	const hasRepos = Boolean(input.repos?.trim());
+	const hasSources = Boolean(input.docs?.trim() || input.localFolders?.trim());
+
+	if (hasRepos && !hasSources) {
+		return "repositories";
+	}
+	if (!hasRepos && hasSources) {
+		return "sources";
+	}
+	return "unified";
+}
+
 const universalCommand = annotate(
 	app
 		.sub("universal")
@@ -65,7 +87,9 @@ const universalCommand = annotate(
 const queryCommand = annotate(
 	app
 		.sub("query")
-		.meta({ description: "Query indexed repositories and documentation" })
+		.meta({
+			description: "Query indexed repositories, sources, and local folders",
+		})
 		.args([
 			{
 				name: "query",
@@ -82,6 +106,14 @@ const queryCommand = annotate(
 			docs: {
 				type: "string",
 				description: "Documentation source names to search (comma-separated)",
+			},
+			"local-folders": {
+				type: "string",
+				description: "Local folder IDs or names to search (comma-separated)",
+			},
+			category: {
+				type: "string",
+				description: "Local folder category filter",
 			},
 			"search-mode": {
 				type: "string",
@@ -124,8 +156,19 @@ const queryCommand = annotate(
 				if (flags.docs) {
 					params.data_sources = flags.docs.split(",").map((s) => s.trim());
 				}
-				if (flags["search-mode"]) {
-					params.search_mode = flags["search-mode"];
+				if (flags["local-folders"]) {
+					params.local_folders = flags["local-folders"]
+						.split(",")
+						.map((s) => s.trim());
+				}
+				params.search_mode = resolveQuerySearchMode({
+					explicit: flags["search-mode"],
+					repos: flags.repos,
+					docs: flags.docs,
+					localFolders: flags["local-folders"],
+				});
+				if (flags.category) {
+					params.category = flags.category;
 				}
 				if (flags["max-tokens"] !== undefined) {
 					params.max_tokens = flags["max-tokens"];
@@ -149,8 +192,8 @@ const queryCommand = annotate(
 			});
 		}),
 	[
-		"Targeted search with AI response and sources. Pass repos and docs as comma-separated strings.",
-		"Search mode is auto-detected: `repositories` when only `--repos`, `sources` when only `--docs`, `unified` when both.",
+		"Targeted search with AI response and sources. Pass repos, docs, and local folders as comma-separated strings.",
+		"Search mode is auto-detected: `repositories` when only `--repos`, `sources` when only `--docs` or `--local-folders`, `unified` when mixed.",
 		"Use `--fast` for 100-500ms responses without LLM processing.",
 		"Use `--skip-llm` to return raw search results without AI synthesis.",
 	],
