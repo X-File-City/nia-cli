@@ -37,7 +37,7 @@
 		"check:types": "tsc --noEmit",
 		"test": "bun test",
 		"check": "biome check .",
-		"publish": "crust publish"
+		"publish": "crust build --package && crust publish && changeset tag"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.6",
