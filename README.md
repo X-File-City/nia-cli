@@ -87,3 +87,7 @@ bun run build
 # Run built CLI
 bun run start
 ```
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE).
