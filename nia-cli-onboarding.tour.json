@@ -62,7 +62,7 @@
     {
       "id": "step-2-entry-points",
       "title": "CLI Entry Points",
-      "description": "The CLI starts at src/cli.ts, which registers all 13+ commands as subcommands and sets up plugins (update notifier, version, help, auto-complete, and skill integration for LLM usage). Global flags like api-key, verbose, and color are defined in src/app.ts — separated to prevent circular imports between commands.",
+      "description": "The cli starts at src/cli.ts, which registers all 13+ commands as subcommands and sets up plugins (update notifier, version, help, auto-complete and skill integration for LLM usage). Global flags like api-key, verbose, and color are defined in src/app.ts — separated to prevent circular imports between commands.",
       "estimatedTime": 90,
       "focusDirectory": "src",
       "colorMode": "fileTypes",
