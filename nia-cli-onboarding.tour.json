@@ -12,7 +12,7 @@
     {
       "id": "step-1-overview",
       "title": "Welcome to Nia CLI",
-      "description": "Nia CLI (@nozomioai/nia) is a command-line interface for the Nia platform — a multi-source code search and research tool with autonomous research capabilities. The codebase is written in TypeScript, runs on Bun, and uses the Crust JS framework for CLI construction. Key areas: src/ for application code, tests/ for the test suite, and configuration files at the root.",
+      "description": "Nia CLI is a command-line interface for the Nia platform — a multi-source code search and research tool with autonomous research capabilities. The codebase is written in TypeScript, runs on Bun, and uses the Crust JS framework for CLI construction. Key areas: src/ for application code, tests/ for the test suite, and configuration files at the root.",
       "estimatedTime": 60,
       "colorMode": "fileTypes",
       "highlightLayers": [
@@ -62,7 +62,7 @@
     {
       "id": "step-2-entry-points",
       "title": "CLI Entry Points",
-      "description": "The CLI starts at src/cli.ts, which registers all 13+ commands as subcommands and sets up plugins (update notifier, version, help, auto-complete, and skill integration for LLM usage). Global flags like --api-key, --verbose, and --color are defined in src/app.ts — separated to prevent circular imports between commands.",
+      "description": "The CLI starts at src/cli.ts, which registers all 13+ commands as subcommands and sets up plugins (update notifier, version, help, auto-complete, and skill integration for LLM usage). Global flags like api-key, verbose, and color are defined in src/app.ts — separated to prevent circular imports between commands.",
       "estimatedTime": 90,
       "focusDirectory": "src",
       "colorMode": "fileTypes",
