@@ -143,7 +143,7 @@
     {
       "id": "step-4-services",
       "title": "Services Layer",
-      "description": "The services/ directory provides core infrastructure. config.ts manages API key resolution through a chain: CLI --api-key flag → NIA_API_KEY env var → ~/.config/nia/config.json. sdk.ts is a factory that creates configured NiaSDK instances. The local/ subdirectory is the most complex service — handling local folder synchronization with file watching, content extraction, batched uploads, and retry logic.",
+      "description": "The services/ directory provides core infrastructure. config.ts manages API key resolution through a chain: CLI --api-key flag → NIA_API_KEY env var → config/nia/config.json. sdk.ts is a factory that creates configured NiaSDK instances. The local/ subdirectory is the most complex service — handling local folder synchronization with file watching, content extraction, batched uploads, and retry logic.",
       "estimatedTime": 120,
       "focusDirectory": "src/services",
       "colorMode": "fileTypes",
