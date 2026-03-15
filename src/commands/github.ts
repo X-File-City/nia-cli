@@ -8,7 +8,7 @@ import { GithubSearchService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { withErrorHandling } from "../utils/errors.ts";
-import { createFormatter } from "../utils/formatter.ts";
+import { createOutput } from "../utils/output.ts";
 
 /**
  * Parse a "owner/repo" string into separate owner and repo parts.
@@ -53,7 +53,7 @@ const globCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		await withErrorHandling({ domain: "GitHub" }, async () => {
 			await createSdk({ apiKey: flags["api-key"] });
@@ -127,7 +127,7 @@ const readCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		await withErrorHandling({ domain: "GitHub" }, async () => {
 			await createSdk({ apiKey: flags["api-key"] });
@@ -198,7 +198,7 @@ const searchCommand = annotate(
 			},
 		})
 		.run(async ({ args, flags }) => {
-			const fmt = createFormatter({ color: flags.color });
+			const fmt = createOutput({ color: flags.color });
 
 			await withErrorHandling({ domain: "GitHub" }, async () => {
 				await createSdk({ apiKey: flags["api-key"] });
@@ -276,7 +276,7 @@ const treeCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		const { owner, repo } = parseOwnerRepo(args.repo);
 

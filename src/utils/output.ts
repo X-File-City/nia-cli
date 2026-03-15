@@ -7,9 +7,9 @@ import { createStyle, table as styleTable } from "@crustjs/style";
 export type OutputFormat = "json" | "table" | "text";
 
 /**
- * Options for creating a formatter instance.
+ * Options for creating an output helper.
  */
-export interface FormatterOptions {
+export interface OutputOptions {
 	/** Explicit output format. Overrides TTY auto-detection. */
 	output?: string;
 	/** Whether color output is enabled. */
@@ -19,7 +19,7 @@ export interface FormatterOptions {
 /**
  * Resolve the output format.
  *
- * For now, CLI output is always text.
+ * For now, CLI output is always text unless explicitly overridden.
  */
 export function resolveOutputFormat(output?: string): OutputFormat {
 	if (output) {
@@ -31,7 +31,6 @@ export function resolveOutputFormat(output?: string): OutputFormat {
 		) {
 			return normalized;
 		}
-		// Invalid format — fall through to default
 	}
 
 	return "text";
@@ -56,15 +55,13 @@ export function truncate(value: string, maxLength: number): string {
 }
 
 /**
- * Formatter provides output formatting with TTY-aware defaults.
- *
- * Instantiate via `createFormatter()` for each command invocation.
+ * Shared CLI output renderer.
  */
-export class Formatter {
+export class OutputRenderer {
 	readonly format: OutputFormat;
 	readonly style: StyleInstance;
 
-	constructor(options: FormatterOptions = {}) {
+	constructor(options: OutputOptions = {}) {
 		this.format = resolveOutputFormat(options.output);
 		this.style = createStyle({
 			mode: options.color === false ? "never" : "auto",
@@ -95,19 +92,13 @@ export class Formatter {
 			return this.style.dim("(no columns)");
 		}
 
-		// Build header labels — capitalize first letter
 		const headers = cols.map((col) => {
 			const label = col.replace(/([A-Z])/g, " $1").trim();
 			return this.style.bold(label.charAt(0).toUpperCase() + label.slice(1));
 		});
 
-		// Build data rows — convert values to strings and truncate
 		const dataRows = rows.map((row) =>
-			cols.map((col) => {
-				const value = row[col];
-				const str = formatValue(value);
-				return truncate(str, MAX_CELL_WIDTH);
-			}),
+			cols.map((col) => truncate(formatValue(row[col]), MAX_CELL_WIDTH)),
 		);
 
 		return styleTable(headers, dataRows, {
@@ -117,8 +108,6 @@ export class Formatter {
 
 	/**
 	 * Format data as human-friendly text output.
-	 *
-	 * Handles primitives, arrays, and nested objects with indentation.
 	 */
 	formatText(data: unknown, indent = 0): string {
 		const prefix = "  ".repeat(indent);
@@ -140,12 +129,10 @@ export class Formatter {
 				return `${prefix}${this.style.dim("(empty)")}`;
 			}
 
-			// If array of primitives, join them
 			if (data.every((item) => typeof item !== "object" || item === null)) {
 				return data.map((item) => `${prefix}- ${String(item)}`).join("\n");
 			}
 
-			// Array of objects — format each
 			return data
 				.map(
 					(item, i) => `${prefix}[${i}]\n${this.formatText(item, indent + 1)}`,
@@ -193,9 +180,6 @@ export class Formatter {
 
 	/**
 	 * Output data in the configured format.
-	 *
-	 * This is the main entry point for command output. It auto-selects
-	 * the formatting method based on the resolved output format.
 	 */
 	output(data: unknown, options?: { columns?: string[] }): void {
 		let result: string;
@@ -219,37 +203,22 @@ export class Formatter {
 		console.log(result);
 	}
 
-	/**
-	 * Print a success message.
-	 */
 	success(message: string): void {
 		console.log(this.style.green(message));
 	}
 
-	/**
-	 * Print a warning message.
-	 */
 	warn(message: string): void {
 		console.error(this.style.yellow(message));
 	}
 
-	/**
-	 * Print an error message.
-	 */
 	error(message: string): void {
 		console.error(this.style.red(message));
 	}
 
-	/**
-	 * Print an informational message (dimmed).
-	 */
 	info(message: string): void {
 		console.log(this.style.dim(message));
 	}
 
-	/**
-	 * Format a status string with color.
-	 */
 	private formatStatus(status: string): string {
 		const lower = status.toLowerCase();
 		switch (lower) {
@@ -298,8 +267,8 @@ function formatValue(value: unknown): string {
 }
 
 /**
- * Factory function to create a Formatter with resolved global flags.
+ * Factory function to create a shared output renderer.
  */
-export function createFormatter(flags: FormatterOptions = {}): Formatter {
-	return new Formatter(flags);
+export function createOutput(options: OutputOptions = {}): OutputRenderer {
+	return new OutputRenderer(options);
 }

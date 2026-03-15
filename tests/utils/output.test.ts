@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
-	createFormatter,
-	Formatter,
+	createOutput,
+	OutputRenderer,
 	resolveOutputFormat,
 	truncate,
-} from "../../src/utils/formatter.ts";
+} from "../../src/utils/output.ts";
 
 describe("resolveOutputFormat", () => {
 	test("returns 'json' when explicit output is 'json'", () => {
@@ -92,14 +92,12 @@ describe("truncate", () => {
 	});
 
 	test("handles maxLength of 3", () => {
-		// maxLength <= 3 slices without ellipsis to avoid "..." being the entire output
 		expect(truncate("hello", 3)).toBe("hel");
 	});
 });
 
-describe("Formatter", () => {
-	// Use color: false consistently to get predictable output without ANSI codes
-	const formatter = new Formatter({ output: "text", color: false });
+describe("OutputRenderer", () => {
+	const formatter = new OutputRenderer({ output: "text", color: false });
 
 	describe("formatJson", () => {
 		test("formats primitives as JSON", () => {
@@ -146,7 +144,6 @@ describe("Formatter", () => {
 			const result = formatter.formatTable(rows);
 			const plain = Bun.stripANSI(result);
 
-			// Should contain header and data
 			expect(plain).toContain("Name");
 			expect(plain).toContain("Age");
 			expect(plain).toContain("Alice");
@@ -164,7 +161,6 @@ describe("Formatter", () => {
 			expect(plain).toContain("Email");
 			expect(plain).toContain("Alice");
 			expect(plain).toContain("alice@test.com");
-			// 'age' column should NOT be in output
 			expect(plain).not.toContain("Age");
 		});
 
@@ -174,10 +170,7 @@ describe("Formatter", () => {
 			const result = formatter.formatTable(rows);
 			const plain = Bun.stripANSI(result);
 
-			// The cell value should be truncated (MAX_CELL_WIDTH is 60)
-			// The table itself has borders, headers, and separators adding to total length
 			expect(plain).toContain("...");
-			// The actual cell content should not contain the full 100 chars
 			expect(plain).not.toContain("a".repeat(61));
 		});
 
@@ -186,20 +179,17 @@ describe("Formatter", () => {
 			const result = formatter.formatTable(rows);
 			const plain = Bun.stripANSI(result);
 
-			// camelCase should be split: "firstName" → "First Name"
 			expect(plain).toContain("First Name");
 		});
 	});
 
 	describe("formatText", () => {
 		test("formats null as (none)", () => {
-			const result = formatter.formatText(null);
-			expect(result).toBe("(none)");
+			expect(formatter.formatText(null)).toBe("(none)");
 		});
 
 		test("formats undefined as (none)", () => {
-			const result = formatter.formatText(undefined);
-			expect(result).toBe("(none)");
+			expect(formatter.formatText(undefined)).toBe("(none)");
 		});
 
 		test("formats strings directly", () => {
@@ -219,8 +209,7 @@ describe("Formatter", () => {
 		});
 
 		test("formats array of primitives as bulleted list", () => {
-			const result = formatter.formatText(["a", "b", "c"]);
-			expect(result).toBe("- a\n- b\n- c");
+			expect(formatter.formatText(["a", "b", "c"])).toBe("- a\n- b\n- c");
 		});
 
 		test("formats empty object as (empty)", () => {
@@ -242,15 +231,13 @@ describe("Formatter", () => {
 		});
 
 		test("respects indent parameter", () => {
-			const result = formatter.formatText("hello", 2);
-			expect(result).toBe("    hello");
+			expect(formatter.formatText("hello", 2)).toBe("    hello");
 		});
 	});
 
 	describe("formatList", () => {
 		test("returns empty message for empty items", () => {
-			const result = formatter.formatList([]);
-			expect(result).toBe("(no items)");
+			expect(formatter.formatList([])).toBe("(no items)");
 		});
 
 		test("formats items with id, name, and optional status", () => {
@@ -277,30 +264,29 @@ describe("Formatter", () => {
 			const result = formatter.formatList(items);
 			const plain = Bun.stripANSI(result);
 
-			// ID should be truncated to 12 chars
 			expect(plain).toContain("very-long...");
 		});
 	});
 });
 
-describe("createFormatter", () => {
-	test("returns a Formatter instance", () => {
-		const fmt = createFormatter();
-		expect(fmt).toBeInstanceOf(Formatter);
+describe("createOutput", () => {
+	test("returns an OutputRenderer instance", () => {
+		const fmt = createOutput();
+		expect(fmt).toBeInstanceOf(OutputRenderer);
 	});
 
 	test("respects explicit output format", () => {
-		const fmt = createFormatter({ output: "json" });
+		const fmt = createOutput({ output: "json" });
 		expect(fmt.format).toBe("json");
 	});
 
 	test("respects color option", () => {
-		const fmt = createFormatter({ color: false });
+		const fmt = createOutput({ color: false });
 		expect(fmt.style.enabled).toBe(false);
 	});
 });
 
-describe("Formatter output method", () => {
+describe("OutputRenderer output method", () => {
 	let logOutput: string[];
 	const originalLog = console.log;
 
@@ -316,7 +302,7 @@ describe("Formatter output method", () => {
 	});
 
 	test("outputs JSON when format is json", () => {
-		const fmt = new Formatter({ output: "json", color: false });
+		const fmt = new OutputRenderer({ output: "json", color: false });
 		fmt.output({ name: "test" });
 		expect(logOutput.length).toBe(1);
 		const parsed = JSON.parse(logOutput[0] as string);
@@ -324,7 +310,7 @@ describe("Formatter output method", () => {
 	});
 
 	test("outputs text when format is text", () => {
-		const fmt = new Formatter({ output: "text", color: false });
+		const fmt = new OutputRenderer({ output: "text", color: false });
 		fmt.output({ name: "test" });
 		expect(logOutput.length).toBe(1);
 		expect(logOutput[0]).toContain("name");
@@ -332,7 +318,7 @@ describe("Formatter output method", () => {
 	});
 
 	test("outputs table when format is table", () => {
-		const fmt = new Formatter({ output: "table", color: false });
+		const fmt = new OutputRenderer({ output: "table", color: false });
 		fmt.output([{ name: "Alice", age: "30" }]);
 		expect(logOutput.length).toBe(1);
 		const plain = Bun.stripANSI(logOutput[0] as string);
@@ -340,7 +326,7 @@ describe("Formatter output method", () => {
 	});
 
 	test("wraps single object in array for table format", () => {
-		const fmt = new Formatter({ output: "table", color: false });
+		const fmt = new OutputRenderer({ output: "table", color: false });
 		fmt.output({ name: "single" });
 		expect(logOutput.length).toBe(1);
 		const plain = Bun.stripANSI(logOutput[0] as string);
@@ -348,7 +334,7 @@ describe("Formatter output method", () => {
 	});
 });
 
-describe("Formatter convenience methods", () => {
+describe("OutputRenderer convenience methods", () => {
 	let logOutput: string[];
 	let errOutput: string[];
 	const originalLog = console.log;
@@ -371,25 +357,25 @@ describe("Formatter convenience methods", () => {
 	});
 
 	test("success writes to stdout", () => {
-		const fmt = new Formatter({ color: false });
+		const fmt = new OutputRenderer({ color: false });
 		fmt.success("done");
 		expect(logOutput[0]).toBe("done");
 	});
 
 	test("warn writes to stderr", () => {
-		const fmt = new Formatter({ color: false });
+		const fmt = new OutputRenderer({ color: false });
 		fmt.warn("warning");
 		expect(errOutput[0]).toBe("warning");
 	});
 
 	test("error writes to stderr", () => {
-		const fmt = new Formatter({ color: false });
+		const fmt = new OutputRenderer({ color: false });
 		fmt.error("failure");
 		expect(errOutput[0]).toBe("failure");
 	});
 
 	test("info writes to stdout", () => {
-		const fmt = new Formatter({ color: false });
+		const fmt = new OutputRenderer({ color: false });
 		fmt.info("note");
 		expect(logOutput[0]).toBe("note");
 	});

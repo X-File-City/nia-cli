@@ -5,7 +5,7 @@ import { V2ApiDataSourcesService, V2ApiSourcesService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { withErrorHandling } from "../utils/errors.ts";
-import { createFormatter } from "../utils/formatter.ts";
+import { createOutput } from "../utils/output.ts";
 
 /**
  * Valid source type values accepted by the API.
@@ -159,7 +159,7 @@ const indexCommand = annotate(
 			},
 		})
 		.run(async ({ args, flags }) => {
-			const fmt = createFormatter({ color: flags.color });
+			const fmt = createOutput({ color: flags.color });
 			const url = await resolveIndexUrl(args.url);
 
 			await withErrorHandling({ domain: "Source" }, async () => {
@@ -220,7 +220,7 @@ const listCommand = app
 		},
 	})
 	.run(async ({ flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		const sourceType = validateSourceType(flags.type);
 
@@ -259,7 +259,7 @@ const getCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		const sourceType = validateSourceType(flags.type);
 
@@ -295,7 +295,7 @@ const resolveCommand = annotate(
 			},
 		})
 		.run(async ({ args, flags }) => {
-			const fmt = createFormatter({ color: flags.color });
+			const fmt = createOutput({ color: flags.color });
 
 			const sourceType = validateSourceType(flags.type);
 
@@ -340,7 +340,7 @@ const updateCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		const sourceType = validateSourceType(flags.type);
 
@@ -392,7 +392,7 @@ const deleteCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		const sourceType = validateSourceType(flags.type);
 
@@ -430,7 +430,7 @@ const syncCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		const sourceType = validateSourceType(flags.type);
 
@@ -478,7 +478,7 @@ const renameCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		await withErrorHandling({ domain: "Source" }, async () => {
 			await createSdk({ apiKey: flags["api-key"] });
@@ -534,7 +534,7 @@ const readCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		validateSourceType(flags.type);
 
@@ -609,7 +609,7 @@ const grepCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		validateSourceType(flags.type);
 
@@ -671,7 +671,7 @@ const treeCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		validateSourceType(flags.type);
 
@@ -710,7 +710,7 @@ const lsCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		await withErrorHandling({ domain: "Source" }, async () => {
 			await createSdk({ apiKey: flags["api-key"] });

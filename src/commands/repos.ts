@@ -4,7 +4,7 @@ import { V2ApiRepositoriesService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { withErrorHandling } from "../utils/errors.ts";
-import { createFormatter } from "../utils/formatter.ts";
+import { createOutput } from "../utils/output.ts";
 
 // --- Subcommands ---
 
@@ -42,7 +42,7 @@ const indexCommand = annotate(
 			},
 		})
 		.run(async ({ args, flags }) => {
-			const fmt = createFormatter({ color: flags.color });
+			const fmt = createOutput({ color: flags.color });
 
 			await withErrorHandling({ domain: "Repository" }, async () => {
 				await createSdk({ apiKey: flags["api-key"] });
@@ -98,7 +98,7 @@ const listCommand = app
 		},
 	})
 	.run(async ({ flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
 			await createSdk({ apiKey: flags["api-key"] });
@@ -127,7 +127,7 @@ const statusCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
 			await createSdk({ apiKey: flags["api-key"] });
@@ -177,7 +177,7 @@ const deleteCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
 			await createSdk({ apiKey: flags["api-key"] });
@@ -209,7 +209,7 @@ const renameCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
 			await createSdk({ apiKey: flags["api-key"] });
@@ -256,7 +256,7 @@ const readCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		await withErrorHandling({ domain: "Repository" }, async () => {
 			await createSdk({ apiKey: flags["api-key"] });
@@ -344,7 +344,7 @@ const grepCommand = annotate(
 			},
 		})
 		.run(async ({ args, flags }) => {
-			const fmt = createFormatter({ color: flags.color });
+			const fmt = createOutput({ color: flags.color });
 
 			await withErrorHandling({ domain: "Repository" }, async () => {
 				await createSdk({ apiKey: flags["api-key"] });
@@ -440,7 +440,7 @@ const treeCommand = annotate(
 			},
 		})
 		.run(async ({ args, flags }) => {
-			const fmt = createFormatter({ color: flags.color });
+			const fmt = createOutput({ color: flags.color });
 
 			await withErrorHandling({ domain: "Repository" }, async () => {
 				await createSdk({ apiKey: flags["api-key"] });

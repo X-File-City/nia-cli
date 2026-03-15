@@ -8,7 +8,7 @@ import { V2ApiCategoriesService, V2ApiDataSourcesService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { withErrorHandling } from "../utils/errors.ts";
-import { createFormatter } from "../utils/formatter.ts";
+import { createOutput } from "../utils/output.ts";
 
 // --- Subcommands ---
 
@@ -26,7 +26,7 @@ const listCommand = app
 		},
 	})
 	.run(async ({ flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		await withErrorHandling({ domain: "Category" }, async () => {
 			await createSdk({ apiKey: flags["api-key"] });
@@ -142,7 +142,7 @@ const updateCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		// Require at least one update field
 		if (!flags.name && !flags["hex-color"] && flags.order === undefined) {

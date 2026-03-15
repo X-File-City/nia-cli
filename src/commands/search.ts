@@ -2,7 +2,7 @@ import { annotate } from "@crustjs/skills";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { withErrorHandling } from "../utils/errors.ts";
-import { createFormatter } from "../utils/formatter.ts";
+import { createOutput } from "../utils/output.ts";
 
 export function resolveQuerySearchMode(input: {
 	explicit?: string;
@@ -53,7 +53,7 @@ const universalCommand = annotate(
 			},
 		})
 		.run(async ({ args, flags }) => {
-			const fmt = createFormatter({ color: flags.color });
+			const fmt = createOutput({ color: flags.color });
 
 			await withErrorHandling({ domain: "Search" }, async () => {
 				const sdk = await createSdk({ apiKey: flags["api-key"] });
@@ -141,7 +141,7 @@ const queryCommand = annotate(
 			},
 		})
 		.run(async ({ args, flags }) => {
-			const fmt = createFormatter({ color: flags.color });
+			const fmt = createOutput({ color: flags.color });
 
 			await withErrorHandling({ domain: "Search" }, async () => {
 				const sdk = await createSdk({ apiKey: flags["api-key"] });
@@ -239,7 +239,7 @@ const webCommand = annotate(
 			},
 		})
 		.run(async ({ args, flags }) => {
-			const fmt = createFormatter({ color: flags.color });
+			const fmt = createOutput({ color: flags.color });
 
 			// Validate category if provided
 			if (
@@ -306,7 +306,7 @@ const deepCommand = annotate(
 			},
 		})
 		.run(async ({ args, flags }) => {
-			const fmt = createFormatter({ color: flags.color });
+			const fmt = createOutput({ color: flags.color });
 
 			await withErrorHandling({ domain: "Search" }, async () => {
 				const sdk = await createSdk({ apiKey: flags["api-key"] });

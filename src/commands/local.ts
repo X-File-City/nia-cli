@@ -16,7 +16,7 @@ import type {
 } from "../services/local/types.ts";
 import { LocalFolderWatcher } from "../services/local/watcher.ts";
 import { withErrorHandling } from "../utils/errors.ts";
-import { createFormatter } from "../utils/formatter.ts";
+import { createOutput } from "../utils/output.ts";
 
 function validateDirectory(inputPath: string): string {
 	const resolved = path.resolve(inputPath);
@@ -225,7 +225,7 @@ const addCommand = app
 		},
 	] as const)
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		await withErrorHandling({ domain: "Local sync" }, async () => {
 			const folderPath = validateDirectory(args.path);
@@ -243,7 +243,7 @@ const statusCommand = app
 	.sub("status")
 	.meta({ description: "List local folder sync sources and status" })
 	.run(async ({ flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		await withErrorHandling({ domain: "Local sync" }, async () => {
 			const sources = await listLocalSources(flags["api-key"]);

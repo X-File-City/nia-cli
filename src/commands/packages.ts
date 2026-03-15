@@ -8,7 +8,7 @@ import { V2ApiPackageSearchService } from "nia-ai-ts";
 import { app } from "../app.ts";
 import { createSdk } from "../services/sdk.ts";
 import { withErrorHandling } from "../utils/errors.ts";
-import { createFormatter } from "../utils/formatter.ts";
+import { createOutput } from "../utils/output.ts";
 
 /**
  * Valid package registries supported by the API.
@@ -90,7 +90,7 @@ const grepCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		validateRegistry(args.registry);
 
@@ -177,7 +177,7 @@ const hybridCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		validateRegistry(args.registry);
 
@@ -261,7 +261,7 @@ const readCommand = app
 		},
 	})
 	.run(async ({ args, flags }) => {
-		const fmt = createFormatter({ color: flags.color });
+		const fmt = createOutput({ color: flags.color });
 
 		validateRegistry(args.registry);
 
