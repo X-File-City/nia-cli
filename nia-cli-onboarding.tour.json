@@ -1,0 +1,338 @@
+{
+  "id": "nia-cli-onboarding",
+  "title": "Nia CLI Codebase Tour",
+  "description": "A guided walkthrough of the Nia CLI — a multi-source code search and autonomous research tool built with TypeScript, Bun, and Crust JS",
+  "version": "1.0.0",
+  "audience": "New Contributors & AI Assistants",
+  "prerequisites": [
+    "Basic TypeScript knowledge",
+    "Familiarity with CLI tools"
+  ],
+  "steps": [
+    {
+      "id": "step-1-overview",
+      "title": "Welcome to Nia CLI",
+      "description": "Nia CLI (@nozomioai/nia) is a command-line interface for the Nia platform — a multi-source code search and research tool with autonomous research capabilities. The codebase is written in TypeScript, runs on Bun, and uses the Crust JS framework for CLI construction. Key areas: src/ for application code, tests/ for the test suite, and configuration files at the root.",
+      "estimatedTime": 60,
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "root-config",
+          "name": "Configuration",
+          "color": "#f59e0b",
+          "items": [
+            { "path": "package.json", "type": "file" },
+            { "path": "tsconfig.json", "type": "file" },
+            { "path": "biome.json", "type": "file" },
+            { "path": "bunfig.toml", "type": "file" }
+          ],
+          "opacity": 0.8,
+          "renderStrategy": "fill"
+        },
+        {
+          "id": "source-code",
+          "name": "Source Code",
+          "color": "#3b82f6",
+          "items": [
+            { "path": "src", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "test-suite",
+          "name": "Tests",
+          "color": "#10b981",
+          "items": [
+            { "path": "tests", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        }
+      ],
+      "focusDirectory": "",
+      "interactiveActions": [
+        {
+          "type": "hover-directory",
+          "description": "Hover over the src/ directory to see the application code",
+          "target": "src"
+        }
+      ]
+    },
+    {
+      "id": "step-2-entry-points",
+      "title": "CLI Entry Points",
+      "description": "The CLI starts at src/cli.ts, which registers all 13+ commands as subcommands and sets up plugins (update notifier, version, help, auto-complete, and skill integration for LLM usage). Global flags like --api-key, --verbose, and --color are defined in src/app.ts — separated to prevent circular imports between commands.",
+      "estimatedTime": 90,
+      "focusDirectory": "src",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "entry-points",
+          "name": "Entry Points",
+          "color": "#ef4444",
+          "items": [
+            { "path": "src/cli.ts", "type": "file" },
+            { "path": "src/app.ts", "type": "file" }
+          ],
+          "opacity": 0.9,
+          "renderStrategy": "fill"
+        }
+      ],
+      "interactiveActions": [
+        {
+          "type": "click-file",
+          "description": "Click cli.ts to see how commands and plugins are registered",
+          "target": "src/cli.ts"
+        },
+        {
+          "type": "click-file",
+          "description": "Click app.ts to see the global flag definitions",
+          "target": "src/app.ts"
+        }
+      ]
+    },
+    {
+      "id": "step-3-commands",
+      "title": "Command Modules",
+      "description": "The commands/ directory contains 14 command modules, each following a consistent pattern: subcommands via .sub(), skill annotations for LLM integration, error-wrapped handlers via withErrorHandling(), and output formatting via OutputRenderer. Key commands include search (universal/targeted/web/deep research), oracle (autonomous research jobs), sources (documentation management), repos (GitHub indexing), local (folder sync), and contexts (memory sessions).",
+      "estimatedTime": 120,
+      "focusDirectory": "src/commands",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "core-commands",
+          "name": "Core Commands",
+          "color": "#8b5cf6",
+          "items": [
+            { "path": "src/commands/search.ts", "type": "file" },
+            { "path": "src/commands/oracle.ts", "type": "file" },
+            { "path": "src/commands/sources.ts", "type": "file" },
+            { "path": "src/commands/repos.ts", "type": "file" }
+          ],
+          "opacity": 0.8,
+          "renderStrategy": "fill"
+        },
+        {
+          "id": "data-commands",
+          "name": "Data & Integration",
+          "color": "#06b6d4",
+          "items": [
+            { "path": "src/commands/local.ts", "type": "file" },
+            { "path": "src/commands/contexts.ts", "type": "file" },
+            { "path": "src/commands/tracer.ts", "type": "file" },
+            { "path": "src/commands/github.ts", "type": "file" }
+          ],
+          "opacity": 0.8,
+          "renderStrategy": "fill"
+        }
+      ],
+      "interactiveActions": [
+        {
+          "type": "click-file",
+          "description": "Click search.ts to see the universal search command with multiple modes",
+          "target": "src/commands/search.ts"
+        },
+        {
+          "type": "click-file",
+          "description": "Click oracle.ts to explore autonomous research streaming",
+          "target": "src/commands/oracle.ts"
+        }
+      ]
+    },
+    {
+      "id": "step-4-services",
+      "title": "Services Layer",
+      "description": "The services/ directory provides core infrastructure. config.ts manages API key resolution through a chain: CLI --api-key flag → NIA_API_KEY env var → ~/.config/nia/config.json. sdk.ts is a factory that creates configured NiaSDK instances. The local/ subdirectory is the most complex service — handling local folder synchronization with file watching, content extraction, batched uploads, and retry logic.",
+      "estimatedTime": 120,
+      "focusDirectory": "src/services",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "config-sdk",
+          "name": "Config & SDK",
+          "color": "#f59e0b",
+          "items": [
+            { "path": "src/services/config.ts", "type": "file" },
+            { "path": "src/services/sdk.ts", "type": "file" }
+          ],
+          "opacity": 0.9,
+          "renderStrategy": "fill"
+        },
+        {
+          "id": "local-service",
+          "name": "Local Sync Service",
+          "color": "#ec4899",
+          "items": [
+            { "path": "src/services/local", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        }
+      ],
+      "interactiveActions": [
+        {
+          "type": "click-file",
+          "description": "Click config.ts to see the API key resolution chain",
+          "target": "src/services/config.ts"
+        },
+        {
+          "type": "hover-directory",
+          "description": "Hover over local/ to see the sync service modules",
+          "target": "src/services/local"
+        }
+      ]
+    },
+    {
+      "id": "step-5-local-sync",
+      "title": "Local Folder Sync (Deep Dive)",
+      "description": "The local sync system is the most complex service in the CLI. It consists of 5 modules: types.ts (data models), watcher.ts (chokidar file system watcher with 2s debounce), extractor.ts (incremental folder scanning with cursor-based resumption, 10MB file limit, 76+ supported extensions), sync.ts (orchestration with 500-file/4MB batching and exponential backoff retries), and api.ts (low-level HTTP calls to the Nia daemon API).",
+      "estimatedTime": 150,
+      "focusDirectory": "src/services/local",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "sync-data-flow",
+          "name": "Data Flow: Types → Extract → Sync → API",
+          "color": "#3b82f6",
+          "items": [
+            { "path": "src/services/local/types.ts", "type": "file" },
+            { "path": "src/services/local/extractor.ts", "type": "file" },
+            { "path": "src/services/local/sync.ts", "type": "file" },
+            { "path": "src/services/local/api.ts", "type": "file" }
+          ],
+          "opacity": 0.8,
+          "renderStrategy": "fill"
+        },
+        {
+          "id": "watcher",
+          "name": "File Watcher",
+          "color": "#10b981",
+          "items": [
+            { "path": "src/services/local/watcher.ts", "type": "file" }
+          ],
+          "opacity": 0.8,
+          "renderStrategy": "fill"
+        }
+      ],
+      "interactiveActions": [
+        {
+          "type": "click-file",
+          "description": "Click sync.ts to see batching and retry logic",
+          "target": "src/services/local/sync.ts"
+        },
+        {
+          "type": "click-file",
+          "description": "Click extractor.ts to see the file scanning and skip lists",
+          "target": "src/services/local/extractor.ts"
+        }
+      ]
+    },
+    {
+      "id": "step-6-utilities",
+      "title": "Utility Modules",
+      "description": "Three utility modules support the entire CLI. output.ts provides OutputRenderer with 3 formats (JSON, table, text) and TTY-aware, status-colored rendering. errors.ts centralizes error handling — mapping SDK, API, and HTTP errors to user-friendly messages with verbose debug mode. streaming.ts renders SSE streams with event-type labeling (thinking, searching, reading, analyzing) for the Oracle's autonomous research output.",
+      "estimatedTime": 90,
+      "focusDirectory": "src/utils",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "output-rendering",
+          "name": "Output & Display",
+          "color": "#3b82f6",
+          "items": [
+            { "path": "src/utils/output.ts", "type": "file" },
+            { "path": "src/utils/streaming.ts", "type": "file" }
+          ],
+          "opacity": 0.8,
+          "renderStrategy": "fill"
+        },
+        {
+          "id": "error-handling",
+          "name": "Error Handling",
+          "color": "#ef4444",
+          "items": [
+            { "path": "src/utils/errors.ts", "type": "file" }
+          ],
+          "opacity": 0.8,
+          "renderStrategy": "fill"
+        }
+      ],
+      "interactiveActions": [
+        {
+          "type": "click-file",
+          "description": "Click output.ts to see the flexible rendering system",
+          "target": "src/utils/output.ts"
+        },
+        {
+          "type": "click-file",
+          "description": "Click streaming.ts to see SSE event rendering",
+          "target": "src/utils/streaming.ts"
+        }
+      ]
+    },
+    {
+      "id": "step-7-testing-and-ci",
+      "title": "Testing & CI/CD",
+      "description": "The tests/ directory contains 19 test files using Bun's native test runner, covering commands, utilities, and configuration. CI runs on pull requests (lint → type check → test → build) and releases are managed via Changesets with npm publishing. To get started: run 'bun install', then 'bun run dev' for development, 'bun run test' for tests, and 'bun run check' for linting.",
+      "estimatedTime": 60,
+      "focusDirectory": "",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "testing",
+          "name": "Test Suite",
+          "color": "#10b981",
+          "items": [
+            { "path": "tests", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "ci-cd",
+          "name": "CI/CD Pipelines",
+          "color": "#f59e0b",
+          "items": [
+            { "path": ".github", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "release-mgmt",
+          "name": "Release Management",
+          "color": "#8b5cf6",
+          "items": [
+            { "path": ".changeset", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        }
+      ],
+      "interactiveActions": [
+        {
+          "type": "hover-directory",
+          "description": "Hover over tests/ to see the full test suite",
+          "target": "tests"
+        },
+        {
+          "type": "explore",
+          "description": "Explore the full codebase — you're ready to contribute!"
+        }
+      ],
+      "resources": [
+        {
+          "title": "Nia CLI Repository",
+          "url": "https://github.com/nozomio-labs/nia-cli",
+          "type": "documentation"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "author": "Claude",
+    "createdAt": "2026-03-14",
+    "tags": ["onboarding", "architecture", "cli"]
+  }
+}
